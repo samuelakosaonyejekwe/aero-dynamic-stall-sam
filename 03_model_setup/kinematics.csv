@@ -1,0 +1,3 @@
+case_id,alpha_mean_deg,alpha_amp_deg,reduced_freq_k,omega_rad_s,freq_Hz,period_s,pitch_axis_x_c,motion
+A_validation_rig,10.0,10.0,0.1,68.0,10.823,0.0924,0.25,alpha(t)=mean+amp*sin(omega t)
+B_application_rotor,12.0,8.0,0.074,26.904,4.282,0.23354,0.25,alpha(t)=mean+amp*sin(omega t)

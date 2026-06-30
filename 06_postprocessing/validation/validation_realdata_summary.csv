@@ -1,0 +1,7 @@
+metric,value
+NACA0012 held-out frames,4
+mean RMS_CL,0.185
+mean RMS_CM,0.059
+mean |CLmax| error [%],1.9
+mean |CMmin| error [abs],0.023
+airfoil identity,CONFIRMED via load_frame.m (frames 7019-14220 = NACA0012)

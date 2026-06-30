@@ -1,0 +1,16 @@
+metric,value
+CL_max_dynamic,1.738
+alpha_at_CLmax_deg,15.76
+CL_max_static,1.427
+dynamic_overshoot_ratio,1.217
+CM_min(c/4),-0.208
+alpha_at_CMmin_deg,19.63
+CD_max,0.174
+stall_onset_alpha_deg,12.14
+aero_damping_Xi,-0.0001
+stall_flutter_risk,HIGH (neg. damping)
+CL_hysteresis_loop_area,0.0919
+reduced_frequency_k,0.074
+mach_M,0.28
+mean_alpha_deg,12.0
+amp_alpha_deg,8.0

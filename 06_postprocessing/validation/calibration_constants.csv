@@ -1,0 +1,11 @@
+constant,value,basis,status
+"A1, A2 (indicial circulatory)","0.30, 0.70",literature [S6],fixed
+"b1, b2 (indicial circulatory)","0.14, 0.53",literature [S6],fixed
+Tp (pressure lag),1.7,literature [S6],fixed
+Tf (boundary-layer lag),2.5,calibrated to real frame 9302,tuned
+"Tv, Tvl (vortex)","6.0, 6.0",calibrated to real frame 9302,tuned
+CN1 (DSV onset),1.38,near static CLmax,tuned
+k1 (CP aft-travel),-0.22,calibrated to real frame 9302 C_M,tuned
+cpv_amp (vortex CP travel),0.22,calibrated to real frame 9302 C_M,tuned
+Bv (vortex-feed gain),1.3,calibrated to real frame 9302 C_L overshoot,tuned
+f(α) Kirchhoff fit,from static polar,"calibrated to [S1,S2,S3]",calibrated

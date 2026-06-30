@@ -1,0 +1,17 @@
+metric,value
+topology,C-grid (body-fitted)
+i_nodes_wrap,257
+j_nodes_normal,121
+total_nodes,31097
+total_cells,30720
+farfield_radius_chords,20.0
+first_cell_height_y1_chords,1.31e-05
+first_cell_height_y1_m,3.92e-06
+wall_normal_growth_ratio,1.1051
+target_yplus,1.0
+max_aspect_ratio,5915.3
+mean_aspect_ratio,71.6
+min_orthogonality_deg,7.9
+max_skewness,0.912
+mean_skewness,0.08
+min_cell_area_c2,1e-09

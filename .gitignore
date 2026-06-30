@@ -1,0 +1,20 @@
+# --- Excluded from the public repository ---
+
+# Python caches
+__pycache__/
+*.pyc
+
+# Excluded folders
+00_overview/
+07_report/
+
+# Excluded standalone files
+aero_style.py
+case.docx
+run_all.py
+08_engineering_drawings/draw_engineering.py
+
+# Exclude all PDFs from the project tree...
+*.pdf
+# ...except the consolidated technical report
+!aero_dynamic_stall_report.pdf

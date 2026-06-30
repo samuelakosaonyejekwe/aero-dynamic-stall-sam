@@ -1,0 +1,10 @@
+property,value,units
+section,NACA 0012,-
+chord_m,0.3,m
+max_thickness_t_c,0.12003,-
+x_at_max_thickness_x_c,0.303,-
+max_camber_y_c,0.0,-
+LE_radius_r_c,0.01587,-
+TE_type,finite (0.252% open),-
+enclosed_area_A_c2,0.0822,-
+n_surface_points,319,-

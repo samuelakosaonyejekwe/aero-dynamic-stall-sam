@@ -1,0 +1,71 @@
+{
+  "solver_name": "UNISTALL(TM) Universal Unsteady-Aerodynamics & Dynamic-Stall Solver",
+  "core_method": "Unified Indicial-Beddoes State-Space (UIBS)",
+  "version": "1.0.0",
+  "modules": [
+    "attached_flow_indicial",
+    "trailing_edge_separation",
+    "leading_edge_dynamic_stall_vortex",
+    "compressibility_correction",
+    "vortex_panel_field_reconstruction",
+    "compressible_thermal_module"
+  ],
+  "indicial_circulatory": {
+    "A1": 0.3,
+    "A2": 0.7,
+    "b1": 0.14,
+    "b2": 0.53
+  },
+  "time_constants_semichords": {
+    "Tp": 1.7,
+    "Tf": 3.0,
+    "Tv": 6.0,
+    "Tvl": 5.0
+  },
+  "separation_kirchhoff": {
+    "alpha1_deg": 14.6,
+    "S1_deg": 3.0,
+    "S2_deg": 1.8,
+    "f_min": 0.04,
+    "comment": "calibrated to static_polar_reference"
+  },
+  "dynamic_stall_onset": {
+    "CN1": 1.45,
+    "comment": "critical CN for LE vortex shedding"
+  },
+  "calibrated_constants": {
+    "CN1": 1.38,
+    "Tf": 2.5,
+    "Tv": 6.0,
+    "Tvl": 6.0,
+    "k0": 0.0,
+    "k1": -0.22,
+    "k2": 0.04,
+    "kappa": 2.0,
+    "eta": 0.95,
+    "cpv_amp": 0.22,
+    "Bv": 1.3,
+    "comment": "single source of truth; calibrated against REAL NACA 0012 frame 9302 (10deg+/-10deg, M0.30, k0.10) from NASA TM-84245"
+  },
+  "lift_curve_slope_CNalpha_per_rad": 6.28,
+  "zero_lift_CM0": 0.0,
+  "numerics": {
+    "steps_per_cycle": 720,
+    "n_cycles": 6,
+    "report_cycle": 6,
+    "integrator": "semichord-marching exponential-recurrence"
+  },
+  "field_reconstruction": {
+    "method": "linear-strength vortex panel (Hess-Smith)",
+    "n_panels": 200,
+    "grid_nx": 260,
+    "grid_ny": 200,
+    "domain_chords": [
+      -1.0,
+      2.0,
+      -1.2,
+      1.2
+    ]
+  },
+  "calibration_state": "calibrated_per_case (static polar) + validated (dynamic)"
+}
