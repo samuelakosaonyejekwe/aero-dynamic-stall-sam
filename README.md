@@ -118,4 +118,10 @@ python3 06_postprocessing/validation/validate.py
 ## License & attribution
 
 © 2026 Akosa Samuel Onyejekwe. Independent research and engineering work.
-Please credit the author when referencing or reusing this material.
+
+This repository — code, datasets, figures, engineering drawings, and technical
+report — is licensed under the
+[Creative Commons Attribution 4.0 International License (CC BY 4.0)](LICENSE).
+You may share and adapt the material for any purpose, provided you give
+appropriate credit to **Akosa Samuel Onyejekwe**, link to the license, and
+indicate any changes.
