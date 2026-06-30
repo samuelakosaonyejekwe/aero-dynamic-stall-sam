@@ -1,0 +1,4 @@
+theme: jekyll-theme-cayman
+title: "UNISTALL — Dynamic-Stall Prediction"
+description: "Reduced-order Unified Indicial–Beddoes State-Space (UIBS) solver for a helicopter retreating blade (NACA 0012), validated against NASA static and dynamic-stall experiments."
+author: Akosa Samuel Onyejekwe
