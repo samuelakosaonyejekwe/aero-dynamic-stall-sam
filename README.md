@@ -33,8 +33,10 @@ UNISTALL marches a **Unified Indicial–Beddoes State-Space (UIBS)** model in
 semichord time: attached-flow indicial loads + Kirchhoff trailing-edge
 separation (two lags) + a leading-edge dynamic-stall vortex, with
 compressibility corrections, an integrated potential-flow field reconstruction,
-and a compressible thermal module. It is calibrated per case against a static
-polar and validated against McAlister / Carr / McCroskey NACA 0012 data.
+and a compressible thermal module. The static separation law is recovered in
+closed form by inverting the Kirchhoff relation against a single measured static
+polar, so no loop-by-loop curve fitting is required; the model is then validated
+against McAlister / Carr / McCroskey NACA 0012 data.
 
 ---
 
@@ -62,11 +64,28 @@ frequency.
 
 ### Headline results
 
-- Static-polar errors **< 1 %**.
+- Static-polar errors **< 1 %** (lift-curve slope 0.11 %, C_L,max 0.52 %, stall
+  angle exact — see `06_postprocessing/validation/validation_static.csv`).
 - **All five** integral dynamic-stall metrics fall inside the published
   experimental envelope.
-- Matched validation point (M = 0.30, k = 0.10, α = 10° ± 10°): dynamic
-  C_L,max ≈ 2.07, C_M,c/4 break ≈ −0.31, C_D,max ≈ 0.31.
+- Case A, the matched validation point (M = 0.30, k = 0.10, α = 10° ± 10°):
+  dynamic C_L,max = 1.909 at α = 17.4°, C_M,c/4 break = −0.234, C_D,max = 0.256,
+  a 34 % overshoot above the static maximum
+  (`05_solution/metrics_A_validation.csv`).
+- Case B, the retreating-blade station (M = 0.28, k = 0.074, α = 12° ± 8°):
+  C_L,max = 1.738 at α = 15.8°, C_M,c/4 break = −0.208
+  (`05_solution/metrics_B_application.csv`).
+
+### Held-out validation
+
+The dynamic constants were calibrated against **one** measured oscillating-aerofoil
+loop (frame 9302), frozen, and then used to predict four entirely held-out loops
+spanning light to deep stall. Across those four blind predictions the frozen model
+returns a **mean peak-lift error of 1.9 %** and a **mean moment-break error of
+0.023**. Applying the same frozen constants to a *different* aerofoil section
+(frame 25104) degrades peak-lift agreement to about 10 %, confirming that the
+calibration encodes section-specific physics rather than a generic loop shape.
+Per-frame figures are in `06_postprocessing/validation/validation_nasa_real.csv`.
 
 ---
 
@@ -112,6 +131,16 @@ python3 06_postprocessing/validation/validate.py
 
 **Requirements:** Python 3.12+ with `numpy`, `scipy`, `matplotlib`, and
 `pandas`.
+
+---
+
+## Related publication
+
+A manuscript based on this study, *"A Dynamic Stall Model for Rotor Blades
+Calibrated from One Static Polar,"* is in preparation for submission to the
+*Journal of the American Helicopter Society*. The manuscript itself is not
+distributed in this repository. The consolidated technical report
+(`aero_dynamic_stall_report.pdf`) remains the full write-up of the study.
 
 ---
 
