@@ -136,8 +136,8 @@ python3 06_postprocessing/validation/validate.py
 
 ## Related publication
 
-A manuscript based on this study, *"A Dynamic Stall Model for Rotor Blades
-Calibrated from One Static Polar,"* is in preparation for submission to the
+A manuscript based on this study, *"A Rotor Blade Dynamic Stall Model with Closed Form
+Separation Calibration,"* is in preparation for submission to the
 *Journal of the American Helicopter Society*. The manuscript itself is not
 distributed in this repository. The consolidated technical report
 (`aero_dynamic_stall_report.pdf`) remains the full write-up of the study.
