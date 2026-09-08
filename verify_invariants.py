@@ -330,6 +330,22 @@ try:
 except ImportError:
     pass
 
+# --- the report must not restate model constants that live in solver_config.json.
+#     The indicial pair (A1,A2,b1,b2) was written into an equation as literals, a
+#     second copy of numbers the solver reads from the config.
+_cfg=json.load(open('03_model_setup/solver_config.json'))
+_icc=_cfg['indicial_circulatory']
+_bd=open('07_report/build_docx.py',encoding='utf-8').read() if os.path.exists('07_report/build_docx.py') else ''
+if _bd:
+    _lit=re.search(r'\(A_\{1\},A_\{2\},b_\{1\},b_\{2\}\)=\(([-0-9.]+)', _bd)
+    ck("report does not hardcode the indicial constants", _lit is None,
+       f"found literal {_lit.group(1) if _lit else ''}")
+try:
+    import fitz as _fz3
+    _rp3=_fz3.open('aero_dynamic_stall_report.pdf'); _rp3.close()
+except ImportError:
+    pass
+
 # --- dead code / imports
 tot=0
 for f in sorted(glob.glob('0*/**/*.py',recursive=True)+glob.glob('*.py')):

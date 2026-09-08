@@ -12,6 +12,7 @@ Author: Akosa Samuel Onyejekwe (independent).  No third-party attribution.
 """
 import glob
 from pathlib import Path
+import json
 import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
@@ -269,7 +270,12 @@ EQ(r"\alpha_{3/4}=\alpha+\frac{c}{2U}\,\dot\alpha")
 EQ(r"X_{1}^{\,n}=X_{1}^{\,n-1}e^{-b_{1}\beta^{2}\Delta s}+A_{1}\,\Delta\alpha_{3/4}\,e^{-b_{1}\beta^{2}\Delta s/2}")
 EQ(r"X_{2}^{\,n}=X_{2}^{\,n-1}e^{-b_{2}\beta^{2}\Delta s}+A_{2}\,\Delta\alpha_{3/4}\,e^{-b_{2}\beta^{2}\Delta s/2}")
 EQ(r"\alpha_{E}=\alpha_{3/4}-X_{1}-X_{2},\qquad C_{N}^{C}=C_{N\alpha}\,\alpha_{E}")
-EQ(r"(A_{1},A_{2},b_{1},b_{2})=(0.30,\;0.70,\;0.14,\;0.53)")
+# Values taken FROM solver_config.json, not restated. They were written here as
+# literals, a second copy of numbers the solver reads from the config, and a
+# change to one would have left the report quoting the other.
+_ic = json.load(open(ROOT/"03_model_setup"/"solver_config.json"))["indicial_circulatory"]
+EQ(r"(A_{1},A_{2},b_{1},b_{2})=(%.2f,\;%.2f,\;%.2f,\;%.2f)"
+   % (_ic["A1"], _ic["A2"], _ic["b1"], _ic["b2"]))
 H("4.3 Non-circulatory (impulsive / added-mass) loads", 2)
 EQ(r"K_{\alpha}=\frac{0.75}{1-M+\pi\beta M^{2}(A_{1}b_{1}+A_{2}b_{2})},\qquad T_{I}=\frac{K_{\alpha}c}{a}")
 EQ(r"D_{I}^{\,n}=D_{I}^{\,n-1}e^{-\Delta t/T_{I}}+\left(\dot\alpha_{3/4}^{\,n}-\dot\alpha_{3/4}^{\,n-1}\right)e^{-\Delta t/2T_{I}}")
