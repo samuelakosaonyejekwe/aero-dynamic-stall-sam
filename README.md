@@ -177,7 +177,21 @@ python3 06_postprocessing/validation/validate.py            # static calibration
 python3 06_postprocessing/validation/validate_nasa_real.py  # held-out dynamic validation
 python3 06_postprocessing/validation/validate_digitized.py  # certification harness (optional)
 
+python3 08_engineering_drawings/draw_engineering.py         # the four drawing sheets
+
+# Report build. These three need python-docx, pillow, reportlab and PyMuPDF,
+# which requirements.txt installs but the solver pipeline itself does not need.
+python3 07_report/build_docx.py           # assembles case.docx
+python3 07_report/build_pdfs.py           # plots album + data dossier
+python3 07_report/build_report_pdf.py     # -> aero_dynamic_stall_report.pdf
+
 python3 check_claims.py    # asserts every number quoted below still matches the CSVs
+```
+
+Or run all fourteen stages in the correct order with a single command:
+
+```bash
+python3 run_all.py
 ```
 
 Every number, figure and table above is produced by these stages. The handful
@@ -187,8 +201,11 @@ against the generated CSVs by `check_claims.py`, which the pipeline runs last
 and which fails the build if any of them has drifted. `aero_dynamic_stall_report.pdf` is likewise a generated
 artefact (report body + data dossier + plots album, assembled from the same
 outputs), so it cannot fall out of step with the solver. The report-assembly
-tooling itself is not distributed here; the report is included as the finished
-PDF.
+tooling in `07_report/` is distributed too, so a clean checkout can rebuild the
+report from the solver outputs rather than having to trust the shipped PDF. The
+intermediate products of that build -- the plots album, the data dossier,
+`case.docx` and the rendered equation images -- are not committed, because they
+are regenerated from the same outputs on every run.
 
 `03_model_setup/` is the single source of truth for the case conditions.
 `generate_geometry.py`, `generate_mesh.py`, `run_case.py`, `make_all_plots.py`,
@@ -198,6 +215,13 @@ rather than restating any value — which is why the setup stage runs first.
 
 **Requirements:** Python 3.9+ with `numpy`, `scipy`, `matplotlib` and `pandas`
 (see `requirements.txt`). Developed and regenerated on Python 3.12.
+
+The report stages in `07_report/` additionally need `python-docx`, `pillow`,
+`reportlab` and `PyMuPDF`, plus the DejaVu Sans Condensed fonts for the Greek
+and symbol glyphs (`fonts-dejavu-core` on Debian/Ubuntu, `dejavu-sans-fonts` on
+Fedora, `ttf-dejavu` on Arch). The build searches the usual font directories and
+exits with an install hint if it cannot find them. The solver pipeline itself
+needs none of this.
 
 ---
 
