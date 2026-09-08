@@ -10,6 +10,7 @@
     "vortex_panel_field_reconstruction",
     "compressible_thermal_module"
   ],
+  "constant_precedence": "literature defaults below are OVERRIDDEN, key by key, by calibrated_constants; where a key appears in both (CN1, Tf, Tvl) the calibrated value is the one solved",
   "indicial_circulatory": {
     "A1": 0.3,
     "A2": 0.7,
@@ -20,18 +21,18 @@
     "Tp": 1.7,
     "Tf": 3.0,
     "Tv": 6.0,
-    "Tvl": 5.0
+    "Tvl": 5.0,
+    "comment": "literature defaults [S6]; Tf and Tvl are superseded by calibrated_constants"
   },
-  "separation_kirchhoff": {
-    "alpha1_deg": 14.6,
-    "S1_deg": 3.0,
-    "S2_deg": 1.8,
-    "f_min": 0.04,
-    "comment": "calibrated to static_polar_reference"
+  "separation_model": {
+    "method": "inverse-Kirchhoff fit of f(alpha) to static_polar_reference.csv",
+    "form": "f = (2*sqrt(CN_static/(CNalpha*alpha)) - 1)^2, PCHIP-interpolated in |alpha|",
+    "f_min": 0.02,
+    "comment": "no alpha1/S1/S2 exponential fit is used: the separation law is recovered in closed form from the measured polar"
   },
   "dynamic_stall_onset": {
     "CN1": 1.45,
-    "comment": "critical CN for LE vortex shedding"
+    "comment": "literature default for critical CN; the SOLVED value is calibrated_constants.CN1"
   },
   "calibrated_constants": {
     "CN1": 1.38,
@@ -56,16 +57,19 @@
     "integrator": "semichord-marching exponential-recurrence"
   },
   "field_reconstruction": {
-    "method": "linear-strength vortex panel (Hess-Smith)",
-    "n_panels": 200,
-    "grid_nx": 260,
-    "grid_ny": 200,
+    "method": "constant-strength source panels (flow tangency) + elliptic bound vortex sheet matched to the UIBS C_L + Lamb-Oseen dynamic-stall vortex",
+    "n_panels": 160,
+    "grid_nx_default": 260,
+    "grid_ny_default": 200,
+    "grid_nx_solution": 220,
+    "grid_ny_solution": 170,
     "domain_chords": [
       -1.0,
       2.0,
       -1.2,
       1.2
-    ]
+    ],
+    "comment": "grid_*_solution are the sizes actually written to 05_solution/field_*.csv"
   },
   "calibration_state": "calibrated_per_case (static polar) + validated (dynamic)"
 }

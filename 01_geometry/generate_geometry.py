@@ -4,9 +4,9 @@
 Generates the airfoil section geometry for the UNISTALL(TM) dynamic-stall
 case study (helicopter main-rotor retreating blade).
 
-Primary section : NACA 0012  (baseline rotor airfoil, the canonical dynamic-stall
-                  validation geometry of McAlister/Carr/McCroskey).
-Reference section: a cambered, drooped-LE SC1095-class section (for context).
+Section : NACA 0012  (baseline rotor airfoil, the canonical dynamic-stall
+          validation geometry of McAlister/Carr/McCroskey).  The 4-digit
+          generator below is general; only the 0012 section is written out.
 
 Outputs
   naca0012_coordinates.csv      surface coordinates (x/c, y/c) + node id
@@ -39,7 +39,7 @@ def naca_4digit(code="0012", n=N_PTS):
     x = (1 - np.cos(beta)) / 2.0           # cosine clustering -> dense at LE/TE
     yt = 5*t*(0.2969*np.sqrt(x) - 0.1260*x - 0.3516*x**2
               + 0.2843*x**3 - 0.1015*x**4)  # (note: open TE form)
-    if m > 0:
+    if m > 0 and p > 0:
         yc = np.where(x < p, m/p**2*(2*p*x - x**2),
                       m/(1-p)**2*((1-2*p) + 2*p*x - x**2))
         dyc = np.where(x < p, 2*m/p**2*(p - x),
@@ -54,7 +54,9 @@ def naca_4digit(code="0012", n=N_PTS):
     Y = np.concatenate([yu[::-1], yl[1:]])
     return X, Y, x, yt, yc
 
-X, Y, xc, yt, yc = naca_4digit("0012")
+CODE = "0012"
+X, Y, xc, yt, yc = naca_4digit(CODE)
+T_C = int(CODE[2:]) / 100.0          # thickness ratio taken from the code itself
 
 # ---- write coordinate CSV ----
 df = pd.DataFrame({"node_id": np.arange(1, len(X)+1),
@@ -70,13 +72,14 @@ xtmax = xc[np.argmax(yt)]
 # enclosed area via shoelace
 area = 0.5*np.abs(np.dot(X, np.roll(Y, -1)) - np.dot(Y, np.roll(X, -1)))
 # LE radius for 4-digit: r/c = 1.1019 t^2
-le_radius = 1.1019*(0.12**2)
+le_radius = 1.1019*(T_C**2)
 props = pd.DataFrame({
     "property": ["section", "chord_m", "max_thickness_t_c", "x_at_max_thickness_x_c",
                  "max_camber_y_c", "LE_radius_r_c", "TE_type", "enclosed_area_A_c2",
                  "n_surface_points"],
-    "value": ["NACA 0012", CHORD, round(tmax,5), round(xtmax,4),
-              round(yc.max(),5), round(le_radius,5), "finite (0.252% open)",
+    "value": ["NACA " + CODE, CHORD, round(tmax,5), round(xtmax,4),
+              round(yc.max(),5), round(le_radius,5),
+              "open (%.3f%% gap)" % (200*yt[-1]),
               round(area,5), len(X)],
     "units": ["-", "m", "-", "-", "-", "-", "-", "-", "-"]})
 props.to_csv(HERE/"section_geometry_summary.csv", index=False)
@@ -88,7 +91,7 @@ ax.plot(X, Y, color="#1f3b5c", lw=1.8)
 ax.plot(xc, yc, "--", color="#b03a2e", lw=1.2, label="mean camber line")
 ax.axhline(0, color="grey", lw=0.6)
 ax.set_xlabel("x/c"); ax.set_ylabel("y/c")
-ax.set_title("NACA 0012 section — UNISTALL case geometry (chord = %.2f m)" % CHORD)
+ax.set_title("NACA %s section — UNISTALL case geometry (chord = %.2f m)" % (CODE, CHORD))
 ax.set_aspect("equal"); ax.set_xlim(-0.05, 1.05)
 ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.42), ncol=2, frameon=True)
 fig.savefig(HERE/"fig_geometry_profile.png"); plt.close(fig)

@@ -1,21 +1,36 @@
 """
 02_mesh / generate_mesh.py
 --------------------------
-Builds a body-fitted structured C-type grid around the NACA 0012 section used by
+Builds a body-fitted structured O-type grid around the NACA 0012 section used by
 the UNISTALL(TM) field-reconstruction module, and reports mesh-quality metrics.
 
 The reduced-order UIBS core does not require a volume mesh, but the universal
 solver embeds a body-fitted grid for (a) panel-method field reconstruction and
-(b) optional CFD hand-off. This module documents that grid to CFD-grade standards.
+(b) optional CFD hand-off. This module generates that grid and reports the usual
+CFD quality metrics for it.
+
+Quality caveat (the metrics CSV carries the numbers; read them before reusing
+this grid for CFD): about 5 % of cells exceed 0.5 skewness and the worst reaches
+0.91, all of them in the trailing-edge region where the upper- and lower-surface
+normals oppose one another across the open TE; the largest aspect ratios (~5900)
+are in the outermost far-field layers. Those are intrinsic to an O-grid with a
+slit trailing edge. The loads reported by this study do not depend on this grid
+-- the UIBS core is meshless and the field reconstruction is panel-based -- so
+the grid is a documentation and hand-off artefact, not a production CFD mesh.
 
 Outputs
   mesh_nodes.csv              every grid node (i, j, x_m, y_m, wall_distance_m)
   mesh_quality_metrics.csv    scalar quality metrics (y+, growth, AR, ortho, skew)
   mesh_radial_spacing.csv     wall-normal spacing law
-  fig_mesh_full.png           full C-grid (far field)
+  fig_mesh_full.png           full O-grid (far field)
   fig_mesh_le_zoom.png        leading-edge boundary-layer zoom
   fig_mesh_te_zoom.png        trailing-edge zoom
   fig_mesh_wall_spacing.png   first-cell height / growth-ratio plot
+
+Topology note: the wall line wraps the complete surface and every node is offset
+along a normal that is blended into a radial direction at the far field, so the
+outer boundary is a circle and there is NO wake cut. That is an O-grid, not a
+C-grid; the metrics CSV records it as such.
 """
 import sys
 import numpy as np
@@ -24,7 +39,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
-from aero_style import apply_style, PALETTE, INK, INK_SOFT, CMAP_PRESSURE
+from aero_style import apply_style, PALETTE, INK_SOFT
 import matplotlib.pyplot as plt
 apply_style()
 
@@ -46,11 +61,7 @@ yw = np.interp(sq, s, ys)
 dx = np.gradient(xw); dy = np.gradient(yw)
 nl = np.hypot(dx, dy); tx, ty = dx/nl, dy/nl
 nx, ny = ty, -tx                     # rotate tangent -> normal
-# ensure outward (away from chord line y=0 mid)
-sign = np.sign((yw) + 1e-9)
-sign[sign == 0] = 1
-nx *= 1; ny *= 1
-# flip normals that point inward (dot with radial from 0.5,0)
+# flip normals that point inward (dot with radial from mid-chord)
 rx, ry = xw - 0.5, yw - 0.0
 inward = (nx*rx + ny*ry) < 0
 nx[inward] *= -1; ny[inward] *= -1
@@ -59,10 +70,12 @@ nx[inward] *= -1; ny[inward] *= -1
 N_RAD = 121
 FARFIELD = 20.0          # chords (radius of far-field boundary)
 Y_PLUS_TARGET = 1.0
-# estimate first-cell height for y+ ~= 1 at Re_c
-RE_C = 2.0e6
-Cf = 0.026 / RE_C**(1/7.0)                       # turbulent flat-plate ~
+# estimate first-cell height for y+ ~= 1 at Re_c.
+# NOTE: these mirror case A of 03_model_setup/flow_conditions.csv, which is written
+# later in the pipeline; keep the two in step if the case-A conditions change.
 rho, U, mu = 1.10, 102.0, 1.78e-5
+RE_C = rho*U*CHORD/mu                            # 1.89e6, derived not quoted
+Cf = 0.026 / RE_C**(1/7.0)                       # turbulent flat-plate ~
 tau_w = 0.5*rho*U**2*Cf
 u_tau = np.sqrt(tau_w/rho)
 y1 = Y_PLUS_TARGET*mu/(rho*u_tau) / CHORD          # in chords
@@ -122,7 +135,7 @@ metrics = pd.DataFrame({
                "first_cell_height_y1_m", "wall_normal_growth_ratio", "target_yplus",
                "max_aspect_ratio", "mean_aspect_ratio", "min_orthogonality_deg",
                "max_skewness", "mean_skewness", "min_cell_area_c2"],
-    "value": ["C-grid (body-fitted)", I, J, I*J, (I-1)*(J-1), FARFIELD,
+    "value": ["O-grid (body-fitted, no wake cut)", I, J, I*J, (I-1)*(J-1), FARFIELD,
               round(y1,7), round(y1*CHORD,8), round(GR,4), Y_PLUS_TARGET,
               round(ar.max(),1), round(ar.mean(),1), round(ortho.min(),1),
               round(skew.max(),3), round(skew.mean(),3), float("%.2e"%area.min())],
@@ -138,9 +151,11 @@ nodes = pd.DataFrame({"i": ii.ravel(), "j": jj.ravel(),
                       "wall_distance_m": wall_dist.ravel().round(7)})
 nodes.to_csv(HERE/"mesh_nodes.csv", index=False)
 
+# spacing of layer j is yn[j]-yn[j-1]; layer 0 lies ON the wall, so it has none
+layer_spacing = np.concatenate([[np.nan], np.diff(yn)])
 pd.DataFrame({"layer_j": np.arange(N_RAD),
               "normal_coord_chords": yn.round(6),
-              "layer_spacing_chords": np.concatenate([[y1], np.diff(yn)]).round(7),
+              "layer_spacing_chords": layer_spacing.round(7),
               "normal_coord_m": (yn*CHORD).round(6)}).to_csv(HERE/"mesh_radial_spacing.csv", index=False)
 
 # ---- figures ----
@@ -155,7 +170,7 @@ def plot_grid(ax, every_i=4, every_j=3, lw=0.4):
 fig, ax = plt.subplots(figsize=(7.5, 7.5))
 plot_grid(ax, 4, 4)
 ax.set_xlim(-6*CHORD, 7*CHORD); ax.set_ylim(-6.5*CHORD, 6.5*CHORD)
-ax.set_title("Body-fitted C-grid (near field) — %d×%d nodes" % (I, J))
+ax.set_title("Body-fitted O-grid (near field) — %d×%d nodes" % (I, J))
 ax.set_xlabel("x [m]"); ax.set_ylabel("y [m]")
 fig.savefig(HERE/"fig_mesh_full.png"); plt.close(fig)
 
@@ -175,14 +190,16 @@ fig.savefig(HERE/"fig_mesh_te_zoom.png"); plt.close(fig)
 
 fig, ax = plt.subplots(figsize=(8, 4.5))
 layer = np.arange(N_RAD)
-ax.semilogy(layer, np.concatenate([[y1], np.diff(yn)])*CHORD*1e3, color=PALETTE[1], lw=2,
-            marker="o", ms=3, label="layer spacing")
+l1, = ax.semilogy(layer, layer_spacing*CHORD*1e3, color=PALETTE[1], lw=2,
+                  marker="o", ms=3, label="layer spacing")
 ax.set_xlabel("wall-normal layer index j"); ax.set_ylabel("cell height [mm]")
 ax.set_title("Wall-normal spacing law (geom. growth GR=%.3f, y1=%.2e m)" % (GR, y1*CHORD))
-ax.legend(loc="upper left")
 ax2 = ax.twinx(); ax2.grid(False)
-ax2.plot(layer, yn*CHORD, color=PALETTE[2], lw=1.5, ls="--", label="cumulative dist")
+l2, = ax2.plot(layer, yn*CHORD, color=PALETTE[2], lw=1.5, ls="--",
+               label="cumulative normal distance")
 ax2.set_ylabel("cumulative normal distance [m]", color=PALETTE[2])
+# single combined legend: both curves live on different axes
+ax.legend(handles=[l1, l2], loc="upper left")
 fig.savefig(HERE/"fig_mesh_wall_spacing.png"); plt.close(fig)
 
 print("[mesh] %d nodes, GR=%.3f, y1=%.2e m, maxAR=%.0f, maxSkew=%.3f, minOrtho=%.1f deg"

@@ -19,20 +19,28 @@ HERE = Path(__file__).resolve().parent
 # ============================================================ FLOW CONDITIONS
 # Case A: oscillating-airfoil VALIDATION rig (matches McAlister/McCroskey NACA0012)
 # Case B: APPLICATION - medium utility helicopter retreating-blade section r/R=0.75
+# chord [m], Mach, U [m/s], rho [kg/m^3], mu [Pa.s] -- Re_c is DERIVED, never quoted
+CH_A, CH_B   = 0.30, 0.527
+U_A,  U_B    = 102.0, 95.8
+RHO_A, RHO_B = 1.10, 1.112
+MU           = 1.78e-5
+RE_A = RHO_A*U_A*CH_A/MU          # 1.891e6
+RE_B = RHO_B*U_B*CH_B/MU          # 3.154e6
+
 flow = pd.DataFrame([
     ["case_id",                 "A_validation_rig", "B_application_rotor", "-"],
     ["description",             "NACA0012 oscillating airfoil (wind tunnel)",
                                 "Retreating-blade section, r/R=0.75, mu=0.32", "-"],
     ["airfoil",                 "NACA 0012", "NACA 0012", "-"],
-    ["chord_c",                 0.30, 0.527, "m"],
+    ["chord_c",                 CH_A, CH_B, "m"],
     ["freestream_mach_M",       0.30, 0.28, "-"],
-    ["freestream_velocity_U",   102.0, 95.8, "m/s"],
+    ["freestream_velocity_U",   U_A, U_B, "m/s"],
     ["speed_of_sound_a",        340.0, 340.0, "m/s"],
-    ["air_density_rho",         1.10, 1.112, "kg/m^3"],
+    ["air_density_rho",         RHO_A, RHO_B, "kg/m^3"],
     ["static_pressure_p_inf",   90000.0, 91200.0, "Pa"],
     ["static_temperature_T_inf",288.15, 287.5, "K"],
-    ["dynamic_viscosity_mu",    1.78e-5, 1.78e-5, "Pa.s"],
-    ["reynolds_number_Re_c",    2.0e6, 3.55e6, "-"],
+    ["dynamic_viscosity_mu",    MU, MU, "Pa.s"],
+    ["reynolds_number_Re_c",    float("%.4g" % RE_A), float("%.4g" % RE_B), "-"],
     ["reduced_frequency_k",     0.10, 0.074, "-"],
     ["advance_ratio_mu",        np.nan, 0.32, "-"],
     ["rotor_radius_R",          np.nan, 8.18, "m"],
@@ -50,8 +58,8 @@ def kin_row(case, U, c, k, a_mean, a_amp):
     return [case, a_mean, a_amp, k, round(omega,3), round(f_hz,3), round(T,5)]
 
 kin = pd.DataFrame([
-    kin_row("A_validation_rig", 102.0, 0.30, 0.10, 10.0, 10.0),
-    kin_row("B_application_rotor", 95.8, 0.527, 0.074, 12.0, 8.0),
+    kin_row("A_validation_rig", U_A, CH_A, 0.10, 10.0, 10.0),
+    kin_row("B_application_rotor", U_B, CH_B, 0.074, 12.0, 8.0),
 ], columns=["case_id", "alpha_mean_deg", "alpha_amp_deg", "reduced_freq_k",
             "omega_rad_s", "freq_Hz", "period_s"])
 kin["pitch_axis_x_c"] = 0.25
@@ -83,11 +91,22 @@ config = {
     "modules": ["attached_flow_indicial", "trailing_edge_separation",
                 "leading_edge_dynamic_stall_vortex", "compressibility_correction",
                 "vortex_panel_field_reconstruction", "compressible_thermal_module"],
+    "constant_precedence": "literature defaults below are OVERRIDDEN, key by key, "
+                           "by calibrated_constants; where a key appears in both "
+                           "(CN1, Tf, Tvl) the calibrated value is the one solved",
     "indicial_circulatory": {"A1": 0.30, "A2": 0.70, "b1": 0.14, "b2": 0.53},
-    "time_constants_semichords": {"Tp": 1.7, "Tf": 3.0, "Tv": 6.0, "Tvl": 5.0},
-    "separation_kirchhoff": {"alpha1_deg": 14.6, "S1_deg": 3.0, "S2_deg": 1.8,
-                             "f_min": 0.04, "comment": "calibrated to static_polar_reference"},
-    "dynamic_stall_onset": {"CN1": 1.45, "comment": "critical CN for LE vortex shedding"},
+    "time_constants_semichords": {"Tp": 1.7, "Tf": 3.0, "Tv": 6.0, "Tvl": 5.0,
+                                  "comment": "literature defaults [S6]; Tf and Tvl "
+                                             "are superseded by calibrated_constants"},
+    "separation_model": {
+        "method": "inverse-Kirchhoff fit of f(alpha) to static_polar_reference.csv",
+        "form": "f = (2*sqrt(CN_static/(CNalpha*alpha)) - 1)^2, PCHIP-interpolated in |alpha|",
+        "f_min": 0.02,
+        "comment": "no alpha1/S1/S2 exponential fit is used: the separation law is "
+                   "recovered in closed form from the measured polar"},
+    "dynamic_stall_onset": {"CN1": 1.45,
+                            "comment": "literature default for critical CN; the SOLVED "
+                                       "value is calibrated_constants.CN1"},
     "calibrated_constants": {
         "CN1": 1.38, "Tf": 2.5, "Tv": 6.0, "Tvl": 6.0,
         "k0": 0.0, "k1": -0.22, "k2": 0.04, "kappa": 2.0, "eta": 0.95,
@@ -98,9 +117,14 @@ config = {
     "zero_lift_CM0": 0.0,
     "numerics": {"steps_per_cycle": 720, "n_cycles": 6, "report_cycle": 6,
                  "integrator": "semichord-marching exponential-recurrence"},
-    "field_reconstruction": {"method": "linear-strength vortex panel (Hess-Smith)",
-                             "n_panels": 200, "grid_nx": 260, "grid_ny": 200,
-                             "domain_chords": [-1.0, 2.0, -1.2, 1.2]},
+    "field_reconstruction": {
+        "method": "constant-strength source panels (flow tangency) + elliptic bound "
+                  "vortex sheet matched to the UIBS C_L + Lamb-Oseen dynamic-stall vortex",
+        "n_panels": 160,
+        "grid_nx_default": 260, "grid_ny_default": 200,
+        "grid_nx_solution": 220, "grid_ny_solution": 170,
+        "domain_chords": [-1.0, 2.0, -1.2, 1.2],
+        "comment": "grid_*_solution are the sizes actually written to 05_solution/field_*.csv"},
     "calibration_state": "calibrated_per_case (static polar) + validated (dynamic)"
 }
 with open(HERE/"solver_config.json", "w") as fp:

@@ -9,7 +9,9 @@ __pycache__/
 07_report/
 
 # Excluded standalone files
-aero_style.py
+# NOTE: aero_style.py is NOT excluded — it is imported by 01_geometry,
+# 02_mesh, 06_postprocessing and the validation scripts, so the published
+# pipeline cannot run without it.
 case.docx
 run_all.py
 08_engineering_drawings/draw_engineering.py

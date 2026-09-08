@@ -28,6 +28,9 @@ published dynamic-stall experiments. References are recorded in 03_model_setup.
 import numpy as np
 from scipy.interpolate import PchipInterpolator
 
+# np.trapz was removed in NumPy 2.0 in favour of np.trapezoid; bind whichever exists
+_trapz = getattr(np, "trapezoid", None) or np.trapz
+
 # --------------------------------------------------------------------------- #
 #  STATIC SEPARATION CALIBRATION  (Kirchhoff inverse from a static polar)
 # --------------------------------------------------------------------------- #
@@ -50,13 +53,20 @@ def calibrate_separation(alpha_deg, Cl, Cd, CNalpha):
     order = np.argsort(alpha_deg)
     ad = np.asarray(alpha_deg, float)[order]; fd = f[order]
     interp = PchipInterpolator(ad, fd, extrapolate=False)
-    amin, amax, fmax_end = ad.min(), ad.max(), 0.02
+    amin, amax = ad.min(), ad.max()
+    F_MIN, S_EXT = 0.02, 3.0        # floor, and decay length past the data (deg)
+    f_end = float(interp(amax))     # separation point AT the last measured alpha
     def f_static(alpha_query_deg):
         q = np.abs(np.asarray(alpha_query_deg, float))
         out = interp(q)
-        out = np.where(q <= amax, out, fmax_end)       # deep stall -> fully sep.
+        # Past the calibration data, decay smoothly from the last measured value
+        # towards full separation. Snapping straight to F_MIN put a step of 0.13
+        # in f at alpha_max, which showed up as a 0.37 jump in the model C_L --
+        # 15x the neighbouring steps -- purely as an artefact of the clamp.
+        deep = F_MIN + (f_end - F_MIN)*np.exp(-(q - amax)/S_EXT)
+        out = np.where(q <= amax, out, deep)
         out = np.where(q >= amin, out, 1.0)            # below data -> attached
-        return np.clip(np.nan_to_num(out, nan=1.0), 0.02, 1.0)
+        return np.clip(np.nan_to_num(out, nan=1.0), F_MIN, 1.0)
     return f_static
 
 
@@ -136,11 +146,20 @@ def solve_dynamic_stall(alpha_mean_deg, alpha_amp_deg, k, M, c, U,
         Kf = ((1.0+np.sqrt(fpp[n]))/2.0)**2
         CNf[n] = CNalpha*aE*Kf + CNi
         # (3) leading-edge dynamic-stall vortex
+        # tau_v is the vortex convection clock. It is zeroed ONLY at shedding
+        # onset and HELD (not zeroed) once the vortex switches off, because the
+        # vortex normal force CNv is still decaying at that instant: zeroing it
+        # would collapse the vortex moment arm CP_v in a single step and put a
+        # step discontinuity into CM (and hence into the damping integral).
         if (CNp[n] >= p["CN1"]) and (not vortex_on) and (alpha_dot[n] > 0):
-            vortex_on = True; tau_v[n] = 0.0
+            vortex_on = True
+            tau_v[n] = 0.0                           # shedding starts: CP still at c/4
+        elif vortex_on:
+            tau_v[n] = tau_v[n-1] + ds               # convecting over the chord
+        else:
+            tau_v[n] = tau_v[n-1]                    # off: hold, so CM_v decays with CNv
         Cv = p["Bv"]*CNc*(1.0 - Kf)                  # vortex feed = (attached-separated)*gain
         if vortex_on:
-            tau_v[n] = tau_v[n-1] + ds
             vortex_active[n] = 1.0
             if tau_v[n] < p["Tvl"]:
                 CNv[n] = CNv[n-1]*Etv + (Cv - Cv_prev)*Etvh
@@ -170,7 +189,11 @@ def solve_dynamic_stall(alpha_mean_deg, alpha_amp_deg, k, M, c, U,
 
     # return last cycle
     s = slice(N-n_per_cycle, N+1)
-    phase = (np.degrees(omega*t[s]) % 360.0)
+    # Phase runs 0 -> 360 monotonically across the reported cycle. Taking the
+    # modulo of the absolute time wrapped the final 360 deg point back to 0,
+    # which made every curve plotted against phase draw a spurious horizontal
+    # line straight back across the axes at its terminal value.
+    phase = np.degrees(omega*(t[s]-t[s][0]))
     out = dict(t=t[s]-t[s][0], phase_deg=phase,
                alpha_deg=np.degrees(alpha[s]), alpha_dot=alpha_dot[s],
                CL=CL[s], CD=CD[s], CM=CM[s], CN=CN[s], CC=CC[s],
@@ -187,12 +210,39 @@ def solve_dynamic_stall(alpha_mean_deg, alpha_amp_deg, k, M, c, U,
 # --------------------------------------------------------------------------- #
 #  AERODYNAMIC DAMPING (stall-flutter indicator) from the CM-alpha loop
 # --------------------------------------------------------------------------- #
-def aerodynamic_damping(alpha_deg, CM):
+#  |Xi_hat| below this is treated as neutral: for a figure-of-eight CM loop the
+#  raw Xi is a small residual between two lobes of opposite sign, and at this
+#  level it is no larger than the time-step discretisation error.
+DAMPING_TOL = 0.02
+
+
+def aerodynamic_damping(alpha_deg, CM, normalise=False):
     """Cyclic work / damping coefficient:  Xi = -∮ CM dalpha .
     Xi > 0  -> positive aerodynamic damping (stable);
-    Xi < 0  -> negative damping (stall-flutter prone)."""
+    Xi < 0  -> negative damping (stall-flutter prone).
+
+    With normalise=True, also returns Xi divided by the area of the bounding box
+    of the CM-alpha loop.  Only that ratio is a meaningful discriminator: Xi
+    itself carries the units of the loop and, for the near-cancelling
+    figure-of-eight loops typical of light dynamic stall, is a small residual.
+    """
     a = np.radians(alpha_deg)
-    return -np.trapz(CM, a)
+    Xi = -_trapz(CM, a)
+    if not normalise:
+        return Xi
+    box = (np.max(CM)-np.min(CM))*(np.max(a)-np.min(a))
+    return Xi, (Xi/box if box > 0 else 0.0)
+
+
+def damping_verdict(Xi_hat, tol=DAMPING_TOL):
+    """Three-way stall-flutter verdict from the NORMALISED damping Xi_hat.
+    A bare sign test on Xi is not defensible: |Xi_hat| < tol means the two
+    lobes of the CM loop cancel to within the resolution of the model."""
+    if Xi_hat < -tol:
+        return "HIGH (neg. damping)"
+    if Xi_hat > tol:
+        return "low (pos. damping)"
+    return "neutral (within model resolution)"
 
 
 # --------------------------------------------------------------------------- #
@@ -219,7 +269,6 @@ def _solve_sources(xp, yp, U, alpha):
     Np = len(xc)
     Uinf = np.array([U*np.cos(alpha), U*np.sin(alpha)])
     A = np.zeros((Np, Np)); rhs = np.zeros(Np)
-    eps = 0.5*L.mean()
     for i in range(Np):
         rx = xc[i]-xc; ry = yc[i]-yc
         r2 = rx*rx+ry*ry + (0.5*L)**2*1e-2
@@ -229,6 +278,35 @@ def _solve_sources(xp, yp, U, alpha):
         rhs[i] = -(Uinf[0]*nx[i]+Uinf[1]*ny[i])
     sigma = np.linalg.solve(A, rhs)
     return xc, yc, L, sigma
+
+def _core_pressure_deficit(r, Gamma, rc, U, n=800):
+    """Cp correction converting Bernoulli into radial equilibrium inside a
+    Lamb-Oseen vortex core.
+
+    Cp = 1 - (V/U)^2 is Bernoulli, which holds only where the flow is
+    IRROTATIONAL. Inside the core v_theta -> 0 as r -> 0, so Bernoulli alone
+    reports the dynamic-stall vortex as a pressure PEAK, when a real vortex core
+    is a pressure MINIMUM held by radial equilibrium  dp/dr = rho*v_theta^2/r :
+
+        Cp_eq(r) = -(2/U^2) * integral_r^inf ( v_theta^2 / r' ) dr'
+
+    Outside the core v_theta = Gamma/(2*pi*r) and that integral collapses to
+    -(v_theta/U)^2 -- precisely what Bernoulli already supplies. So the value
+    returned here is Cp_eq minus the Bernoulli part: it decays to zero away from
+    the core and adds the missing suction inside it.
+    """
+    r = np.asarray(r, float)
+    if Gamma <= 0.0 or rc <= 0.0 or U <= 0.0:
+        return np.zeros_like(r)
+    rmax = max(float(np.nanmax(r)), 12.0*rc)
+    rr = np.linspace(rc*1e-4, rmax, n)
+    vt = (Gamma/(2.0*np.pi*rr))*(1.0 - np.exp(-rr**2/rc**2))
+    g = vt*vt/rr
+    I = np.concatenate([[0.0], np.cumsum(0.5*(g[1:]+g[:-1])*np.diff(rr))])
+    cp_eq = -(2.0/U**2)*(I[-1] - I)          # radial equilibrium
+    cp_bern = -(vt/U)**2                     # already counted by Bernoulli
+    return np.interp(r, rr, cp_eq - cp_bern)
+
 
 def reconstruct_field(naca_csv, c, U, M, alpha_deg, CL, CNv,
                       tau_over_Tvl, domain=(-1.0, 2.0, -1.2, 1.2),
@@ -262,7 +340,7 @@ def reconstruct_field(naca_csv, c, U, M, alpha_deg, CL, CNv,
     nb = 80
     xb = np.linspace(0.01*c, 0.99*c, nb)
     w = np.sqrt(np.clip((xb/c)*(1-xb/c), 0, None))       # elliptic loading
-    w /= np.trapz(w, xb); dGam = Gamma*w*np.gradient(xb)
+    w /= _trapz(w, xb); dGam = Gamma*w*np.gradient(xb)
     epsb2 = (0.06*c)**2
     for j in range(nb):
         rx = X-xb[j]; ry = Y-0.0; r2 = rx*rx+ry*ry+epsb2
@@ -272,7 +350,16 @@ def reconstruct_field(naca_csv, c, U, M, alpha_deg, CL, CNv,
     # dynamic-stall vortex (Lamb-Oseen), convects along upper surface
     xv = (0.25 + 0.55*np.clip(tau_over_Tvl, 0, 1.3))*c
     yv = 0.10*c + 0.06*c*np.clip(tau_over_Tvl, 0, 1.3)
-    Gv = -1.4*max(CNv, 0.0)*U*c                          # sign: clockwise (lift)
+    # NOTE ON SIGN. This is a KINEMATIC surrogate: the vortex is given the
+    # circulation that reproduces the extra upper-surface suction associated
+    # with the UIBS vortex load CNv. Because it sits ABOVE the surface, that
+    # makes its rotation opposite to a physical dynamic-stall vortex, which is
+    # a roll-up of upper-surface boundary-layer vorticity (same sense as the
+    # bound circulation) and augments lift through its own low-pressure core
+    # rather than by accelerating the surface flow. So in the vorticity plots
+    # the DSV appears with sign opposite to the bound sheet. The loads are NOT
+    # affected -- they come from the UIBS core, not from this reconstruction.
+    Gv = -1.4*max(CNv, 0.0)*U*c
     rc = 0.16*c
     rx = X-xv; ry = Y-yv; r2 = rx*rx+ry*ry
     fcore = (1-np.exp(-r2/rc**2))
@@ -281,8 +368,11 @@ def reconstruct_field(naca_csv, c, U, M, alpha_deg, CL, CNv,
         v += -Gv/(2*np.pi)*rx/np.where(r2 == 0, 1, r2)*fcore
 
     speed = np.hypot(u, v)
-    # incompressible Cp + Prandtl-Glauert compressibility correction (bounded)
-    Cp_inc = 1.0 - (speed/U)**2
+    # incompressible Cp + Prandtl-Glauert compressibility correction (bounded).
+    # The core correction is what keeps the dynamic-stall vortex reading as the
+    # suction feature it is; see _core_pressure_deficit.
+    Cp_inc = (1.0 - (speed/U)**2
+              + _core_pressure_deficit(np.sqrt(r2), abs(Gv), rc, U))
     Cp = Cp_inc/np.sqrt(1-M**2) if M > 0 else Cp_inc
     Cp = np.clip(Cp, -8.0, 1.0)               # keep field physical & clean
     # thermodynamics

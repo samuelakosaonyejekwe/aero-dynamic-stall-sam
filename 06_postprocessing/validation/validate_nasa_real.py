@@ -5,8 +5,8 @@
 PRIMARY dynamic validation against REAL digitised experimental loops.
 
 DATA PROVENANCE
-  Digitised C_L(α), C_M(α) oscillating-airfoil loops from McAlister, Pucci,
-  McCroskey & Carr (1982), NASA TM-84245, via the open repository
+  Digitised C_L(α), C_M(α) oscillating-airfoil loops from McCroskey, McAlister,
+  Carr & Pucci (1982), NASA TM-84245 [S5], via the open repository
   L. Pancini, "BL-DSM-JFS-2021" (NASA Data/frame_*.mat),
   https://github.com/luizpancini/BL-DSM-JFS-2021 .
 
@@ -55,6 +55,9 @@ FRAMES = [
  ("frame_10118.mat", "NACA 0012", "held-out: 15°±5°, k0.10"),
  ("frame_25104.mat", "AMES-01",   "cross-check (NOT NACA0012): 10°±10°, k0.10"),
 ]
+# The UIBS march is chord-independent: omega = 2kU/c and ds = 2U dt/c, and
+# dt/T_I scales the same way, so every recurrence depends on (k, M) alone. CHORD
+# is therefore a nominal value that does not affect any load reported below.
 CHORD = 0.30
 
 def loadframe(fn):
@@ -64,7 +67,17 @@ def loadframe(fn):
                 acm=d["alpha_exp_cm"].ravel(), cm=d["cm_exp"].ravel())
 
 def stroke_split(a):
-    ip = int(np.argmax(a)); s = np.full(len(a), "up", dtype="<U4"); s[ip+1:] = "down"; return s
+    """Label each experimental point up/down. The record is a closed loop that may
+    start anywhere, so split on BOTH turning points rather than assuming it opens
+    on the upstroke."""
+    a = np.asarray(a, float)
+    imax, imin = int(np.argmax(a)), int(np.argmin(a))
+    s = np.empty(len(a), dtype="<U4")
+    if imin <= imax:                       # ... min ... max ...  -> rising between them
+        s[:] = "down"; s[imin:imax+1] = "up"
+    else:                                  # ... max ... min ...  -> falling between them
+        s[:] = "up";   s[imax+1:imin+1] = "down"
+    return s
 
 def model_branches(o):
     a = o["alpha_deg"]; up = o["alpha_dot"] > 0; br = {}
@@ -101,9 +114,13 @@ for i, (fn, airfoil, role) in enumerate(FRAMES):
     axs[i,1].plot(fr["acm"], fr["cm"], "o", color=PALETTE[1], ms=3.2, label="experiment")
     axs[i,1].set_ylabel("$C_{M,c/4}$"); axs[i,1].set_xlabel("α [deg]")
     axs[i,1].set_title(f"moment   RMS$_{{CM}}$={rms_cm:.3f}", pad=6, fontsize=8.5)
-    if i == 0:
-        for ax in axs[i]:
-            ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.75), ncol=2, fontsize=8)
+# one figure-level legend (the two per-axes legends were identical and orphaned).
+# constrained_layout does not reserve space for a figure legend, so shrink the
+# layout rect first, otherwise the legend lands on top of the first row's title.
+fig.get_layout_engine().set(rect=(0, 0, 1, 0.972))
+h, l = axs[0, 0].get_legend_handles_labels()
+fig.legend(h, l, loc="upper center", bbox_to_anchor=(0.5, 1.0), ncol=2,
+           fontsize=9, frameon=True)
 fig.savefig(HERE/"fig_validation_nasa_real.png"); plt.close(fig)
 
 res = pd.DataFrame(rows, columns=["frame","airfoil","role","M","k","alpha0_deg","amp_deg",

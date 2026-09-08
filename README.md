@@ -2,7 +2,7 @@
 ### UNISTALL™ Universal Unsteady-Aerodynamics & Dynamic-Stall Solver (UIBS core)
 
 **Author:** Akosa Samuel Onyejekwe (independent)
-**Date:** June 2026
+**Date:** 27 June 2026
 
 ---
 
@@ -65,24 +65,36 @@ frequency.
 ### Headline results
 
 - Static-polar errors **< 1 %** (lift-curve slope 0.11 %, C_L,max 0.52 %, stall
-  angle exact — see `06_postprocessing/validation/validation_static.csv`).
-- **All five** integral dynamic-stall metrics fall inside the published
-  experimental envelope.
+  angle within the 1° resolution of the reference table — see
+  `06_postprocessing/validation/validation_static.csv`). This is a *calibration
+  check*: the separation law is fitted to that polar. The predictive claim is
+  the held-out dynamic validation below.
 - Case A, the matched validation point (M = 0.30, k = 0.10, α = 10° ± 10°):
-  dynamic C_L,max = 1.909 at α = 17.4°, C_M,c/4 break = −0.234, C_D,max = 0.256,
+  dynamic C_L,max = 1.912 at α = 17.5°,
+  C_M,c/4 break = −0.236, C_D,max = 0.257,
   a 34 % overshoot above the static maximum
   (`05_solution/metrics_A_validation.csv`).
 - Case B, the retreating-blade station (M = 0.28, k = 0.074, α = 12° ± 8°):
-  C_L,max = 1.738 at α = 15.8°, C_M,c/4 break = −0.208
+  C_L,max = 1.742 at α = 15.8°,
+  C_M,c/4 break = −0.209
   (`05_solution/metrics_B_application.csv`).
+- Aerodynamic damping: both cases give a *figure-of-eight* C_M loop whose two
+  lobes very nearly cancel. The normalised damping Ξ̂ = Ξ / (ΔC_M · Δα) is
+  -0.008 (Case A) and -0.0013 (Case B) — negative,
+  but well inside the ±0.02 band where the residual is no larger than the
+  time-step discretisation error. Both are therefore reported as **neutrally
+  damped**, not as a positive stall-flutter finding.
 
 ### Held-out validation
 
 The dynamic constants were calibrated against **one** measured oscillating-aerofoil
 loop (frame 9302), frozen, and then used to predict four entirely held-out loops
 spanning light to deep stall. Across those four blind predictions the frozen model
-returns a **mean peak-lift error of 1.9 %** and a **mean moment-break error of
-0.023**. Applying the same frozen constants to a *different* aerofoil section
+returns a **mean peak-lift error of 1.7 %** and a **mean moment-break error of
+0.023** (mean RMS over the whole C_L loop is 0.195, i.e. the
+integral peaks are matched considerably better than the full loop shape —
+the residual is dominated by the downstroke/reattachment branch).
+Applying the same frozen constants to a *different* aerofoil section
 (frame 25104) degrades peak-lift agreement to about 10 %, confirming that the
 calibration encodes section-specific physics rather than a generic loop shape.
 Per-frame figures are in `06_postprocessing/validation/validation_nasa_real.csv`.
@@ -94,13 +106,13 @@ Per-frame figures are in `06_postprocessing/validation/validation_nasa_real.csv`
 | Folder | Contents |
 |---|---|
 | `01_geometry/` | Airfoil geometry generation, coordinate CSVs, profile/thickness plots |
-| `02_mesh/` | Body-fitted C-grid generation, mesh-quality metrics, mesh plots |
+| `02_mesh/` | Body-fitted O-grid generation, mesh-quality metrics, mesh plots |
 | `03_model_setup/` | Flow conditions, kinematics, thermo properties, solver config, static reference polar |
 | `04_solver/` | `unistall_solver.py` (UIBS core + field reconstruction + thermal) and `run_case.py` |
 | `05_solution/` | Time histories, Cp distributions, reconstructed fields, integral metrics, convergence residuals |
 | `06_postprocessing/` | All plots (`plots/`) plus validation & calibration against experiment (`validation/`) |
 | `08_engineering_drawings/` | Dimensioned 3-view, isometric, blade and section A-A drawings |
-| `aero_dynamic_stall_report.pdf` | Consolidated technical report |
+| `aero_dynamic_stall_report.pdf` | Consolidated technical report — built by the pipeline (report body + data dossier + plots album), not exported by hand |
 
 ---
 
@@ -117,20 +129,36 @@ report.
 ## Reproducing the pipeline
 
 Each numbered stage is a self-contained Python script that consumes the outputs
-of the previous stage. Run them in order, e.g.:
+of the previous stage. Every stage imports the shared plotting module
+`aero_style.py` at the repository root, so run them from a full checkout:
 
 ```bash
+pip install -r requirements.txt
+
 python3 01_geometry/generate_geometry.py
 python3 02_mesh/generate_mesh.py
 python3 03_model_setup/generate_setup.py
 python3 04_solver/run_case.py
 python3 06_postprocessing/make_all_plots.py
 python3 06_postprocessing/make_3d_plots.py
-python3 06_postprocessing/validation/validate.py
+python3 06_postprocessing/validation/validate.py            # static calibration check
+python3 06_postprocessing/validation/validate_nasa_real.py  # held-out dynamic validation
+python3 06_postprocessing/validation/validate_digitized.py  # certification harness (optional)
 ```
 
-**Requirements:** Python 3.12+ with `numpy`, `scipy`, `matplotlib`, and
-`pandas`.
+Every number, figure and table above is produced by these stages — nothing is
+transcribed by hand. `aero_dynamic_stall_report.pdf` is likewise a generated
+artefact (report body + data dossier + plots album, assembled from the same
+outputs), so it cannot fall out of step with the solver. The report-assembly
+tooling itself is not distributed here; the report is included as the finished
+PDF.
+
+`03_model_setup/` is the single source of truth for the case conditions: the
+solver and every plotting script read `flow_conditions.csv`, `kinematics.csv`
+and `solver_config.json` rather than restating any value.
+
+**Requirements:** Python 3.9+ with `numpy`, `scipy`, `matplotlib` and `pandas`
+(see `requirements.txt`). Developed and regenerated on Python 3.12.
 
 ---
 

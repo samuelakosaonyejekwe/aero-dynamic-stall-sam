@@ -10,7 +10,7 @@ air_density_rho,1.1,1.112,kg/m^3
 static_pressure_p_inf,90000.0,91200.0,Pa
 static_temperature_T_inf,288.15,287.5,K
 dynamic_viscosity_mu,1.78e-05,1.78e-05,Pa.s
-reynolds_number_Re_c,2000000.0,3550000.0,-
+reynolds_number_Re_c,1891000.0,3154000.0,-
 reduced_frequency_k,0.1,0.074,-
 advance_ratio_mu,,0.32,-
 rotor_radius_R,,8.18,m

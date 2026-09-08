@@ -11,10 +11,12 @@ STATIC SOURCES (recorded):
   [S1] Sheldahl & Klimas (1981) SAND80-2114, Sandia National Laboratories.
   [S2] Abbott & von Doenhoff (1959) "Theory of Wing Sections", Dover.
   [S3] McCroskey (1987) NASA TM-100019.
-DYNAMIC DATA SOURCE:
-  [S4] McAlister, Pucci, McCroskey & Carr (1982) NASA TM-84245 (digitised via
-       the Pancini BL-DSM-JFS-2021 repository); airfoil identity confirmed from
-       that repository's load_frame.m (frames 7019-14220 = NACA 0012).
+DYNAMIC DATA SOURCE (keys match the report's reference list):
+  [S4] McAlister, Carr & McCroskey (1978) NASA TP-1100.
+  [S5] McCroskey, McAlister, Carr & Pucci (1982) NASA TM-84245 — the loops used
+       here, digitised via the Pancini BL-DSM-JFS-2021 repository; airfoil
+       identity confirmed from that repository's load_frame.m
+       (frames 7019-14220 = NACA 0012).
   [S6] Leishman (2006) "Principles of Helicopter Aerodynamics" (model basis).
 """
 import sys
@@ -38,7 +40,11 @@ def slope(a, cl):
     m = a <= 8; return np.polyfit(a[m], cl[m], 1)[0]
 sm = slope(ref["alpha_deg"].values, Cl_model); sr = slope(ref["alpha_deg"].values, ref["Cl"].values)
 clmax_m, clmax_r = Cl_model.max(), ref["Cl"].max()
-ast_m = ref["alpha_deg"].values[np.argmax(Cl_model)]; ast_r = ref["alpha_deg"].values[np.argmax(ref["Cl"].values)]
+# model stall angle from the model's OWN 0.25-deg polar, not resampled onto the
+# reference's 1-deg grid (which would force an apparently exact match)
+ast_m = float(mp["alpha_deg"].values[np.argmax(mp["Cl_model"].values)])
+ast_r = float(ref["alpha_deg"].values[np.argmax(ref["Cl"].values)])
+d_ref = float(np.min(np.diff(np.sort(ref["alpha_deg"].values))))   # reference resolution
 lin = ref["alpha_deg"] <= 12; rmse = float(np.sqrt(np.mean((Cl_model[lin]-ref["Cl"][lin])**2)))
 pd.DataFrame([
  ["lift-curve slope a0 [1/deg]", round(sm,4), round(sr,4), round(abs(sm-sr),4),
@@ -47,6 +53,7 @@ pd.DataFrame([
   round(100*abs(clmax_m-clmax_r)/clmax_r,2), "S1,S3"],
  ["stall angle [deg]", round(ast_m,2), round(ast_r,2), round(abs(ast_m-ast_r),2),
   round(100*abs(ast_m-ast_r)/ast_r,2), "S1,S3"],
+ ["  (reference alpha resolution [deg])", d_ref, d_ref, 0.0, "-", "S1,S3"],
  ["RMSE C_L (α≤12°)", round(rmse,4), 0.0, round(rmse,4), "-", "S1,S2"],
 ], columns=["metric","model","reference","abs_error","pct_error","source"]
 ).to_csv(HERE/"validation_static.csv", index=False)
@@ -65,10 +72,11 @@ fig.savefig(HERE/"fig_validation_static_polar.png"); plt.close(fig)
 # ---------------- CALIBRATION RECORD ----------------
 import json
 cfg = json.load(open(SETUP/"solver_config.json")); cc = cfg["calibrated_constants"]
+ic = cfg["indicial_circulatory"]; tc = cfg["time_constants_semichords"]
 pd.DataFrame([
- ["A1, A2 (indicial circulatory)", "0.30, 0.70", "literature [S6]", "fixed"],
- ["b1, b2 (indicial circulatory)", "0.14, 0.53", "literature [S6]", "fixed"],
- ["Tp (pressure lag)", "1.7", "literature [S6]", "fixed"],
+ ["A1, A2 (indicial circulatory)", f"{ic['A1']:.2f}, {ic['A2']:.2f}", "literature [S6]", "fixed"],
+ ["b1, b2 (indicial circulatory)", f"{ic['b1']:.2f}, {ic['b2']:.2f}", "literature [S6]", "fixed"],
+ ["Tp (pressure lag)", str(tc["Tp"]), "literature [S6]", "fixed"],
  ["Tf (boundary-layer lag)", str(cc["Tf"]), "calibrated to real frame 9302", "tuned"],
  ["Tv, Tvl (vortex)", f"{cc['Tv']}, {cc['Tvl']}", "calibrated to real frame 9302", "tuned"],
  ["CN1 (DSV onset)", str(cc["CN1"]), "near static CLmax", "tuned"],

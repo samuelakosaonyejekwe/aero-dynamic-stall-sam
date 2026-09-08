@@ -1,0 +1,15 @@
+# UNISTALL dynamic-stall case study — runtime dependencies.
+# Pinned to lower bounds that the pipeline is known to run on.
+numpy>=1.24,<3
+scipy>=1.10
+pandas>=2.0
+matplotlib>=3.6
+
+# Report build (07_report/) only — NOT needed to run the solver pipeline.
+# On a PEP 668 "externally managed" Python, install these in a venv:
+#     python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+# or into your own site-packages with:  pip install --user <pkg>
+python-docx>=1.0     # assembles case.docx
+pillow>=9.0          # image sizing for the consolidated PDF
+reportlab>=4.0       # renders case.docx to PDF
+PyMuPDF>=1.23        # merges the report body with the dossier and plots album

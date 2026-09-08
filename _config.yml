@@ -2,3 +2,16 @@ theme: jekyll-theme-cayman
 title: "UNISTALL — Dynamic-Stall Prediction"
 description: "Reduced-order Unified Indicial–Beddoes State-Space (UIBS) solver for a helicopter retreating blade (NACA 0012), validated against NASA static and dynamic-stall experiments."
 author: Akosa Samuel Onyejekwe
+lang: en-US
+
+# _layouts/default.html calls {% seo %}, so the plugin must be declared here
+# rather than relied on from the theme gem's own config.
+plugins:
+  - jekyll-seo-tag
+
+# Link-preview card. assets/social-preview.jpg is the purpose-built 1280x640
+# card; without this, {% seo %} fell back to a 512x512 square icon and every
+# shared link rendered as a small thumbnail instead of the card.
+image: /assets/social-preview.jpg
+twitter:
+  card: summary_large_image
