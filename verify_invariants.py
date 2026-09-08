@@ -303,6 +303,21 @@ try:
 except ImportError:
     pass
 
+# --- a drawing sheet states a SCALE, so its paper units must be millimetres on
+#     the page. They were not: the figure was 8.5 in tall while the sheet was 210
+#     paper units, and savefig.bbox="tight" then grew it further, so a sheet whose
+#     title block read "1:270" printed at 1:263.8.
+try:
+    from PIL import Image as _Img
+    _sh='08_engineering_drawings/sheet1_general_arrangement_3view.png'
+    if os.path.exists(_sh):
+        _im=_Img.open(_sh); _dpi=_im.info.get('dpi',(150,150))[1]
+        _mm=_im.size[1]/_dpi*25.4
+        ck("drawing sheet is 210 mm tall, so its stated scale is true",
+           abs(_mm-210.0)<0.5, f"{_mm:.2f} mm")
+except ImportError:
+    pass
+
 # --- dead code / imports
 tot=0
 for f in sorted(glob.glob('0*/**/*.py',recursive=True)+glob.glob('*.py')):

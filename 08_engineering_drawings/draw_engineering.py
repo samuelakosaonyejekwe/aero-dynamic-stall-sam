@@ -34,13 +34,29 @@ sys.path.insert(0, str(ROOT))
 from aero_style import apply_style, INK, INK_SOFT, PALETTE   # noqa: E402
 
 apply_style()
+# A drawing sheet has a stated SCALE, so it must be saved at exactly the figure
+# size -- not cropped or expanded to the content. aero_style sets
+# savefig.bbox="tight", which grew the 271.76 x 210 mm sheet to 276.7 x 215.0 mm
+# and left a title block reading "1:270" on a sheet that printed at 1:263.8.
+# Passing bbox_inches=None to savefig does NOT help: matplotlib treats an
+# explicit None as "unspecified" and falls back to this rcParam, so the rcParam
+# itself has to be cleared.
+matplotlib.rcParams["savefig.bbox"] = None
 
 # ----------------------------------------------------------------------------
 # Sheet geometry (landscape, working in "paper mm": W x H proportional to fig)
 # ----------------------------------------------------------------------------
-FIG_W, FIG_H = 11.0, 8.5            # inches
-H = 210.0                            # paper height units
-W = H * FIG_W / FIG_H               # paper width units -> matches figure aspect
+# The sheet is drawn in "paper mm" and the title blocks state a SCALE, so those
+# units must BE millimetres on the page or the stated scale is wrong. The figure
+# used to be 11.0 x 8.5 in while H was 210 units, which stretched 210 units over
+# 215.9 mm: a sheet printed at its native dpi came out at 1:262.7 against a title
+# block reading "1:270", 2.8 % out. The figure size is now derived FROM the paper
+# units, so one unit is one millimetre and the stated scale is exact. The aspect
+# ratio is unchanged (271.76/210 = 11.0/8.5), so the layout is untouched.
+H = 210.0                            # paper height, mm (A4 short side)
+W = H * 11.0 / 8.5                  # paper width, mm -> keeps the original aspect
+FIG_H = H / 25.4                     # inches, so 1 paper unit == 1 mm on the page
+FIG_W = W / 25.4
 M = 8.0                             # outer margin -> border frame
 
 from project_meta import (STUDY_DATE_ISO as DATE,      # single source of truth
