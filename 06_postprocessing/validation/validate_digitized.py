@@ -30,7 +30,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 EXP = HERE/"experimental"; EXP.mkdir(exist_ok=True)
 sys.path.insert(0, str(ROOT)); sys.path.insert(0, str(ROOT/"04_solver"))
-from aero_style import apply_style, PALETTE, INK, INK_SOFT
+from aero_style import apply_style, PALETTE, INK
 import matplotlib.pyplot as plt
 import unistall_solver as us
 apply_style(); plt.rcParams["figure.constrained_layout.use"] = True

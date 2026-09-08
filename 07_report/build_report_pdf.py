@@ -41,7 +41,7 @@ from docx.oxml.ns import qn
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from PIL import Image as PILImage
 
-from reportlab.lib.pagesizes import letter
+
 from reportlab.lib.units import inch
 from reportlab.lib import colors
 from reportlab.lib.styles import ParagraphStyle

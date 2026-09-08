@@ -24,7 +24,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from aero_style import apply_style, INK, INK_SOFT, PALETTE
+from aero_style import apply_style, INK, INK_SOFT
 apply_style()
 # aero_style sets savefig.bbox="tight", which is right for the standalone PNGs
 # but wrong here: PdfPages.savefig() honours it and crops every page to its own

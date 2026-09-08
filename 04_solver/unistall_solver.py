@@ -75,9 +75,10 @@ Two auxiliary modules make the solver "universal" for engineering output:
         It does not affect the reported loads, which come from the UIBS core.
       - Nothing in the reconstruction knows about separation: it is a potential
         field, so at post-stall incidence the leading-edge suction peak it draws
-        (about Cp = -16 at 17.5 deg) is far deeper than a real separated flow
-        would sustain. The FIELD is clipped at -8 for display only; the surface
-        distributions and the closure metric see the unclipped peak.
+        (about Cp = -15 at 17.5 deg) is far deeper than a real separated flow
+        would sustain. Nothing is clipped. The FIELD nonetheless bottoms out near
+        -5.2, because the near-wall ring carrying that peak is masked, so the
+        contour plots understate the surface suction by about three times.
     The reconstruction is qualitative; the reported loads come from the UIBS
     core and do not depend on it.
   * Compressible thermal module          -> static & recovery (skin) temperature.
@@ -571,11 +572,15 @@ def reconstruct_field(naca_csv, c, U, M, alpha_deg, CL, CNv,
     # here was one of the three errors that put the surface-Cp closure at
     # -12.4%; see surface_cp.
     Cp = Cp_inc
-    # The field alone is clipped, and only for display: the potential-flow
-    # leading-edge suction peak runs to about Cp = -16 at 17.5 deg, which would
-    # flatten every contour plot onto two colours. surface_cp is NOT clipped, so
-    # the published surface distributions and the closure metric see the peak.
-    Cp = np.clip(Cp, -8.0, 1.0)
+    # NOT clipped. There used to be a np.clip(Cp, -8, 1) here, described as a
+    # display bound. It was a no-op and the description was wrong: the deepest
+    # value reached across all eight published fields is -5.2, and removing the
+    # clip leaves every field bit-identical, tested at conditions past the ones
+    # written out. The field never approaches the -15 the surface reaches
+    # because the near-wall ring that carries the leading-edge suction peak is
+    # masked below (see near_wall_cells_masked) -- so the FIELD understates the
+    # peak suction by about a factor of three relative to surface_cp, which is a
+    # property of the grid, not a bound imposed on the data.
     # thermodynamics
     T0 = T_inf*(1+(gamma-1)/2*M**2)
     T_static = T0 - speed**2/(2*cp)

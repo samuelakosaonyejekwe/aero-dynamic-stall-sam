@@ -25,7 +25,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 sys.path.insert(0, str(ROOT)); sys.path.insert(0, str(ROOT/"04_solver"))
-from aero_style import (apply_style, PALETTE, INK, INK_SOFT, GRID,
+from aero_style import (apply_style, PALETTE, INK, INK_SOFT, 
                         CMAP_PRESSURE, CMAP_CP, CMAP_TEMP, CMAP_VORT)
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon as MplPoly

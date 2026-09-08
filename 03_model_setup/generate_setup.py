@@ -161,7 +161,6 @@ config = {
         "domain_chords": [-1.0, 2.0, -1.2, 1.2],
         "near_wall_cells_masked": 1,
         "surface_cp_evaluation": "panel control points, exact self-terms",
-        "field_cp_display_clip": -8.0,
         "comment": "grid_*_solution are the sizes written to 05_solution/field_*.csv. "
                    "cp_distribution_*.csv is NOT read off any grid, and is no longer "
                    "probed at an offset either: the surface Cp is evaluated at the "
@@ -172,9 +171,11 @@ config = {
                    "missing vortex self-term rather than avoiding it -- the error grew "
                    "to -48.7 % as the probe approached the wall. near_wall_cells_masked "
                    "is the ring of field cells left blank because the regularised "
-                   "surface sheet is not resolved there. field_cp_display_clip applies "
-                   "to the plotted FIELD only; the surface Cp and the closure metric "
-                   "are unclipped. Accuracy of the reconstruction is measured, not "
+                   "surface sheet is not resolved there. Neither the field nor the "
+                   "surface Cp is clipped: the field's deepest value is about -5.2 "
+                   "because the near-wall ring carrying the leading-edge peak is "
+                   "masked, so it understates the surface peak (about -15) by roughly "
+                   "three times. Accuracy of the reconstruction is measured, not "
                    "asserted: the Cp_closure_error_pct row of metrics_*.csv reports how "
                    "well the integrated surface Cp reproduces the C_L it was given"},
     "calibration_state": "calibrated_per_case (static polar) + validated (dynamic)"

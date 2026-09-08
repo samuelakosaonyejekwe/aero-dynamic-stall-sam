@@ -26,9 +26,8 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.patches import (Rectangle, Circle, Ellipse, Polygon, FancyBboxPatch,
+from matplotlib.patches import (Rectangle, Circle, Polygon, FancyBboxPatch, 
                                 Arc, PathPatch)
-from matplotlib.path import Path as MplPath
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
@@ -70,7 +69,12 @@ SPEC = dict(
     Wf      = 2360.0,         # fuselage width
     Hh      = 3760.0,         # rotor hub height above ground
     Hf      = 4000.0,         # fin tip height above ground
-    Rdia    = 16360.0,        # main-rotor diameter  (= 2 * 8.18 m)
+    # Rdia and section_station_frac are DERIVED below from flow_conditions.csv
+    # rather than written here. They used to be hardcoded (16360.0 mm and 0.75)
+    # as a second copy of rotor_radius_R and radial_station_r_R. The copies
+    # happened to agree, but nothing made them agree: changing the rotor in
+    # 03_model_setup would have moved the solver and left these drawings
+    # silently dimensioning a different aircraft.
     trdia   = 3350.0,         # tail-rotor diameter
     track   = 2700.0,         # main-wheel track
     wbase   = 4830.0,         # wheelbase
@@ -80,8 +84,9 @@ SPEC = dict(
     tailrotor_from_nose = 15500.0 - 700.0,  # on the fin, 700 forward of the tail
     blade_twist_deg    = -13.0,
     root_cutout_frac   = 0.20,
-    section_station_frac = 0.75,
 )
+SPEC["Rdia"] = 2.0*float(_flowB["rotor_radius_R"])*1000.0     # m -> mm
+SPEC["section_station_frac"] = float(_flowB["radial_station_r_R"])
 SPEC["R"] = SPEC["Rdia"]/2.0
 SPEC["blade_chord"] = float(_flowB["chord_c"])*1000.0        # m -> mm
 # overall length: forward-most point (rotor disc) to aft-most (tail-rotor disc)

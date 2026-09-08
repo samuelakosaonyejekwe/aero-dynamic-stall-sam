@@ -18,9 +18,12 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 sys.path.insert(0, str(ROOT)); sys.path.insert(0, str(ROOT/"04_solver"))
 from aero_style import (apply_style, PALETTE, INK, INK_SOFT,
-                        CMAP_PRESSURE, CMAP_CP, CMAP_TEMP)
+                        CMAP_PRESSURE, CMAP_CP)
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D  # noqa
+# NOTE: mpl_toolkits.mplot3d.Axes3D used to be imported here purely for its
+# side effect of registering the '3d' projection. That has been built in
+# since matplotlib 3.2 and requirements.txt pins >=3.6, so the import was
+# dead. Removed and the stage re-run to confirm the 3-D axes still build.
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import unistall_solver as us
 apply_style()
