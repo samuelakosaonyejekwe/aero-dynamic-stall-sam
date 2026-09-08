@@ -146,15 +146,23 @@ Folder numbers are sections, not execution order: `03_model_setup/` runs first
 because it defines the case conditions that `01_geometry/` and `02_mesh/`
 consume. Execution order is given under *Reproducing the pipeline* below.
 
-| Folder | Contents |
+| Folder or file | Contents |
 |---|---|
+| `00_overview/` | `case_definition.md` — the industrial problem, reference aircraft and the two configurations solved |
 | `03_model_setup/` | Flow conditions, kinematics, thermo properties, solver config, static reference polar — **runs first** |
 | `01_geometry/` | Airfoil geometry generation, coordinate CSVs, profile/thickness plots |
 | `02_mesh/` | Body-fitted O-grid generation, mesh-quality metrics, mesh plots |
 | `04_solver/` | `unistall_solver.py` (UIBS core + field reconstruction + thermal) and `run_case.py` |
 | `05_solution/` | Time histories, Cp distributions, reconstructed fields, integral metrics, convergence residuals |
 | `06_postprocessing/` | All plots (`plots/`) plus validation & calibration against experiment (`validation/`) |
+| `07_report/` | The three scripts that assemble the report; their intermediate products (`case.docx`, plots album, data dossier) are rebuilt on every run and not committed |
 | `08_engineering_drawings/` | Dimensioned 3-view, isometric, blade and section A-A drawings |
+| `run_all.py` | Runs all fifteen stages in the correct order |
+| `verify_invariants.py` | Re-checks the physics and numerics the results must satisfy; fails the build on any violation |
+| `check_claims.py` | Asserts every number quoted in the prose still matches the generated CSVs |
+| `aero_style.py`, `project_meta.py` | Shared plotting style and study metadata; imported by most stages, so a clone needs both |
+| `requirements.txt` | Runtime dependencies, with the versions the pipeline is exercised on |
+| `LICENSE`, `NOTICE` | CC BY 4.0 licence text and the attribution notice |
 | `aero_dynamic_stall_report.pdf` | Consolidated technical report — built by the pipeline (report body + data dossier + plots album), not exported by hand |
 
 ---

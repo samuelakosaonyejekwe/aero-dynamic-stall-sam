@@ -186,6 +186,20 @@ _undeclared=[f for f in _gen if not _declared(os.path.basename(f))]
 ck("every generated artifact is declared in a stage manifest",
    not _undeclared, f"{len(_undeclared)} undeclared, e.g. {_undeclared[:3]}")
 
+# --- every shipped top-level entry must be described in the README's structure
+#     table. Making 00_overview/ and 07_report/ ship in an earlier pass left both
+#     undocumented there, so the table described a repository that no longer
+#     existed. Site furniture and the README itself are excluded.
+_rm=open('README.md',encoding='utf-8').read()
+_sec=_rm[_rm.index('## Repository structure'):]
+_sec=_sec[:_sec.index('\n## ',5)] if '\n## ' in _sec[5:] else _sec
+_tops=sorted({t.split('/')[0] if '/' in t else t
+              for t in subprocess.run(['git','ls-files'],capture_output=True,text=True).stdout.split()})
+_skip={'_config.yml','_includes','_layouts','assets','favicon.ico','README.md'}
+_undoc=[t for t in _tops if not t.startswith('.') and t not in _skip
+        and f'`{t}/`' not in _sec and f'`{t}`' not in _sec]
+ck("README structure table covers everything that ships", not _undoc, f"missing {_undoc}")
+
 # --- dead code / imports
 tot=0
 for f in sorted(glob.glob('0*/**/*.py',recursive=True)+glob.glob('*.py')):
