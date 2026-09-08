@@ -51,7 +51,9 @@ CASES = {"A_validation":  _case("case_A_validation",
          "B_application": _case("case_B_application",
                                 "Case B — rotor retreating blade (r/R=0.75, M=%.2f, k=%.3f, α=%.0f°±%.0f°)")}
 
-def airfoil_patch(ax, c, fc="#e3e9f0"):
+AIRFOIL_FC = "#e3e9f0"
+
+def airfoil_patch(ax, c, fc=AIRFOIL_FC):
     poly = np.column_stack([AF["x_over_c"].values*c, AF["y_over_c"].values*c])
     ax.add_patch(MplPoly(poly, closed=True, facecolor=fc, edgecolor=INK, lw=1.3, zorder=5))
 
@@ -188,6 +190,13 @@ def contour_plot(xu, yu, Z, title, cbar_label, cmap, c, fname,
                  lines=False, levels=24, vector=None, stream=None, vlim=None):
     X, Y = np.meshgrid(xu, yu)
     fig, ax = plt.subplots(figsize=(7.8, 5.2))
+    # The reconstruction masks the body AND the one ring of cells touching it
+    # (the surface sheet is not resolved within a cell of the wall). contourf
+    # draws nothing over NaN, so that ring let the white page show through as a
+    # ragged halo around the aerofoil in all 56 contour figures. Painting the
+    # axes background with the aerofoil fill makes the unresolved ring read as
+    # part of the body, which is the honest reading: there is no field there.
+    ax.set_facecolor(AIRFOIL_FC)
     lv = np.linspace(vlim[0], vlim[1], levels) if vlim else levels
     cf = ax.contourf(X, Y, Z, levels=lv, cmap=cmap, extend="both")
     if lines:
@@ -205,6 +214,13 @@ def contour_plot(xu, yu, Z, title, cbar_label, cmap, c, fname,
                   angles="xy", width=0.003)
     airfoil_patch(ax, c)
     cb = fig.colorbar(cf, ax=ax, pad=0.02, fraction=0.046)
+    # Tick the colorbar on ROUND values. A filled-contour colorbar ticks every
+    # contour level by default, so the percentile-clipped temperature and Mach
+    # scales came out labelled 291.6854, 291.5930, ... -- four decimals of
+    # spurious precision on a 0.65 K range, and long enough to crowd the axis.
+    from matplotlib.ticker import MaxNLocator
+    cb.locator = MaxNLocator(nbins=7, steps=[1, 2, 2.5, 5, 10])
+    cb.update_ticks()
     cb.set_label(cbar_label)
     ax.set_aspect("equal"); ax.grid(False)
     ax.set_xlim(xu.min(), xu.max()); ax.set_ylim(yu.min(), yu.max())
@@ -268,14 +284,22 @@ for cs in CASES:
     itp = RegularGridInterpolator((yu, xu), F["T_recovery_K"],
                                   bounds_error=False, fill_value=np.nan)
     xq = np.linspace(0.02*c, 0.98*c, 120)
-    yt = np.interp(xq/c, AF["x_over_c"][:len(AF)//2][::-1], AF["y_over_c"][:len(AF)//2][::-1])
+    # UNITS. yt comes from y_over_c and is NON-dimensional; xq, the offset and
+    # the interpolator grid are all in metres. Adding the two directly put the
+    # sample point 0.17 c above the surface instead of 0.03 c -- a factor 5.7 --
+    # so this "surface" profile was reading the field well outside the boundary
+    # layer while still looking perfectly smooth.
+    yt = np.interp(xq/c, AF["x_over_c"][:len(AF)//2][::-1],
+                   AF["y_over_c"][:len(AF)//2][::-1])*c        # -> metres
+    OFF = 0.03*c                                               # standoff [m]
     fig, ax = plt.subplots(figsize=(7.8, 4.6))
-    for off, lab, col in [(0.03*c, "upper surface", PALETTE[1]),
-                          (-0.03*c, "lower surface", PALETTE[0])]:
-        Tq = itp(np.column_stack([yt*np.sign(off)+off, xq]))
+    for sgn, lab, col in [(+1.0, "upper surface", PALETTE[1]),
+                          (-1.0, "lower surface", PALETTE[0])]:
+        Tq = itp(np.column_stack([sgn*(yt + OFF), xq]))
         ax.plot(xq/c, Tq, color=col, lw=2, label=lab)
     ax.set_xlabel("x/c"); ax.set_ylabel("recovery temperature  $T_r$ [K]")
-    ax.set_title("Surface recovery (skin) temperature profile — peak incidence", pad=10)
+    ax.set_title("Recovery (skin) temperature %.0f%%c off the surface — peak incidence"
+                 % (100*OFF/c), pad=10)
     ax.legend(loc="best")
     save(fig, f"temperature_profile_{cs}.png")
 

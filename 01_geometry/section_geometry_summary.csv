@@ -2,7 +2,7 @@ property,value,units
 section,NACA 0012,-
 chord_m,0.3,m
 max_thickness_t_c,0.12003,-
-x_at_max_thickness_x_c,0.303,-
+x_at_max_thickness_x_c,0.2998,-
 max_camber_y_c,0.0,-
 LE_radius_r_c,0.01587,-
 TE_type,open (0.252% gap),-

@@ -4,4 +4,7 @@ mean RMS_CL,0.195
 mean RMS_CM,0.063
 mean |CLmax| error [%],1.7
 mean |CMmin| error [abs],0.023
+mean |Xi_hat| model-exp discrepancy,0.072
+max |Xi_hat| model-exp discrepancy,0.144
+solver damping neutral band (us.DAMPING_TOL),0.08
 airfoil identity,CONFIRMED via load_frame.m (frames 7019-14220 = NACA0012)

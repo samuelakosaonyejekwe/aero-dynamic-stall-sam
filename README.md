@@ -45,11 +45,20 @@ against McAlister / Carr / McCroskey NACA 0012 data.
 | Case | Description | Chord | Mach | Reduced freq. k | Incidence |
 |---|---|---|---|---|---|
 | **A — validation rig** | NACA 0012 oscillating aerofoil (matches McAlister/McCroskey deep dynamic-stall test point) | 0.30 m | 0.30 | 0.10 | 10° ± 10° |
-| **B — application** | Retreating-blade section r/R = 0.75 (1/rev feathering) | 0.527 m | 0.28 | 0.074 | 12° ± 8° |
+| **B — application** | Retreating-blade section r/R = 0.75 (1/rev feathering) | 0.527 m | 0.279 | 0.074 | 12° ± 8° |
 
 **Reference aircraft (generic medium utility helicopter):** 4-blade main rotor,
-R = 8.18 m, blade chord 0.527 m, NACA 0012 section, tip speed ΩR ≈ 221 m/s,
-advance ratio μ = 0.32, analysis station r/R = 0.75.
+R = 8.18 m, blade chord 0.527 m, NACA 0012
+section, Ω = 27.0 rad/s so tip speed
+ΩR = 220.9 m/s, advance ratio μ = 0.32,
+analysis station r/R = 0.75.
+
+The free-stream state is over-determined — (p, T, ρ), (M, U, a) and, for Case B,
+the rotor kinematics all describe the same flow — so only the independent
+quantities are specified and the rest are derived: a = √(γRT), ρ = p/(RT),
+Re_c = ρUc/µ, with U = M·a for the rig and U = ΩR(r/R − μ) = 94.97 m/s
+for the blade station (which is why Case B's Mach is 0.2794, not a
+round 0.28). Nothing is quoted twice.
 
 ---
 
@@ -62,6 +71,13 @@ compressible static & recovery (skin) temperature fields; aerodynamic damping
 (stall-flutter indicator); and sensitivity to mean incidence and reduced
 frequency.
 
+The loads come from the UIBS core. The 2-D fields and surface Cp come from a
+separate potential-flow reconstruction driven by the UIBS circulation, and are
+qualitative: integrating the reconstructed surface Cp returns the C_L it was
+given to within -12.4 % (Case A) — a number the pipeline
+measures on every run and publishes as `Cp_closure_error_pct` in
+`05_solution/metrics_*.csv`, rather than a claim in a comment.
+
 ### Headline results
 
 - Static-polar errors **< 1 %** (lift-curve slope 0.11 %, C_L,max 0.52 %, stall
@@ -71,19 +87,26 @@ frequency.
   the held-out dynamic validation below.
 - Case A, the matched validation point (M = 0.30, k = 0.10, α = 10° ± 10°):
   dynamic C_L,max = 1.912 at α = 17.5°,
-  C_M,c/4 break = −0.236, C_D,max = 0.257,
+  C_M,c/4 break = -0.236, C_D,max = 0.257,
+  dynamic-stall onset at α = 12.50° (the incidence at which the
+  model's own vortex-shedding switch fires, C_N′ ≥ C_N1 on the upstroke),
   a 34 % overshoot above the static maximum
   (`05_solution/metrics_A_validation.csv`).
-- Case B, the retreating-blade station (M = 0.28, k = 0.074, α = 12° ± 8°):
+- Case B, the retreating-blade station (M = 0.279, k = 0.074, α = 12° ± 8°):
   C_L,max = 1.742 at α = 15.8°,
-  C_M,c/4 break = −0.209
+  C_M,c/4 break = -0.209, onset at α = 12.49°
   (`05_solution/metrics_B_application.csv`).
 - Aerodynamic damping: both cases give a *figure-of-eight* C_M loop whose two
   lobes very nearly cancel. The normalised damping Ξ̂ = Ξ / (ΔC_M · Δα) is
-  -0.008 (Case A) and -0.0013 (Case B) — negative,
-  but well inside the ±0.02 band where the residual is no larger than the
-  time-step discretisation error. Both are therefore reported as **neutrally
-  damped**, not as a positive stall-flutter finding.
+  -0.008 (Case A) and -0.0007 (Case B) — negative, but far inside the
+  ±0.08 band within which the model cannot resolve the sign. Both are
+  therefore reported as **neutrally damped**, not as a stall-flutter finding.
+  That band is *measured*, not assumed: recomputing Ξ̂ from the real NACA 0012
+  C_M loops and from the model at the same conditions gives a mean discrepancy
+  of 0.072 (max 0.144) — see
+  `06_postprocessing/validation/validation_nasa_real.csv`. It is *not* the
+  time-step error, which is about 45× smaller (refining 720 → 5760 steps per
+  cycle moves Ξ̂ by 0.0004).
 
 ### Held-out validation
 
@@ -101,13 +124,17 @@ Per-frame figures are in `06_postprocessing/validation/validation_nasa_real.csv`
 
 ---
 
-## Repository structure (pipeline order)
+## Repository structure
+
+Folder numbers are sections, not execution order: `03_model_setup/` runs first
+because it defines the case conditions that `01_geometry/` and `02_mesh/`
+consume. Execution order is given under *Reproducing the pipeline* below.
 
 | Folder | Contents |
 |---|---|
+| `03_model_setup/` | Flow conditions, kinematics, thermo properties, solver config, static reference polar — **runs first** |
 | `01_geometry/` | Airfoil geometry generation, coordinate CSVs, profile/thickness plots |
 | `02_mesh/` | Body-fitted O-grid generation, mesh-quality metrics, mesh plots |
-| `03_model_setup/` | Flow conditions, kinematics, thermo properties, solver config, static reference polar |
 | `04_solver/` | `unistall_solver.py` (UIBS core + field reconstruction + thermal) and `run_case.py` |
 | `05_solution/` | Time histories, Cp distributions, reconstructed fields, integral metrics, convergence residuals |
 | `06_postprocessing/` | All plots (`plots/`) plus validation & calibration against experiment (`validation/`) |
@@ -128,34 +155,46 @@ report.
 
 ## Reproducing the pipeline
 
-Each numbered stage is a self-contained Python script that consumes the outputs
-of the previous stage. Every stage imports the shared plotting module
-`aero_style.py` at the repository root, so run them from a full checkout:
+Each stage is a self-contained Python script that consumes the outputs of the
+stages before it, in the order shown. The plotting stages import the shared
+style module `aero_style.py` at the repository root, so run them from a full
+checkout (`04_solver/` and `03_model_setup/` do not need it; every other stage
+does):
 
 ```bash
 pip install -r requirements.txt
 
+# NOTE the order: 03_model_setup runs FIRST. It is the single source of truth for
+# the case conditions, and both 01_geometry (chord) and 02_mesh (chord, rho, U,
+# mu) consume them, so it cannot run after them.
+python3 03_model_setup/generate_setup.py
 python3 01_geometry/generate_geometry.py
 python3 02_mesh/generate_mesh.py
-python3 03_model_setup/generate_setup.py
 python3 04_solver/run_case.py
 python3 06_postprocessing/make_all_plots.py
 python3 06_postprocessing/make_3d_plots.py
 python3 06_postprocessing/validation/validate.py            # static calibration check
 python3 06_postprocessing/validation/validate_nasa_real.py  # held-out dynamic validation
 python3 06_postprocessing/validation/validate_digitized.py  # certification harness (optional)
+
+python3 check_claims.py    # asserts every number quoted below still matches the CSVs
 ```
 
-Every number, figure and table above is produced by these stages — nothing is
-transcribed by hand. `aero_dynamic_stall_report.pdf` is likewise a generated
+Every number, figure and table above is produced by these stages. The handful
+that are necessarily transcribed — the results quoted in this README and in
+`00_overview/case_definition.md`, because Markdown cannot compute — are checked
+against the generated CSVs by `check_claims.py`, which the pipeline runs last
+and which fails the build if any of them has drifted. `aero_dynamic_stall_report.pdf` is likewise a generated
 artefact (report body + data dossier + plots album, assembled from the same
 outputs), so it cannot fall out of step with the solver. The report-assembly
 tooling itself is not distributed here; the report is included as the finished
 PDF.
 
-`03_model_setup/` is the single source of truth for the case conditions: the
-solver and every plotting script read `flow_conditions.csv`, `kinematics.csv`
-and `solver_config.json` rather than restating any value.
+`03_model_setup/` is the single source of truth for the case conditions.
+`generate_geometry.py`, `generate_mesh.py`, `run_case.py`, `make_all_plots.py`,
+`make_3d_plots.py` and the validation scripts all read `flow_conditions.csv`,
+`kinematics.csv`, `material_thermo_properties.csv` and `solver_config.json`
+rather than restating any value — which is why the setup stage runs first.
 
 **Requirements:** Python 3.9+ with `numpy`, `scipy`, `matplotlib` and `pandas`
 (see `requirements.txt`). Developed and regenerated on Python 3.12.

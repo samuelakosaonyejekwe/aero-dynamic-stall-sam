@@ -6,11 +6,16 @@ dynamic_overshoot_ratio,1.339
 CM_min(c/4),-0.236
 alpha_at_CMmin_deg,19.64
 CD_max,0.257
-stall_onset_alpha_deg,11.22
+CD_min,-0.093
+CD_cycle_mean,0.0476
+stall_onset_alpha_deg,12.5
 aero_damping_Xi,-0.00066
 aero_damping_Xi_normalised,-0.008
+damping_neutral_band,0.08
 stall_flutter_risk,neutral (within model resolution)
 CL_hysteresis_loop_area,0.1642
+Cp_closure_error_pct,-12.4
+Cp_TE_jump_max_over_phases,0.153
 reduced_frequency_k,0.1
 mach_M,0.3
 mean_alpha_deg,10.0

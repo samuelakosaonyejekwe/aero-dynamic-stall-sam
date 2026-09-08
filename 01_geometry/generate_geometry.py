@@ -27,7 +27,12 @@ sys.path.insert(0, str(HERE.parent))
 from aero_style import apply_style, PALETTE, INK, INK_SOFT
 apply_style()
 
-CHORD = 0.30          # m, model-scale chord (typical oscillating-airfoil rig)
+# The chord is READ from 03_model_setup/flow_conditions.csv (case A, the
+# oscillating-airfoil rig), not restated here: it was a second independent copy
+# of a value the setup stage already publishes, and the README claims that stage
+# is the single source of truth for the case conditions.
+CHORD = float(pd.read_csv(HERE.parent/"03_model_setup"/"flow_conditions.csv"
+                          ).set_index("parameter").loc["chord_c", "case_A_validation"])
 N_PTS = 160           # surface points per side (cosine-clustered)
 
 def naca_4digit(code="0012", n=N_PTS):
@@ -68,7 +73,13 @@ df.to_csv(HERE/"naca0012_coordinates.csv", index=False)
 
 # ---- geometric properties ----
 tmax = 2*yt.max()
-xtmax = xc[np.argmax(yt)]
+# Analytic stationary point of the 4-digit thickness polynomial. Reporting
+# xc[argmax(yt)] returned 0.303 -- the nearest of the 160 cosine nodes, an
+# artefact of the sampling, not a property of the section (and it disagreed with
+# the 0.30c dimensioned on drawing sheet 4).
+from scipy.optimize import brentq as _brentq
+_dyt = lambda x: (0.14845/np.sqrt(x) - 0.1260 - 0.7032*x + 0.8529*x**2 - 0.4060*x**3)
+xtmax = _brentq(_dyt, 0.05, 0.9)
 # enclosed area via shoelace
 area = 0.5*np.abs(np.dot(X, np.roll(Y, -1)) - np.dot(Y, np.roll(X, -1)))
 # LE radius for 4-digit: r/c = 1.1019 t^2

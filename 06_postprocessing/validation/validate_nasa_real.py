@@ -55,10 +55,16 @@ FRAMES = [
  ("frame_10118.mat", "NACA 0012", "held-out: 15°±5°, k0.10"),
  ("frame_25104.mat", "AMES-01",   "cross-check (NOT NACA0012): 10°±10°, k0.10"),
 ]
-# The UIBS march is chord-independent: omega = 2kU/c and ds = 2U dt/c, and
-# dt/T_I scales the same way, so every recurrence depends on (k, M) alone. CHORD
-# is therefore a nominal value that does not affect any load reported below.
-CHORD = 0.30
+# The UIBS march is chord- AND speed-independent: omega = 2kU/c, ds = 2U dt/c and
+# dt/T_I = pi/(k n_per_cycle K_alpha) all scale so that every recurrence depends
+# on (k, M) alone. CHORD and the speed of sound below are therefore nominal
+# values that do not affect any load reported here; they are read from the case
+# setup rather than restated so that nothing in this file can silently disagree
+# with it. (test_frame_independence() at the bottom asserts the independence.)
+_fl = pd.read_csv(ROOT/"03_model_setup"/"flow_conditions.csv"
+                  ).set_index("parameter")["case_A_validation"]
+CHORD = float(_fl["chord_c"])
+A_SND = float(_fl["speed_of_sound_a"])
 
 def loadframe(fn):
     d = sio.loadmat(str(FR/fn)); g = lambda k: float(d[k].ravel()[0])
@@ -88,7 +94,7 @@ def model_branches(o):
 rows = []
 fig, axs = plt.subplots(len(FRAMES), 2, figsize=(11, 3.0*len(FRAMES)))
 for i, (fn, airfoil, role) in enumerate(FRAMES):
-    fr = loadframe(fn); U = fr["M"]*340.0
+    fr = loadframe(fn); U = fr["M"]*A_SND
     o = us.solve_dynamic_stall(fr["a0"], fr["da"], fr["k"], fr["M"], CHORD, U, f_static,
                                CNalpha=CNALPHA, consts=FROZEN, n_per_cycle=720, n_cycles=6)
     br = model_branches(o)
@@ -101,10 +107,24 @@ for i, (fn, airfoil, role) in enumerate(FRAMES):
     mcm = np.array([np.interp(av, br[s][0], br[s][2]) for s, av in zip(scm, fr["acm"])])
     rms_cl = float(np.sqrt(np.mean((mcl-fr["cl"])**2)))
     rms_cm = float(np.sqrt(np.mean((mcm-fr["cm"])**2)))
+    # ---- normalised aerodynamic damping, model vs EXPERIMENT, at the same
+    #      condition. This is what sets the neutral band in the solver
+    #      (us.DAMPING_TOL): a damping residual smaller than the discrepancy
+    #      below cannot be claimed as a finding. The band used to be justified
+    #      as "no larger than the time-step discretisation error", which is
+    #      false by a factor of ~45 -- refining n_per_cycle 720 -> 5760 moves
+    #      Xi_hat by 0.0004. ----
+    _, xh_mod = us.aerodynamic_damping(o["alpha_deg"], o["CM"], normalise=True)
+    _ae = np.append(fr["acm"], fr["acm"][0])          # close the measured loop
+    _ce = np.append(fr["cm"], fr["cm"][0])
+    _ar = np.radians(_ae)
+    _box = (_ce.max()-_ce.min())*(_ar.max()-_ar.min())
+    xh_exp = float(-us._trapz(_ce, _ar)/_box) if _box > 0 else np.nan
     rows.append([fn.replace(".mat",""), airfoil, role, round(fr["M"],3), round(fr["k"],3),
                  round(fr["a0"],1), round(fr["da"],1), round(rms_cl,4), round(rms_cm,4),
                  round(float(o["CL"].max()),3), round(float(fr["cl"].max()),3),
-                 round(float(o["CM"].min()),3), round(float(fr["cm"].min()),3)])
+                 round(float(o["CM"].min()),3), round(float(fr["cm"].min()),3),
+                 round(xh_mod,4), round(xh_exp,4)])
     axs[i,0].plot(o["alpha_deg"], o["CL"], color=PALETTE[0], lw=2, label="UNISTALL")
     axs[i,0].plot(fr["acl"], fr["cl"], "o", color=PALETTE[1], ms=3.2, label="experiment")
     axs[i,0].set_ylabel("$C_L$"); axs[i,0].set_xlabel("α [deg]")
@@ -124,7 +144,8 @@ fig.legend(h, l, loc="upper center", bbox_to_anchor=(0.5, 1.0), ncol=2,
 fig.savefig(HERE/"fig_validation_nasa_real.png"); plt.close(fig)
 
 res = pd.DataFrame(rows, columns=["frame","airfoil","role","M","k","alpha0_deg","amp_deg",
-        "RMS_CL","RMS_CM","CLmax_model","CLmax_exp","CMmin_model","CMmin_exp"])
+        "RMS_CL","RMS_CM","CLmax_model","CLmax_exp","CMmin_model","CMmin_exp",
+        "Xihat_model","Xihat_exp"])
 res["airfoil_source"] = "load_frame.m mapping (Pancini repo); data NASA TM-84245"
 res.to_csv(HERE/"validation_nasa_real.csv", index=False)
 
@@ -132,12 +153,37 @@ res.to_csv(HERE/"validation_nasa_real.csv", index=False)
 ho = res[(res.airfoil == "NACA 0012") & (res.role.str.startswith("held-out"))]
 clpe = (100*(ho.CLmax_model-ho.CLmax_exp).abs()/ho.CLmax_exp).mean()
 cmpe = (ho.CMmin_model-ho.CMmin_exp).abs().mean()
+# resolution of the damping metric: the model-vs-experiment spread in Xi_hat over
+# every real NACA 0012 frame. This is the evidence behind us.DAMPING_TOL.
+n0012 = res[res.airfoil == "NACA 0012"]
+dxi = (n0012.Xihat_model - n0012.Xihat_exp).abs()
 pd.DataFrame({"metric": ["NACA0012 held-out frames", "mean RMS_CL", "mean RMS_CM",
                          "mean |CLmax| error [%]", "mean |CMmin| error [abs]",
+                         "mean |Xi_hat| model-exp discrepancy",
+                         "max |Xi_hat| model-exp discrepancy",
+                         "solver damping neutral band (us.DAMPING_TOL)",
                          "airfoil identity"],
              "value": [len(ho), round(ho.RMS_CL.mean(),3), round(ho.RMS_CM.mean(),3),
                        round(clpe,1), round(cmpe,3),
+                       round(float(dxi.mean()),3), round(float(dxi.max()),3),
+                       us.DAMPING_TOL,
                        "CONFIRMED via load_frame.m (frames 7019-14220 = NACA0012)"]}
             ).to_csv(HERE/"validation_realdata_summary.csv", index=False)
+if us.DAMPING_TOL < float(dxi.mean()) - 1e-9:
+    print(f"[nasa-real] WARNING: solver DAMPING_TOL={us.DAMPING_TOL} is tighter than the "
+          f"measured model-vs-experiment spread {dxi.mean():.3f}; damping verdicts "
+          "outside the band are not supported by the validation data.")
 print(f"[nasa-real] {len(ho)} held-out NACA0012 frames: meanRMS_CL={ho.RMS_CL.mean():.3f}, "
-      f"mean|CLmax|err={clpe:.1f}%, mean|CMmin|err={cmpe:.3f}; airfoil CONFIRMED")
+      f"mean|CLmax|err={clpe:.1f}%, mean|CMmin|err={cmpe:.3f}; airfoil CONFIRMED; "
+      f"Xi_hat model-exp spread mean={dxi.mean():.3f} max={dxi.max():.3f} "
+      f"(solver band {us.DAMPING_TOL})")
+
+# ---- invariant: the march really is chord/speed independent, as claimed above
+def _frame_independence_check():
+    o1 = us.solve_dynamic_stall(10.0, 10.0, 0.10, 0.30, 0.30, 0.30*A_SND, f_static,
+                                CNalpha=CNALPHA, consts=FROZEN, n_per_cycle=360, n_cycles=3)
+    o2 = us.solve_dynamic_stall(10.0, 10.0, 0.10, 0.30, 1.70, 0.30*A_SND, f_static,
+                                CNalpha=CNALPHA, consts=FROZEN, n_per_cycle=360, n_cycles=3)
+    d = float(np.max(np.abs(o1["CL"] - o2["CL"])))
+    assert d < 1e-10, f"march is NOT chord-independent: max |dCL| = {d:.3e}"
+_frame_independence_check()

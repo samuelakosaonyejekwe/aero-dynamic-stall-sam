@@ -1,5 +1,10 @@
 # UNISTALL dynamic-stall case study — runtime dependencies.
-# Pinned to lower bounds that the pipeline is known to run on.
+#
+# The lower bounds below are the versions that first provide every API the
+# pipeline calls (numpy: np.trapezoid is optional, the solver binds np.trapz as a
+# fallback; matplotlib 3.6: Figure.get_layout_engine, used by the validation
+# figure). They are minimum-API bounds, NOT a tested matrix: the pipeline is
+# exercised end to end only on the versions recorded under "Verified on" below.
 numpy>=1.24,<3
 scipy>=1.10
 pandas>=2.0
@@ -13,3 +18,7 @@ python-docx>=1.0     # assembles case.docx
 pillow>=9.0          # image sizing for the consolidated PDF
 reportlab>=4.0       # renders case.docx to PDF
 PyMuPDF>=1.23        # merges the report body with the dossier and plots album
+
+# Verified on (full run_all.py, all stages green):
+#   Python 3.12.3, numpy 1.26.4, scipy 1.11.4, pandas 3.0.3, matplotlib 3.6.3,
+#   python-docx 1.x, pillow 10.2.0, reportlab 5.0.1, PyMuPDF 1.27.2

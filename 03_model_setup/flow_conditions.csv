@@ -3,16 +3,17 @@ case_id,A_validation_rig,B_application_rotor,-
 description,NACA0012 oscillating airfoil (wind tunnel),"Retreating-blade section, r/R=0.75, mu=0.32",-
 airfoil,NACA 0012,NACA 0012,-
 chord_c,0.3,0.527,m
-freestream_mach_M,0.3,0.28,-
-freestream_velocity_U,102.0,95.8,m/s
-speed_of_sound_a,340.0,340.0,m/s
-air_density_rho,1.1,1.112,kg/m^3
+freestream_mach_M,0.3,0.2794,-
+freestream_velocity_U,102.09,94.97,m/s
+speed_of_sound_a,340.29,339.91,m/s
+air_density_rho,1.0881,1.1051,kg/m^3
 static_pressure_p_inf,90000.0,91200.0,Pa
 static_temperature_T_inf,288.15,287.5,K
 dynamic_viscosity_mu,1.78e-05,1.78e-05,Pa.s
-reynolds_number_Re_c,1891000.0,3154000.0,-
+reynolds_number_Re_c,1872000.0,3107000.0,-
 reduced_frequency_k,0.1,0.074,-
 advance_ratio_mu,,0.32,-
 rotor_radius_R,,8.18,m
 radial_station_r_R,,0.75,-
 rotor_speed_Omega,,27.0,rad/s
+rotor_tip_speed_OmegaR,,220.86,m/s

@@ -19,13 +19,36 @@ HERE = Path(__file__).resolve().parent
 # ============================================================ FLOW CONDITIONS
 # Case A: oscillating-airfoil VALIDATION rig (matches McAlister/McCroskey NACA0012)
 # Case B: APPLICATION - medium utility helicopter retreating-blade section r/R=0.75
-# chord [m], Mach, U [m/s], rho [kg/m^3], mu [Pa.s] -- Re_c is DERIVED, never quoted
-CH_A, CH_B   = 0.30, 0.527
-U_A,  U_B    = 102.0, 95.8
-RHO_A, RHO_B = 1.10, 1.112
-MU           = 1.78e-5
-RE_A = RHO_A*U_A*CH_A/MU          # 1.891e6
-RE_B = RHO_B*U_B*CH_B/MU          # 3.154e6
+#
+# The free-stream state is OVER-DETERMINED: (p, T, rho), (M, U, a) and, for case
+# B, the rotor kinematics all describe the same flow. Quoting all of them
+# independently left them contradicting each other -- rho was 1.09 % (A) and
+# 0.62 % (B) away from p/(R*T), and U_B was 0.63 % away from M*a and 0.87 % away
+# from the rotor kinematics that are supposed to define it. Only the independent
+# quantities are stated here; everything else is DERIVED.
+#
+#   INDEPENDENT: p_inf, T_inf, mu, chord, reduced frequency k
+#                case A -- M (the wind-tunnel test point is specified by Mach)
+#                case B -- Omega, R, r/R, mu_advance (the blade station defines U)
+#   DERIVED:     a = sqrt(gamma*R*T),  rho = p/(R*T),  Re_c = rho*U*c/mu
+#                case A -- U = M*a ;  case B -- U = Omega*R*(r/R - mu_adv), M = U/a
+GAMMA, R_GAS = 1.4, 287.05
+
+CH_A, CH_B   = 0.30, 0.527            # chord [m]
+K_A,  K_B    = 0.10, 0.074            # reduced frequency (also used by KINEMATICS)
+P_A,  P_B    = 90000.0, 91200.0       # static pressure [Pa]
+T_A,  T_B    = 288.15, 287.5          # static temperature [K]
+MU           = 1.78e-5                # dynamic viscosity [Pa.s]
+M_A          = 0.30                   # case A test-point Mach
+OMEGA, R_ROT, R_STA, ADV = 27.0, 8.18, 0.75, 0.32   # case B rotor kinematics
+
+A_A, A_B     = np.sqrt(GAMMA*R_GAS*T_A), np.sqrt(GAMMA*R_GAS*T_B)
+RHO_A, RHO_B = P_A/(R_GAS*T_A), P_B/(R_GAS*T_B)
+U_A          = M_A*A_A                              # rig: Mach is the test point
+U_B          = OMEGA*R_ROT*(R_STA - ADV)            # retreating blade at psi=270 deg
+M_B          = U_B/A_B
+RE_A = RHO_A*U_A*CH_A/MU
+RE_B = RHO_B*U_B*CH_B/MU
 
 flow = pd.DataFrame([
     ["case_id",                 "A_validation_rig", "B_application_rotor", "-"],
@@ -33,19 +56,20 @@ flow = pd.DataFrame([
                                 "Retreating-blade section, r/R=0.75, mu=0.32", "-"],
     ["airfoil",                 "NACA 0012", "NACA 0012", "-"],
     ["chord_c",                 CH_A, CH_B, "m"],
-    ["freestream_mach_M",       0.30, 0.28, "-"],
-    ["freestream_velocity_U",   U_A, U_B, "m/s"],
-    ["speed_of_sound_a",        340.0, 340.0, "m/s"],
-    ["air_density_rho",         RHO_A, RHO_B, "kg/m^3"],
-    ["static_pressure_p_inf",   90000.0, 91200.0, "Pa"],
-    ["static_temperature_T_inf",288.15, 287.5, "K"],
+    ["freestream_mach_M",       round(M_A, 4), round(M_B, 4), "-"],
+    ["freestream_velocity_U",   round(U_A, 2), round(U_B, 2), "m/s"],
+    ["speed_of_sound_a",        round(A_A, 2), round(A_B, 2), "m/s"],
+    ["air_density_rho",         round(RHO_A, 4), round(RHO_B, 4), "kg/m^3"],
+    ["static_pressure_p_inf",   P_A, P_B, "Pa"],
+    ["static_temperature_T_inf",T_A, T_B, "K"],
     ["dynamic_viscosity_mu",    MU, MU, "Pa.s"],
     ["reynolds_number_Re_c",    float("%.4g" % RE_A), float("%.4g" % RE_B), "-"],
-    ["reduced_frequency_k",     0.10, 0.074, "-"],
-    ["advance_ratio_mu",        np.nan, 0.32, "-"],
-    ["rotor_radius_R",          np.nan, 8.18, "m"],
-    ["radial_station_r_R",      np.nan, 0.75, "-"],
-    ["rotor_speed_Omega",       np.nan, 27.0, "rad/s"],
+    ["reduced_frequency_k",     K_A, K_B, "-"],
+    ["advance_ratio_mu",        np.nan, ADV, "-"],
+    ["rotor_radius_R",          np.nan, R_ROT, "m"],
+    ["radial_station_r_R",      np.nan, R_STA, "-"],
+    ["rotor_speed_Omega",       np.nan, OMEGA, "rad/s"],
+    ["rotor_tip_speed_OmegaR",  np.nan, round(OMEGA*R_ROT, 2), "m/s"],
 ], columns=["parameter", "case_A_validation", "case_B_application", "units"])
 flow.to_csv(HERE/"flow_conditions.csv", index=False)
 
@@ -58,8 +82,8 @@ def kin_row(case, U, c, k, a_mean, a_amp):
     return [case, a_mean, a_amp, k, round(omega,3), round(f_hz,3), round(T,5)]
 
 kin = pd.DataFrame([
-    kin_row("A_validation_rig", U_A, CH_A, 0.10, 10.0, 10.0),
-    kin_row("B_application_rotor", U_B, CH_B, 0.074, 12.0, 8.0),
+    kin_row("A_validation_rig", U_A, CH_A, K_A, 10.0, 10.0),
+    kin_row("B_application_rotor", U_B, CH_B, K_B, 12.0, 8.0),
 ], columns=["case_id", "alpha_mean_deg", "alpha_amp_deg", "reduced_freq_k",
             "omega_rad_s", "freq_Hz", "period_s"])
 kin["pitch_axis_x_c"] = 0.25
@@ -67,12 +91,18 @@ kin["motion"] = "alpha(t)=mean+amp*sin(omega t)"
 kin.to_csv(HERE/"kinematics.csv", index=False)
 
 # ============================================================ MATERIAL/THERMO
+# cp and the recovery factor are DERIVED from gamma, R and Pr rather than
+# quoted: stating r = Pr^(1/3) next to 0.892 (Pr^(1/3) = 0.8963) and cp = 1004.5
+# next to gamma*R/(gamma-1) = 1004.68 left each value contradicting its own note.
+PR = 0.72                       # GAMMA and R_GAS are set with the flow conditions
+CP_AIR = GAMMA*R_GAS/(GAMMA - 1.0)
+REC_FAC = PR**(1.0/3.0)
 thermo = pd.DataFrame([
-    ["air_gamma",            1.4,      "-",      "ratio of specific heats"],
-    ["air_gas_constant_R",   287.05,   "J/kg/K", "specific gas constant"],
-    ["air_cp",               1004.5,   "J/kg/K", "specific heat const. pressure"],
-    ["air_Prandtl_Pr",       0.72,     "-",      "Prandtl number"],
-    ["recovery_factor_r",    0.892,    "-",      "turbulent, r=Pr^(1/3)"],
+    ["air_gamma",            GAMMA,    "-",      "ratio of specific heats"],
+    ["air_gas_constant_R",   R_GAS,    "J/kg/K", "specific gas constant"],
+    ["air_cp",               round(CP_AIR, 2), "J/kg/K", "derived: gamma*R/(gamma-1)"],
+    ["air_Prandtl_Pr",       PR,       "-",      "Prandtl number"],
+    ["recovery_factor_r",    round(REC_FAC, 4), "-", "derived: turbulent, r=Pr^(1/3)"],
     ["sutherland_C1",        1.458e-6, "kg/m/s/K^0.5", "Sutherland viscosity const"],
     ["sutherland_S",         110.4,    "K",      "Sutherland temperature"],
     ["blade_skin_material",  "Al-2024-T3", "-",  "blade skin"],
@@ -118,13 +148,31 @@ config = {
     "numerics": {"steps_per_cycle": 720, "n_cycles": 6, "report_cycle": 6,
                  "integrator": "semichord-marching exponential-recurrence"},
     "field_reconstruction": {
-        "method": "constant-strength source panels (flow tangency) + elliptic bound "
-                  "vortex sheet matched to the UIBS C_L + Lamb-Oseen dynamic-stall vortex",
+        "method": "constant-strength source panels solved for flow tangency against a "
+                  "uniform bound vortex sheet ON THE BODY SURFACE carrying "
+                  "Gamma = 0.5*C_L*U*c (Kutta-Joukowski, matched to the UIBS C_L), "
+                  "plus a Lamb-Oseen dynamic-stall vortex",
         "n_panels": 160,
+        "panel_distribution": "closed section, cosine-clustered on each surface "
+                              "separately -> clustering at BOTH the leading and the "
+                              "trailing edge",
         "grid_nx_default": 260, "grid_ny_default": 200,
         "grid_nx_solution": 220, "grid_ny_solution": 170,
         "domain_chords": [-1.0, 2.0, -1.2, 1.2],
-        "comment": "grid_*_solution are the sizes actually written to 05_solution/field_*.csv"},
+        "near_wall_cells_masked": 1,
+        "surface_cp_probe_offset_chords": 0.015,
+        "comment": "grid_*_solution are the sizes written to 05_solution/field_*.csv. "
+                   "cp_distribution_*.csv is NOT read off any grid: the surface Cp is "
+                   "evaluated directly from the panel singularities at "
+                   "surface_cp_probe_offset_chords outside the wall, so it does not "
+                   "depend on a grid at all. That offset is the value at which the "
+                   "closure error is smallest (-14.4 % at alpha 19 deg, against "
+                   "-19.7 % at 0.008c and -17.0 % at 0.030c). near_wall_cells_masked "
+                   "is the ring of field cells left blank because the regularised "
+                   "surface sheet is not resolved there. Accuracy of the "
+                   "reconstruction is measured, not asserted: the "
+                   "Cp_closure_error_pct row of metrics_*.csv reports how well the "
+                   "integrated surface Cp reproduces the C_L it was given"},
     "calibration_state": "calibrated_per_case (static polar) + validated (dynamic)"
 }
 with open(HERE/"solver_config.json", "w") as fp:
@@ -152,4 +200,8 @@ static["source"] = "Sheldahl&Klimas SAND80-2114; Abbott&vonDoenhoff; NASA TM-100
 static.to_csv(HERE/"static_polar_reference.csv", index=False)
 
 print("[setup] wrote flow_conditions, kinematics, thermo, solver_config.json, static_polar_reference")
-print("        validation k=0.10 alpha=10+10sin; application k=0.074 alpha=12+8sin")
+print("        A: M=%.4f U=%.2f a=%.2f rho=%.4f Re=%.3e   (Mach is the test point)"
+      % (M_A, U_A, A_A, RHO_A, RE_A))
+print("        B: M=%.4f U=%.2f a=%.2f rho=%.4f Re=%.3e   (U from Omega*R*(r/R-mu))"
+      % (M_B, U_B, A_B, RHO_B, RE_B))
+print("        validation k=%.3f alpha=10+10sin; application k=%.3f alpha=12+8sin" % (K_A, K_B))

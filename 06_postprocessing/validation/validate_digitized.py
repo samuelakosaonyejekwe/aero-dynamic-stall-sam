@@ -9,7 +9,8 @@ into  06_postprocessing/validation/experimental/  and this script will:
   * run the UNISTALL solver at the matching condition (constants frozen),
   * match each experimental point to the model loop on the correct stroke,
   * compute point-by-point error metrics: RMS C_L / C_M, max |ΔC_L|,
-    moment-break error, and lift-loop-area error, and
+    peak-lift error, moment-break error and lift-loop-area error (all of them,
+    written to validation_digitized_<file>.csv), and
   * produce an experiment-vs-model overlay figure.
 
 If no experimental data are present, it writes a TEMPLATE + instructions and
@@ -42,6 +43,10 @@ FROZEN.update({k: v for k, v in cfg["calibrated_constants"].items() if k != "com
 stat = pd.read_csv(SETUP/"static_polar_reference.csv")
 f_static = us.calibrate_separation(stat["alpha_deg"], stat["Cl"], stat["Cd"], CNALPHA)
 
+_flowA = pd.read_csv(SETUP/"flow_conditions.csv").set_index("parameter")["case_A_validation"]
+_kinA  = pd.read_csv(SETUP/"kinematics.csv").set_index("case_id").loc["A_validation_rig"]
+
+
 def write_template():
     tmpl = pd.DataFrame({
         "alpha_deg": [0, 5, 10, 14, 17, 19, 20, 18, 14, 10, 5, 0],
@@ -49,8 +54,15 @@ def write_template():
         "CD": ["" for _ in range(12)],
         "stroke": ["up"]*6 + ["down"]*6})
     tmpl.to_csv(EXP/"TEMPLATE_experiment.csv", index=False)
-    pd.DataFrame({"file": ["TEMPLATE_experiment.csv"], "mean": [10], "amp": [10],
-                  "k": [0.10], "M": [0.30], "c": [0.30], "U": [102.0],
+    # the example row is the case-A point, read from 03_model_setup rather than
+    # restated, so the template cannot quote a condition the study does not use
+    pd.DataFrame({"file": ["TEMPLATE_experiment.csv"],
+                  "mean": [float(_kinA["alpha_mean_deg"])],
+                  "amp":  [float(_kinA["alpha_amp_deg"])],
+                  "k":    [float(_kinA["reduced_freq_k"])],
+                  "M":    [float(_flowA["freestream_mach_M"])],
+                  "c":    [float(_flowA["chord_c"])],
+                  "U":    [float(_flowA["freestream_velocity_U"])],
                   "source": ["McAlister TP-1100 Fig. X / McCroskey TM-84245 frame Y"]}
                  ).to_csv(EXP/"conditions.csv", index=False)
     (EXP/"README.txt").write_text(
@@ -64,7 +76,8 @@ def write_template():
         "   source) describing the exact test point.\n"
         "4. Re-run:  python3 validate_digitized.py\n"
         "   -> writes validation_digitized_<file>.csv + overlay figure with\n"
-        "      true point-by-point RMS / peak / loop-area errors.\n"
+        "      true point-by-point errors: RMS_CL, maxAbs_CL, RMS_CM,\n"
+        "      CLmax_err, CMbreak_err and CL_loop_area_err_pct.\n"
         "No data are fabricated; results appear only for files you provide.\n")
 
 def branch(a, y, dadt):
@@ -113,6 +126,20 @@ for f in real:
         rec["RMS_CM"] = round(float(np.sqrt(np.mean((mCM-exp["CM"])**2))), 4)
         rec["CMbreak_err"] = round(float(abs(o["CM"].min()-exp["CM"].min())), 4)
     rec["CLmax_err"] = round(float(abs(o["CL"].max()-exp["CL"].max())), 4)
+    # ---- lift-loop area. The module docstring, experimental/README.txt and
+    #      report section 12.3 all promised this metric and none of them
+    #      computed it. Both loops are closed before integrating; the
+    #      experimental points are taken in the order they were digitised,
+    #      which is the order a loop is traced. ----
+    _am = np.radians(np.append(a, a[0]))
+    area_mod = float(abs(us._trapz(np.append(o["CL"], o["CL"][0]), _am)))
+    _ae = np.radians(np.append(exp["alpha_deg"].values, exp["alpha_deg"].values[0]))
+    _ce = np.append(exp["CL"].values, exp["CL"].values[0])
+    area_exp = float(abs(us._trapz(_ce, _ae)))
+    rec["CL_loop_area_model"] = round(area_mod, 4)
+    rec["CL_loop_area_exp"] = round(area_exp, 4)
+    rec["CL_loop_area_err_pct"] = (round(100.0*(area_mod-area_exp)/area_exp, 1)
+                                   if area_exp > 0 else float("nan"))
     rec["source"] = str(c["source"])
     summary.append(rec)
     pd.DataFrame([rec]).to_csv(HERE/f"validation_digitized_{f.stem}.csv", index=False)

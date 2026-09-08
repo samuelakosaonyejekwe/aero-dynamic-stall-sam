@@ -12,6 +12,9 @@ plugins:
 # Link-preview card. assets/social-preview.jpg is the purpose-built 1280x640
 # card; without this, {% seo %} fell back to a 512x512 square icon and every
 # shared link rendered as a small thumbnail instead of the card.
+# assets/social-preview.png is the same 1280x640 image, lossless. It is NOT
+# referenced by the site: it is the master that GitHub's repository "Social
+# preview" setting is uploaded from by hand. Kept so that upload is repeatable.
 image: /assets/social-preview.jpg
 twitter:
   card: summary_large_image

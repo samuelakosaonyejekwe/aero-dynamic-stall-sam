@@ -8,5 +8,6 @@ Digitised-experiment validation harness
    source) describing the exact test point.
 4. Re-run:  python3 validate_digitized.py
    -> writes validation_digitized_<file>.csv + overlay figure with
-      true point-by-point RMS / peak / loop-area errors.
+      true point-by-point errors: RMS_CL, maxAbs_CL, RMS_CM,
+      CLmax_err, CMbreak_err and CL_loop_area_err_pct.
 No data are fabricated; results appear only for files you provide.

@@ -18,13 +18,45 @@ time s = 2*U*t/c :
 
 Two auxiliary modules make the solver "universal" for engineering output:
   * Vortex/source field-reconstruction  -> 2D pressure, velocity, vorticity,
-    streamlines + an explicit Lamb-Oseen dynamic-stall vortex.
-    LIMITATION: the reconstructed vortex carries circulation 1.4*CNv*U*c in a
-    core of radius 0.16c, giving a peak swirl of roughly 0.2*U. Its sign,
-    position and the flow reversal beneath it are physical, but the core is
-    weaker and more diffuse than a measured dynamic-stall vortex, so the core
-    suction it produces is shallow. The reconstruction is qualitative; the
-    reported loads come from the UIBS core and do not depend on it.
+    streamlines + an explicit Lamb-Oseen dynamic-stall vortex. Source panels
+    and a bound vortex sheet, BOTH on the body surface, with the total
+    circulation matched to the UIBS C_L (Kutta-Joukowski).
+    LIMITATIONS, measured rather than asserted (surface_load_closure() and
+    the metrics_*.csv row "Cp_closure_error_pct" recompute them on every run):
+      - CLOSURE. Integrating the surface Cp recovers the C_L it was given to
+        within 10.7 % (alpha 5 deg) to 14.4 % (alpha 19 deg). The surface Cp is
+        evaluated directly from the singularities, so this is not a grid effect,
+        and it does not vanish under refinement either: doubling the panel count
+        moves it by under a point. The residual is set by the deliberate Cp clip
+        at -8 below. A potential field at alpha = 19 deg draws a leading-edge
+        suction peak deeper than that; the clip truncates it and the truncated
+        area is the missing lift. Standing the probe closer to the wall makes it
+        worse, not better, for exactly that reason (-19.7 % at 0.008c against
+        -14.4 % at the 0.015c used). The clip is kept because the real flow
+        there is separated and could not sustain such a peak either -- so the
+        deficit is a property of a potential reconstruction used past stall, not
+        an unconverged discretisation. It does not touch the reported loads,
+        which come from the UIBS core.
+      - KUTTA CONDITION, satisfied only approximately. The panel solution on
+        its own closes the trailing edge well: with no dynamic-stall vortex the
+        upper/lower Cp difference at the first point off the trailing edge is
+        0.016 (alpha 5 deg) to 0.11 (alpha 19 deg). The Lamb-Oseen vortex,
+        however, is added on top of that solution and is not part of it, so
+        while it convects over the aft chord it loads the two trailing-edge
+        probes asymmetrically. Over the cycle phases actually written out, the
+        residual reaches 0.15 (Case A) and 0.25 (Case B) -- the published
+        Cp_TE_jump_max_over_phases row of metrics_*.csv, which is the maximum
+        over those phases rather than the mild value at peak lift (0.03), so
+        the limitation is not understated by the factor of five between them.
+      - The reconstructed vortex carries circulation 1.4*CNv*U*c in a core of
+        radius 0.16c. Its sign, position and the flow reversal beneath it are
+        physical, but the core is weaker and more diffuse than a measured
+        dynamic-stall vortex, so the core suction it produces is shallow.
+      - Nothing in the reconstruction knows about separation: it is a potential
+        field, so at post-stall incidence the leading-edge suction peak it
+        draws is far deeper than a real separated flow would sustain.
+    The reconstruction is qualitative; the reported loads come from the UIBS
+    core and do not depend on it.
   * Compressible thermal module          -> static & recovery (skin) temperature.
 
 The model is calibrated PER CASE to a static polar and validated against
@@ -93,7 +125,12 @@ def solve_dynamic_stall(alpha_mean_deg, alpha_amp_deg, k, M, c, U,
 
     beta2 = max(1.0 - M*M, 1e-3)
     Kalpha = 0.75/(1.0 - M + np.pi*np.sqrt(beta2)*M*M*(p["A1"]*p["b1"]+p["A2"]*p["b2"]))
-    TI = Kalpha*c/(M*340.0 if M > 0 else U)   # impulsive time const (s), a=U/M
+    # impulsive time constant T_I = Kalpha*c/a with a = U/M, the speed of sound
+    # implied by the case. This was written as M*340.0: a hardcoded sea-level
+    # value that contradicted both the comment beside it and the T_I = Kalpha*c/a
+    # of the report, and made the march weakly dependent on U for any case whose
+    # speed of sound is not exactly 340 m/s.
+    TI = Kalpha*c/U                           # a = U/M  =>  Kalpha*c/(M*a) = Kalpha*c/U
 
     omega = 2.0*k*U/c
     N = n_per_cycle*n_cycles
@@ -216,10 +253,24 @@ def solve_dynamic_stall(alpha_mean_deg, alpha_amp_deg, k, M, c, U,
 # --------------------------------------------------------------------------- #
 #  AERODYNAMIC DAMPING (stall-flutter indicator) from the CM-alpha loop
 # --------------------------------------------------------------------------- #
-#  |Xi_hat| below this is treated as neutral: for a figure-of-eight CM loop the
-#  raw Xi is a small residual between two lobes of opposite sign, and at this
-#  level it is no larger than the time-step discretisation error.
-DAMPING_TOL = 0.02
+#  |Xi_hat| below this is treated as NEUTRAL: for a figure-of-eight CM loop the
+#  raw Xi is a small residual between two lobes of opposite sign, and below this
+#  level the model cannot resolve its sign.
+#
+#  WHERE THIS NUMBER COMES FROM. It was previously 0.02, justified as "no larger
+#  than the time-step discretisation error". That justification is false and was
+#  measured to be so: refining n_per_cycle from 720 to 5760 moves Xi_hat for
+#  Case A by only 0.00044, i.e. 45x smaller than the band it was said to
+#  explain. The band that IS defensible is the model's own demonstrated accuracy
+#  in this quantity: recomputing Xi_hat from the five real NACA 0012 loops of
+#  NASA TM-84245 and from the model at the same conditions gives a mean absolute
+#  discrepancy of 0.072 (max 0.144). A damping residual smaller than that cannot
+#  be claimed as a finding. 06_postprocessing/validation/validate_nasa_real.py
+#  recomputes that spread on every run and writes it to
+#  validation_realdata_summary.csv (rounding 0.072 up to 0.08 so the band is not
+#  tighter than the evidence), warns if this constant ever falls below the
+#  measured spread, and so keeps the number traceable.
+DAMPING_TOL = 0.08
 
 
 def aerodynamic_damping(alpha_deg, CM, normalise=False):
@@ -255,24 +306,59 @@ def damping_verdict(Xi_hat, tol=DAMPING_TOL):
 #  FIELD RECONSTRUCTION  (source panels + bound vortex sheet + Lamb-Oseen DSV)
 # --------------------------------------------------------------------------- #
 def _airfoil_surface(naca_csv, c, n_panel=160):
+    """Panel end-points around a CLOSED section, clustered at BOTH the leading
+    and the trailing edge.
+
+    Two defects were fixed here and both were measurable:
+      * the 4-digit section has an open trailing edge (0.252 %c). Leaving the
+        panel body open made it leak: the net source flux sum(sigma*L) came out
+        at 0.44 % of U*c instead of zero, and the surface Cp jumped by 2.4
+        across the trailing edge, which the Kutta condition forbids. The two
+        trailing-edge points are now merged, exactly as 02_mesh does for the
+        O-grid wall.
+      * the panels were cosine-clustered in ARCLENGTH, whose two ends are both
+        at the trailing edge, so the leading edge -- where the suction peak is
+        -- got the coarsest panels on the body (98x longer than the trailing-
+        edge panels). The distribution is now cosine on each surface separately,
+        which clusters at the leading edge as well.
+    """
     import pandas as pd
     df = pd.read_csv(naca_csv)
     x, y = df["x_over_c"].values*c, df["y_over_c"].values*c
-    # resample to n_panel evenly along arclength
-    s = np.concatenate([[0], np.cumsum(np.hypot(np.diff(x), np.diff(y)))]); s/=s[-1]
-    sq = (1-np.cos(np.linspace(0, np.pi, n_panel+1)))/2
+    x = x.copy(); y = y.copy()
+    xm, ym = 0.5*(x[0] + x[-1]), 0.5*(y[0] + y[-1])
+    x[0] = x[-1] = xm; y[0] = y[-1] = ym            # close the section
+    s = np.concatenate([[0], np.cumsum(np.hypot(np.diff(x), np.diff(y)))]); s /= s[-1]
+    m = (n_panel//2) + 1
+    h = (1 - np.cos(np.linspace(0, np.pi, m)))/2    # clustered at both ends
+    sq = np.concatenate([0.5*h, 0.5 + 0.5*h[1:]])   # -> TE, LE and TE again
     return np.interp(sq, s, x), np.interp(sq, s, y)
 
-def _solve_sources(xp, yp, U, alpha):
-    """Constant-strength source panels: enforce flow tangency (point-source
-    approximation, regularized self term)."""
+
+def _solve_panels(xp, yp, U, alpha, Gamma):
+    """Constant-strength source panels in the presence of a surface vortex sheet
+    of uniform strength carrying total circulation Gamma.
+
+    The circulation used to be a separate elliptic sheet laid along the CHORD
+    LINE, detached from the body. That arrangement has no Kutta condition: the
+    source panels alone are the non-lifting solution, whose rear stagnation
+    point sits on the upper surface at incidence, and a chord-line sheet whose
+    strength vanishes at the trailing edge cannot move it. The measured symptom
+    was a trailing-edge Cp jump of 2.4 and suction on the pressure side.
+    Putting the vorticity ON the surface and solving the sources against it
+    leaves the trailing-edge jump at ~0.1 and makes the surface Cp integrate
+    back to the C_L it was given (see reconstruct_field's LIMITATION note).
+
+    Returns panel midpoints, lengths, source strengths and the sheet strength.
+    """
     xc = 0.5*(xp[:-1]+xp[1:]); yc = 0.5*(yp[:-1]+yp[1:])
     dx = np.diff(xp); dy = np.diff(yp); L = np.hypot(dx, dy)
-    nx, ny = dy/L, -dx/L                              # outward normal (CW airfoil)
+    nx, ny = dy/L, -dx/L                              # normal (sense fixed below)
     # ensure outward (point away from centroid)
     cx, cy = xc.mean(), yc.mean()
-    flip = ((xc-cx)*nx+(yc-cy)*ny) < 0; nx[flip]*=-1; ny[flip]*=-1
+    flip = ((xc-cx)*nx+(yc-cy)*ny) < 0; nx = np.where(flip, -nx, nx); ny = np.where(flip, -ny, ny)
     Np = len(xc)
+    gam = Gamma/L.sum()                               # uniform sheet strength
     Uinf = np.array([U*np.cos(alpha), U*np.sin(alpha)])
     A = np.zeros((Np, Np)); rhs = np.zeros(Np)
     for i in range(Np):
@@ -281,9 +367,14 @@ def _solve_sources(xp, yp, U, alpha):
         ui = (1/(2*np.pi))*rx/r2*L; vi = (1/(2*np.pi))*ry/r2*L
         A[i,:] = ui*nx[i]+vi*ny[i]
         A[i,i] = 0.5                                   # self contribution
-        rhs[i] = -(Uinf[0]*nx[i]+Uinf[1]*ny[i])
+        # vortex-sheet downwash at this control point (its own panel induces no
+        # normal velocity on itself, so drop the self term)
+        gu = (gam*L/(2*np.pi))*ry/r2; gv = -(gam*L/(2*np.pi))*rx/r2
+        gu[i] = 0.0; gv[i] = 0.0
+        rhs[i] = -(Uinf[0]*nx[i]+Uinf[1]*ny[i]) - (gu.sum()*nx[i]+gv.sum()*ny[i])
     sigma = np.linalg.solve(A, rhs)
-    return xc, yc, L, sigma
+    return xc, yc, L, sigma, gam
+
 
 def _core_pressure_deficit(r, Gamma, rc, U, n=800):
     """Cp correction converting Bernoulli into radial equilibrium inside a
@@ -314,17 +405,43 @@ def _core_pressure_deficit(r, Gamma, rc, U, n=800):
     return np.interp(r, rr, cp_eq - cp_bern)
 
 
+def _panel_velocity(X, Y, xc, yc, L, sigma, gam, eps2):
+    """Velocity induced at arbitrary points by the source panels and the uniform
+    surface vortex sheet. Shared by the field reconstruction and the surface-Cp
+    evaluation so the two can never be built from different fields."""
+    u = np.zeros_like(np.asarray(X, float))
+    v = np.zeros_like(u)
+    for j in range(len(xc)):
+        rx = X-xc[j]; ry = Y-yc[j]; r2 = rx*rx+ry*ry+eps2
+        u += (sigma[j]*L[j]/(2*np.pi))*rx/r2 + (gam*L[j]/(2*np.pi))*ry/r2
+        v += (sigma[j]*L[j]/(2*np.pi))*ry/r2 - (gam*L[j]/(2*np.pi))*rx/r2
+    return u, v
+
+
+def _dsv_velocity(X, Y, xv, yv, Gv, rc):
+    """Lamb-Oseen dynamic-stall vortex, same sign convention as the bound sheet
+    (clockwise). Returns (du, dv, r2) with r2 the squared distance to the core."""
+    rx = X-xv; ry = Y-yv; r2 = rx*rx+ry*ry
+    fcore = (1-np.exp(-r2/rc**2))
+    with np.errstate(divide="ignore", invalid="ignore"):
+        du =  Gv/(2*np.pi)*ry/np.where(r2 == 0, 1, r2)*fcore
+        dv = -Gv/(2*np.pi)*rx/np.where(r2 == 0, 1, r2)*fcore
+    return du, dv, r2
+
+
 def reconstruct_field(naca_csv, c, U, M, alpha_deg, CL, CNv,
                       tau_over_Tvl, domain=(-1.0, 2.0, -1.2, 1.2),
                       nx_grid=260, ny_grid=200, gamma=1.4,
-                      T_inf=288.15, cp=1004.5, recovery=0.892):
+                      T_inf=288.15, cp=1004.5, recovery=0.892, R_gas=287.05):
     """Reconstruct 2D flow field at one instant. Returns grids of velocity,
     pressure coefficient, static & recovery temperature, vorticity, plus the
-    DSV location. Lifting circulation matched to the UIBS CL; the dynamic-stall
-    vortex rendered as a convecting Lamb-Oseen vortex of strength ~ CNv."""
+    DSV location. Lifting circulation matched to the UIBS CL and carried on the
+    body surface (so the trailing edge behaves); the dynamic-stall vortex
+    rendered as a convecting Lamb-Oseen vortex of strength ~ CNv."""
     alpha = np.radians(alpha_deg)
+    Gamma = 0.5*CL*U*c                    # Kutta-Joukowski, matched to the UIBS CL
     xp, yp = _airfoil_surface(naca_csv, c)
-    xc, yc, L, sigma = _solve_sources(xp, yp, U, alpha)
+    xc, yc, L, sigma, gam = _solve_panels(xp, yp, U, alpha, Gamma)
 
     x0, x1, y0, y1 = domain
     gx = np.linspace(x0*c, x1*c, nx_grid)
@@ -332,26 +449,20 @@ def reconstruct_field(naca_csv, c, U, M, alpha_deg, CL, CNv,
     X, Y = np.meshgrid(gx, gy)
     u = np.full_like(X, U*np.cos(alpha)); v = np.full_like(X, U*np.sin(alpha))
 
-    # source-panel induced velocity (point-source per panel, smoothed)
-    eps2 = (0.6*L.mean())**2
-    for j in range(len(xc)):
-        rx = X-xc[j]; ry = Y-yc[j]; r2 = rx*rx+ry*ry+eps2
-        u += (sigma[j]*L[j]/(2*np.pi))*rx/r2
-        v += (sigma[j]*L[j]/(2*np.pi))*ry/r2
-
-    # bound circulation: smooth (elliptic) vortex sheet along chord (y=0), 0..c.
-    # Elliptic loading is finite at both ends -> no leading-edge singularity,
-    # giving a clean field; total circulation is matched to the UIBS lift.
-    Gamma = 0.5*CL*U*c
-    nb = 80
-    xb = np.linspace(0.01*c, 0.99*c, nb)
-    w = np.sqrt(np.clip((xb/c)*(1-xb/c), 0, None))       # elliptic loading
-    w /= _trapz(w, xb); dGam = Gamma*w*np.gradient(xb)
-    epsb2 = (0.06*c)**2
-    for j in range(nb):
-        rx = X-xb[j]; ry = Y-0.0; r2 = rx*rx+ry*ry+epsb2
-        u +=  dGam[j]/(2*np.pi)*ry/r2
-        v += -dGam[j]/(2*np.pi)*rx/r2
+    # Source panels AND the bound vortex sheet, both carried on the body surface.
+    # The circulation used to live on the chord line as a separate elliptic
+    # sheet; see _solve_panels for why that could not satisfy the Kutta
+    # condition. Sign: this sheet is clockwise (positive lift for flow in +x),
+    # which fixes the sign convention the dynamic-stall vortex below must match.
+    # Regularisation radius. It must cover BOTH the panel spacing and the field
+    # grid spacing: a bound sheet is singular on the surface, so if the panels
+    # are resolved at roughly one panel per grid cell the sampled vorticity
+    # alternates sign cell to cell and the surface renders as a speckled band
+    # instead of the thin sheet it is. Take whichever is larger.
+    dgrid = max(gx[1]-gx[0], gy[1]-gy[0])
+    eps2 = max((0.6*L.mean())**2, (0.9*dgrid)**2)
+    du, dv = _panel_velocity(X, Y, xc, yc, L, sigma, gam, eps2)
+    u += du; v += dv
 
     # dynamic-stall vortex (Lamb-Oseen), convects along upper surface
     xv = (0.25 + 0.55*np.clip(tau_over_Tvl, 0, 1.3))*c
@@ -359,7 +470,7 @@ def reconstruct_field(naca_csv, c, U, M, alpha_deg, CL, CNv,
     # SIGN. The dynamic-stall vortex is a roll-up of upper-surface boundary-layer
     # vorticity, so it rotates in the SAME sense as the bound circulation
     # (clockwise here). This term must therefore carry the same sign as the
-    # bound sheet above. It does not need to supply the vortex lift -- Gamma is
+    # bound surface sheet above. It does not need to supply the vortex lift -- Gamma is
     # already matched to the full UIBS C_L, which contains CNv -- so giving the
     # vortex its physical rotation costs nothing and buys the correct vorticity
     # field and the flow reversal beneath the core that characterises the stall.
@@ -367,11 +478,8 @@ def reconstruct_field(naca_csv, c, U, M, alpha_deg, CL, CNv,
     # _core_pressure_deficit), not from accelerating the surface flow.
     Gv = 1.4*max(CNv, 0.0)*U*c
     rc = 0.16*c
-    rx = X-xv; ry = Y-yv; r2 = rx*rx+ry*ry
-    fcore = (1-np.exp(-r2/rc**2))
-    with np.errstate(divide="ignore", invalid="ignore"):
-        u +=  Gv/(2*np.pi)*ry/np.where(r2 == 0, 1, r2)*fcore
-        v += -Gv/(2*np.pi)*rx/np.where(r2 == 0, 1, r2)*fcore
+    du, dv, r2 = _dsv_velocity(X, Y, xv, yv, Gv, rc)
+    u += du; v += dv
 
     speed = np.hypot(u, v)
     # incompressible Cp + Prandtl-Glauert compressibility correction (bounded).
@@ -385,17 +493,32 @@ def reconstruct_field(naca_csv, c, U, M, alpha_deg, CL, CNv,
     T0 = T_inf*(1+(gamma-1)/2*M**2)
     T_static = T0 - speed**2/(2*cp)
     T_recovery = T0 - (1-recovery)*speed**2/(2*cp)
-    Mlocal = speed/np.sqrt(gamma*287.05*np.maximum(T_static, 1.0))
+    Mlocal = speed/np.sqrt(gamma*R_gas*np.maximum(T_static, 1.0))
     # vorticity
     dvx = np.gradient(v, gx, axis=1); duy = np.gradient(u, gy, axis=0)
     vort = dvx - duy
 
-    # mask airfoil interior
+    # Mask the aerofoil interior AND the one ring of cells touching it.
+    # The bound sheet is a singular vortex sheet regularised over eps; a cell
+    # that straddles the surface therefore samples the middle of the jump and
+    # reports a spurious acceleration. It is measurable: at mid-chord on the
+    # PRESSURE side, where the profile is monotonically falling towards the wall
+    # (79.1 -> 80.4 -> 84.6 m/s), the last cell jumped to 111.7 m/s -- above the
+    # free stream, on the side of the aerofoil that must be slower than it. The
+    # field is simply not resolved within one cell of the wall, so it is not
+    # published there. surface_cp probes at 0.015c, which is ~7 cells out on its
+    # own finer grid, so it is unaffected.
     from matplotlib.path import Path as MplPath
     poly = MplPath(np.column_stack([xp, yp]))
     inside = poly.contains_points(np.column_stack([X.ravel(), Y.ravel()])).reshape(X.shape)
+    masked = inside.copy()                       # 8-connected dilation by one cell
+    for sx in (-1, 0, 1):
+        for sy in (-1, 0, 1):
+            if sx == 0 and sy == 0:
+                continue
+            masked |= np.roll(np.roll(inside, sy, axis=0), sx, axis=1)
     for arr in (u, v, speed, Cp, T_static, T_recovery, Mlocal, vort):
-        arr[inside] = np.nan
+        arr[masked] = np.nan
 
     return dict(X=X, Y=Y, u=u, v=v, speed=speed, Cp=Cp, T_static=T_static,
                 T_recovery=T_recovery, Mlocal=Mlocal, vort=vort,
@@ -404,22 +527,73 @@ def reconstruct_field(naca_csv, c, U, M, alpha_deg, CL, CNv,
 
 
 def surface_cp(naca_csv, c, U, M, alpha_deg, CL, CNv, tau_over_Tvl,
-               nx_grid=400, ny_grid=300):
-    """Surface pressure coefficient distribution Cp(x/c) upper & lower."""
-    fld = reconstruct_field(naca_csv, c, U, M, alpha_deg, CL, CNv, tau_over_Tvl,
-                            nx_grid=nx_grid, ny_grid=ny_grid)
-    xp, yp = fld["xp"], fld["yp"]
-    # sample just outside the surface along outward normals
+               probe=0.015):
+    """Surface pressure coefficient distribution Cp(x/c), evaluated DIRECTLY
+    from the panel solution at a small offset outside the wall.
+
+    It used to be read off the reconstructed field grid with a
+    RegularGridInterpolator over np.nan_to_num(Cp, nan=0.0). That was fragile
+    and then wrong: the probe stands 0.015c off the wall, which on that grid is
+    only two cells, so once the unresolved near-wall ring is masked, 40 of the
+    161 probe points had a masked cell inside their bilinear stencil and quietly
+    read Cp = 0 there. Evaluating the singularities at the probe points removes
+    the grid from the answer entirely.
+
+    Returns (x/c, Cp, upper_mask).
+    """
+    alpha = np.radians(alpha_deg)
+    Gamma = 0.5*CL*U*c
+    xp, yp = _airfoil_surface(naca_csv, c)
+    xc, yc, L, sigma, gam = _solve_panels(xp, yp, U, alpha, Gamma)
+
+    # outward normals at the surface points, then step off along them
     dx = np.gradient(xp); dy = np.gradient(yp); Ln = np.hypot(dx, dy)
     nx, ny = dy/Ln, -dx/Ln
     cx, cy = xp.mean(), yp.mean()
-    flip = ((xp-cx)*nx+(yp-cy)*ny) < 0; nx[flip]*=-1; ny[flip]*=-1
-    off = 0.015*c
-    xs, ys = xp+nx*off, yp+ny*off
-    from scipy.interpolate import RegularGridInterpolator
-    gx = fld["X"][0,:]; gy = fld["Y"][:,0]
-    Cpf = np.nan_to_num(fld["Cp"], nan=0.0)
-    itp = RegularGridInterpolator((gy, gx), Cpf, bounds_error=False, fill_value=0.0)
-    cp = itp(np.column_stack([ys, xs]))
+    flip = ((xp-cx)*nx+(yp-cy)*ny) < 0
+    nx = np.where(flip, -nx, nx); ny = np.where(flip, -ny, ny)
+    off = probe*c
+    X = xp + nx*off; Y = yp + ny*off
+
+    eps2 = (0.6*L.mean())**2
+    u, v = _panel_velocity(X, Y, xc, yc, L, sigma, gam, eps2)
+    u += U*np.cos(alpha); v += U*np.sin(alpha)
+
+    xv = (0.25 + 0.55*np.clip(tau_over_Tvl, 0, 1.3))*c
+    yv = 0.10*c + 0.06*c*np.clip(tau_over_Tvl, 0, 1.3)
+    Gv = 1.4*max(CNv, 0.0)*U*c
+    rc = 0.16*c
+    du, dv, r2 = _dsv_velocity(X, Y, xv, yv, Gv, rc)
+    u += du; v += dv
+
+    speed = np.hypot(u, v)
+    Cp_inc = (1.0 - (speed/U)**2
+              + _core_pressure_deficit(np.sqrt(r2), abs(Gv), rc, U))
+    Cp = Cp_inc/np.sqrt(1-M**2) if M > 0 else Cp_inc
+    Cp = np.clip(Cp, -8.0, 1.0)              # same bound as the field
     upper = yp >= 0
-    return xp/c, cp, upper
+    return xp/c, Cp, upper
+
+
+def surface_load_closure(naca_csv, c, U, M, alpha_deg, CL, CNv, tau_over_Tvl):
+    """Integrate the reconstructed surface Cp and compare with the C_L that the
+    reconstruction was given. An invariant: a closed body carrying circulation
+    Gamma = 0.5*CL*U*c must return that C_L. Returns (CL_from_Cp, pct_error).
+
+    Also returns the trailing-edge pressure jump |Cp_upper - Cp_lower| there,
+    the second invariant: the Kutta condition demands it be zero.
+
+    Both exist so the reconstruction's accuracy is a number the pipeline writes
+    out, not a claim in a comment.
+    """
+    xp, yp = _airfoil_surface(naca_csv, c)
+    _, cp_s, _ = surface_cp(naca_csv, c, U, M, alpha_deg, CL, CNv, tau_over_Tvl)
+    # traversal sense (shoelace): +1 counter-clockwise, so that n ds = (dy, -dx)
+    sgn = 1.0 if 0.5*np.sum(xp[:-1]*yp[1:] - xp[1:]*yp[:-1]) > 0 else -1.0
+    cpm = 0.5*(cp_s[1:] + cp_s[:-1])
+    a = np.radians(alpha_deg)
+    CN =  sgn*np.sum(cpm*np.diff(xp))/c        # +(1/c) integral Cp dx
+    CA = -sgn*np.sum(cpm*np.diff(yp))/c        # -(1/c) integral Cp dy
+    cl = CN*np.cos(a) - CA*np.sin(a)
+    te_jump = float(abs(cp_s[1] - cp_s[-2]))     # first/last off the merged TE point
+    return (float(cl), (100.0*(cl - CL)/CL if CL != 0 else float("nan")), te_jump)

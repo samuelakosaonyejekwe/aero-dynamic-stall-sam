@@ -57,8 +57,9 @@
     "integrator": "semichord-marching exponential-recurrence"
   },
   "field_reconstruction": {
-    "method": "constant-strength source panels (flow tangency) + elliptic bound vortex sheet matched to the UIBS C_L + Lamb-Oseen dynamic-stall vortex",
+    "method": "constant-strength source panels solved for flow tangency against a uniform bound vortex sheet ON THE BODY SURFACE carrying Gamma = 0.5*C_L*U*c (Kutta-Joukowski, matched to the UIBS C_L), plus a Lamb-Oseen dynamic-stall vortex",
     "n_panels": 160,
+    "panel_distribution": "closed section, cosine-clustered on each surface separately -> clustering at BOTH the leading and the trailing edge",
     "grid_nx_default": 260,
     "grid_ny_default": 200,
     "grid_nx_solution": 220,
@@ -69,7 +70,9 @@
       -1.2,
       1.2
     ],
-    "comment": "grid_*_solution are the sizes actually written to 05_solution/field_*.csv"
+    "near_wall_cells_masked": 1,
+    "surface_cp_probe_offset_chords": 0.015,
+    "comment": "grid_*_solution are the sizes written to 05_solution/field_*.csv. cp_distribution_*.csv is NOT read off any grid: the surface Cp is evaluated directly from the panel singularities at surface_cp_probe_offset_chords outside the wall, so it does not depend on a grid at all. That offset is the value at which the closure error is smallest (-14.4 % at alpha 19 deg, against -19.7 % at 0.008c and -17.0 % at 0.030c). near_wall_cells_masked is the ring of field cells left blank because the regularised surface sheet is not resolved there. Accuracy of the reconstruction is measured, not asserted: the Cp_closure_error_pct row of metrics_*.csv reports how well the integrated surface Cp reproduces the C_L it was given"
   },
   "calibration_state": "calibrated_per_case (static polar) + validated (dynamic)"
 }
