@@ -10,13 +10,13 @@ solver embeds a body-fitted grid for (a) panel-method field reconstruction and
 CFD quality metrics for it.
 
 Quality caveat (the metrics CSV carries the numbers; read them before reusing
-this grid for CFD): about 5 % of cells exceed 0.5 skewness and the worst reaches
-0.91, all of them in the trailing-edge region where the upper- and lower-surface
-normals oppose one another across the open TE; the largest aspect ratios (~5900)
-are in the outermost far-field layers. Those are intrinsic to an O-grid with a
-slit trailing edge. The loads reported by this study do not depend on this grid
--- the UIBS core is meshless and the field reconstruction is panel-based -- so
-the grid is a documentation and hand-off artefact, not a production CFD mesh.
+this grid for CFD): about 1.6 % of cells exceed 0.5 skewness and the worst
+reaches 0.76, concentrated near the trailing edge where the wrap turns through
+the largest angle; the largest aspect ratios (~3500, 0.2 % of cells) are in the
+outermost far-field layers, which is normal for a stretched O-grid. The loads
+reported by this study do not depend on this grid -- the UIBS core is meshless
+and the field reconstruction is panel-based -- so the grid is a documentation
+and hand-off artefact, not a production CFD mesh.
 
 Outputs
   mesh_nodes.csv              every grid node (i, j, x_m, y_m, wall_distance_m)
@@ -57,14 +57,27 @@ sq = (1 - np.cos(np.linspace(0, np.pi, N_WALL))) / 2  # cluster LE/TE
 xw = np.interp(sq, s, xs)
 yw = np.interp(sq, s, ys)
 
-# ---- surface normals (outward) ----
-dx = np.gradient(xw); dy = np.gradient(yw)
+# CLOSE the wall curve. The 4-digit section has an open trailing edge (0.252 %c),
+# so the wrap starts and ends at two distinct points. Left open, the two branches
+# march away from each other downstream and leave an unmeshed wedge several
+# chords wide in the mid-field. Merging them makes the wall a genuinely closed
+# curve, which is what an O-grid needs.
+xm, ym = 0.5*(xw[0] + xw[-1]), 0.5*(yw[0] + yw[-1])
+xw[0] = xw[-1] = xm
+yw[0] = yw[-1] = ym
+
+# ---- surface normals (outward), from PERIODIC differences so the normal at the
+#      seam is single-valued rather than two one-sided estimates ----
+xu_, yu_ = xw[:-1], yw[:-1]                       # unique points of the closed loop
+dx = np.roll(xu_, -1) - np.roll(xu_, 1)
+dy = np.roll(yu_, -1) - np.roll(yu_, 1)
 nl = np.hypot(dx, dy); tx, ty = dx/nl, dy/nl
 nx, ny = ty, -tx                     # rotate tangent -> normal
 # flip normals that point inward (dot with radial from mid-chord)
-rx, ry = xw - 0.5, yw - 0.0
+rx, ry = xu_ - 0.5, yu_ - 0.0
 inward = (nx*rx + ny*ry) < 0
 nx[inward] *= -1; ny[inward] *= -1
+nx = np.append(nx, nx[0]); ny = np.append(ny, ny[0])   # close
 
 # ---- wall-normal distribution (geometric growth to far field) ----
 N_RAD = 121
@@ -90,15 +103,25 @@ dn = y1*GR**np.arange(N_RAD)            # spacing of each layer
 yn = np.concatenate([[0], np.cumsum(dn)])[:N_RAD]   # normal coordinate (chords)
 
 # ---- build grid ----
+# Each wall point is given its OWN far-field target, placed on the outer circle
+# by arclength so the mapping wall -> circle is one-to-one and continuous. The
+# marching direction blends from the wall normal (orthogonality at the wall) to
+# the direction of that target. Blending towards a common radial direction from
+# mid-chord, as before, sent the two trailing-edge branches apart and opened the
+# wedge; blending towards a closed loop of targets closes the wrap at every j.
 I, J = N_WALL, N_RAD
+CX, CY = 0.5, 0.0
+sw = np.concatenate([[0], np.cumsum(np.hypot(np.diff(xw), np.diff(yw)))]); sw /= sw[-1]
+th = 2.0*np.pi*sw                                  # TE -> 0, LE -> pi, TE -> 2pi
+xf = CX + FARFIELD*np.cos(th); yf = CY + FARFIELD*np.sin(th)
+ufx, ufy = xf - xw, yf - yw
+uf = np.hypot(ufx, ufy); ufx /= uf; ufy /= uf
+
 Xg = np.zeros((I, J)); Yg = np.zeros((I, J))
 for j in range(J):
-    # blend wall normal -> radial (elliptic-like smoothing toward far field)
-    w = (yn[j]/FARFIELD)
-    cx, cy = 0.5, 0.0
-    rxn = (xw-cx); ryn = (yw-cy); rr = np.hypot(rxn, ryn)+1e-9
-    nxf = (1-w)*nx + w*rxn/rr
-    nyf = (1-w)*ny + w*ryn/rr
+    w = yn[j]/FARFIELD
+    nxf = (1-w)*nx + w*ufx
+    nyf = (1-w)*ny + w*ufy
     nf = np.hypot(nxf, nyf)
     Xg[:, j] = xw + yn[j]*nxf/nf
     Yg[:, j] = yw + yn[j]*nyf/nf

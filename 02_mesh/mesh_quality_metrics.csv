@@ -9,9 +9,9 @@ first_cell_height_y1_chords,1.3e-05
 first_cell_height_y1_m,3.91e-06
 wall_normal_growth_ratio,1.1051
 target_yplus,1.0
-max_aspect_ratio,5917.3
-mean_aspect_ratio,71.8
-min_orthogonality_deg,7.9
-max_skewness,0.912
-mean_skewness,0.08
-min_cell_area_c2,1e-09
+max_aspect_ratio,3545.8
+mean_aspect_ratio,63.3
+min_orthogonality_deg,21.1
+max_skewness,0.765
+mean_skewness,0.056
+min_cell_area_c2,2.12e-09

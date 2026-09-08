@@ -21,6 +21,7 @@ from aero_style import (apply_style, PALETTE, INK, INK_SOFT,
                         CMAP_PRESSURE, CMAP_CP, CMAP_TEMP)
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # noqa
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import unistall_solver as us
 apply_style()
 
@@ -112,9 +113,15 @@ X, Y = np.meshgrid(xu, yu)
 for key, cmap, lab, fn in [("Cp", CMAP_CP, "$C_p$", "Cp"),
                            ("speed_ms", CMAP_PRESSURE, "|V| [m/s]", "speed")]:
     Z = np.array(F[key], dtype=float)
+    # Leave the masked airfoil interior as NaN so it renders as a hole. Filling
+    # it with the global minimum (the Cp clip floor) punched a canyon several
+    # units deep that set the z-scale and flattened the actual field.
+    lo, hi = np.nanpercentile(Z, [0.5, 99.5])
+    Zc = np.clip(Z, lo, hi)
     fig = plt.figure(figsize=(8.5, 6.0)); ax = fig.add_subplot(111, projection="3d")
-    s = ax.plot_surface(X, Y, np.nan_to_num(Z, nan=np.nanmin(Z)), cmap=cmap,
+    s = ax.plot_surface(X, Y, Zc, cmap=cmap, vmin=lo, vmax=hi,
                         linewidth=0, antialiased=True, alpha=0.96, rstride=2, cstride=2)
+    ax.set_zlim(lo, hi)
     ax.set_xlabel("x [m]"); ax.set_ylabel("y [m]"); ax.set_zlabel(lab)
     ax.set_title(f"3D field surface — {lab}  (Case A, peak incidence)", pad=18)
     cb = fig.colorbar(s, ax=ax, pad=0.10, shrink=0.6); cb.set_label(lab)
@@ -126,26 +133,41 @@ xu, yu, F = load_field(peakA)
 X, Y = np.meshgrid(xu, yu)
 span = 0.45   # m, pseudo-span for the pictorial extrusion
 fig = plt.figure(figsize=(9, 6.2)); ax = fig.add_subplot(111, projection="3d")
-# extrude airfoil section at two span stations, colour by chordwise Cp proxy
+# extrude airfoil section at two span stations, filled so it reads as a solid
 afx = AF["x_over_c"].values*0.30; afy = AF["y_over_c"].values*0.30
+# fill BOTH end sections so the extrusion reads as a solid blade rather than
+# two thin sticks lost among the arrows
 for z in (0.0, span):
-    ax.plot(afx, np.full_like(afx, z), afy, color=INK, lw=1.6)
-# connect LE & TE to suggest the blade surface
+    ax.add_collection3d(Poly3DCollection(
+        [list(zip(afx, np.full_like(afx, z), afy))], facecolor="#c6d7ea",
+        edgecolor=INK, linewidths=1.6, alpha=1.0, zorder=10))
 for frac in np.linspace(0, 1, 12):
     k = int(frac*(len(afx)-1))
     ax.plot([afx[k], afx[k]], [0, span], [afy[k], afy[k]], color=INK_SOFT, lw=0.5, alpha=0.6)
-# 3D velocity vectors on a mid-span plane
-sk = (slice(None, None, 10), slice(None, None, 10))
+# 3-D velocity vectors on a mid-span plane. Sampling the whole domain every
+# 10th node produced a solid mat of arrows across the entire box that buried the
+# section; restrict them to a window around the aerofoil and thin them out.
+sk = (slice(None, None, 12), slice(None, None, 12))
 xs = X[sk]; ys = Y[sk]; us_ = F["u_ms"][sk]; vs = F["v_ms"][sk]
-mask = ~np.isnan(us_)
+win = (~np.isnan(us_)) & (xs > -0.18) & (xs < 0.52) & (np.abs(ys) < 0.20)
 zc = span/2
-ax.quiver(xs[mask], np.full(mask.sum(), zc), ys[mask],
-          us_[mask], np.zeros(mask.sum()), vs[mask],
-          length=0.0016, normalize=False, color=PALETTE[0], linewidth=0.9)
+# Cap the plotted magnitude. Arrow length is proportional to |V|, and a handful
+# of near-surface cells carry several times the freestream speed, so unclipped
+# they drew metre-long arrows off the top of the axes.
+uu, vv = us_[win].copy(), vs[win].copy()
+mag = np.hypot(uu, vv)
+cap = np.nanpercentile(mag, 96)
+scale = np.where(mag > cap, cap/np.maximum(mag, 1e-9), 1.0)
+uu *= scale; vv *= scale
+ax.quiver(xs[win], np.full(win.sum(), zc), ys[win],
+          uu, np.zeros(win.sum()), vv,
+          length=0.0026, normalize=False, color=PALETTE[0], linewidth=1.1,
+          arrow_length_ratio=0.30, zorder=2)
 ax.set_xlim(X.min(), X.max()); ax.set_zlim(Y.min(), Y.max()); ax.set_ylim(0, span)
 ax.set_xlabel("x [m]"); ax.set_ylabel("span z [m]"); ax.set_zlabel("y [m]")
 ax.set_title("Pictorial blade section with reconstructed velocity field (peak incidence)",
              pad=20)
+ax.set_yticks(np.linspace(0, span, 4))
 ax.view_init(elev=18, azim=-68); tidy3d(ax)
 ax.set_box_aspect((1.4, 0.8, 0.7))
 fig.savefig(OUT/"fig3d_section_vectors.png", bbox_inches="tight", pad_inches=0.35); plt.close(fig)
