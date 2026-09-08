@@ -38,7 +38,7 @@ this project, so each one is a regression test rather than a hypothetical:
 Run from the repository root, after the pipeline:  python3 verify_invariants.py
 Exits non-zero on any failure, so run_all.py stops.
 """
-import sys, glob, json, re, subprocess, ast
+import sys, os, glob, json, re, subprocess, ast
 import numpy as np, pandas as pd
 sys.path.insert(0,'04_solver'); import unistall_solver as us
 FAIL=[]
@@ -73,6 +73,27 @@ r=pd.read_csv('02_mesh/mesh_radial_spacing.csv'); yv=r['normal_coord_chords'].va
 gr=np.diff(yv)[1:]/np.diff(yv)[:-1]
 ck("growth law recoverable from published file", gr.max()-gr.min()<1e-4, f"spread {gr.max()-gr.min():.2e}")
 ck("growth ratio matches metric", abs(gr.mean()-float(q['wall_normal_growth_ratio']))<1e-3)
+
+# --- the mesh's own quality metrics must be recomputable from its published nodes.
+#     They were not: x_m/y_m were rounded to 6 dp, a 1e-06 m quantum against a
+#     3.94e-06 m first cell, so recomputing gave max AR 1183 against the true 952.
+_nd=pd.read_csv('02_mesh/mesh_nodes.csv')
+_I,_J=int(float(q['i_nodes_wrap'])),int(float(q['j_nodes_normal']))
+_X=np.full((_J,_I),np.nan); _Y=np.full((_J,_I),np.nan)
+_X[_nd.j.values,_nd.i.values]=_nd.x_m.values; _Y[_nd.j.values,_nd.i.values]=_nd.y_m.values
+_x1,_y1=_X[:-1,:-1],_Y[:-1,:-1]; _x2,_y2=_X[:-1,1:],_Y[:-1,1:]
+_x3,_y3=_X[1:,1:],_Y[1:,1:];     _x4,_y4=_X[1:,:-1],_Y[1:,:-1]
+_ar_area=0.5*((_x1*_y2-_x2*_y1)+(_x2*_y3-_x3*_y2)+(_x3*_y4-_x4*_y3)+(_x4*_y1-_x1*_y4))
+_e=[np.hypot(_x2-_x1,_y2-_y1),np.hypot(_x3-_x2,_y3-_y2),np.hypot(_x4-_x3,_y4-_y3),np.hypot(_x1-_x4,_y1-_y4)]
+_arr=np.maximum.reduce(_e)/np.maximum(np.minimum.reduce(_e),1e-30)
+ck("mesh max aspect ratio recomputes from published nodes",
+   abs(_arr.max()-float(q['max_aspect_ratio']))<0.5, f"{_arr.max():.1f} vs {float(q['max_aspect_ratio']):.1f}")
+ck("mesh inverted cells recompute from published nodes",
+   int(np.sum(_ar_area*np.sign(np.median(_ar_area))<=0))==int(float(q['inverted_cells'])))
+ck("near-wall growth ratio recovers from published nodes",
+   abs(np.hypot(np.diff(_X[:6,128]),np.diff(_Y[:6,128]))[1]/
+       np.hypot(np.diff(_X[:6,128]),np.diff(_Y[:6,128]))[0]
+       -float(q['wall_normal_growth_ratio']))<1e-3)
 
 # --- reconstruction invariants
 for a,CL in ((2.,0.22),(10.,1.10),(17.5,1.91)):
@@ -131,9 +152,14 @@ for f in sorted(glob.glob('0*/**/*.py',recursive=True)+glob.glob('*.py')):
 ck("no unused imports", tot==0, f"{tot} found")
 
 # --- stale prose
+# This file is EXCLUDED from its own scan. It necessarily quotes the phrases it
+# forbids, so including it makes every stale-prose check match itself and fail --
+# which is exactly what happened the first time this file was committed, since
+# it had passed while still untracked and git ls-files could not see it.
+_SELF = os.path.basename(__file__)
 allsrc="".join(open(f,encoding='utf-8',errors='replace').read()
                for f in subprocess.run(['git','ls-files'],capture_output=True,text=True).stdout.split()
-               if f.endswith(('.py','.md','.json')))
+               if f.endswith(('.py','.md','.json')) and os.path.basename(f) != _SELF)
 for pat in (r'surface_cp probes at', r'demands it be zero', r'the 0\.015c\s*used', r'clip is kept'):
     ck(f"no stale prose: {pat}", len(re.findall(pat,allsrc))==0)
 

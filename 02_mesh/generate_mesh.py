@@ -247,14 +247,23 @@ if n_inverted:
                      "no artifacts written" % n_inverted)
 metrics.to_csv(HERE/"mesh_quality_metrics.csv", index=False)
 
-# nodes csv (subsampled to keep file reasonable: every node)
+# Nodes, every one, written to SIGNIFICANT FIGURES rather than decimal places
+# -- the same defect that was fixed in mesh_radial_spacing.csv, and for the same
+# reason. These coordinates were rounded to 6 dp, a quantum of 1e-06 m, while
+# the first cell is 3.94e-06 m tall: four quanta. The near-wall spacings then
+# quantised to a staircase (4.00e-06, 5.00e-06, 6.00e-06 m) instead of the
+# geometric progression they are, and the mesh's own quality metrics could not
+# be recomputed from its own published nodes -- recomputing gave a maximum
+# aspect ratio of 1183 against the true 952, and 0.039 % of cells above 1000
+# against the true zero. wall_distance_m at .round(7) was equally lossy, giving
+# 3.90e-06 for a first layer at 3.94e-06.
 ii, jj = np.meshgrid(np.arange(I), np.arange(J), indexing="ij")
 wall_dist = np.repeat(yn[None,:], I, axis=0)*CHORD
 nodes = pd.DataFrame({"i": ii.ravel(), "j": jj.ravel(),
-                      "x_m": (Xg*CHORD).ravel().round(6),
-                      "y_m": (Yg*CHORD).ravel().round(6),
-                      "wall_distance_m": wall_dist.ravel().round(7)})
-nodes.to_csv(HERE/"mesh_nodes.csv", index=False)
+                      "x_m": (Xg*CHORD).ravel(),
+                      "y_m": (Yg*CHORD).ravel(),
+                      "wall_distance_m": wall_dist.ravel()})
+nodes.to_csv(HERE/"mesh_nodes.csv", index=False, float_format="%.9g")
 
 # spacing of layer j is yn[j]-yn[j-1]; layer 0 lies ON the wall, so it has none
 layer_spacing = np.concatenate([[np.nan], np.diff(yn)])
