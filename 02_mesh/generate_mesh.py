@@ -258,10 +258,20 @@ nodes.to_csv(HERE/"mesh_nodes.csv", index=False)
 
 # spacing of layer j is yn[j]-yn[j-1]; layer 0 lies ON the wall, so it has none
 layer_spacing = np.concatenate([[np.nan], np.diff(yn)])
+# Written to SIGNIFICANT FIGURES, not decimal places. These columns span
+# 1.3e-05 to 20 chords, so a fixed number of decimals destroys the near-wall
+# end: .round(6) turned the first normal coordinate into 1.3e-05 (two figures)
+# and the first physical spacing into 4e-06 (ONE figure, against a true y1 of
+# 3.94e-06). Differencing the published coordinates then returned layer growth
+# ratios spread over 1.061 to 1.176, when the distribution is geometric by
+# construction (dn = y1*GR**j) and the file's own companion metric states a
+# constant 1.105. The growth law could not be recovered from the data
+# published to describe it.
 pd.DataFrame({"layer_j": np.arange(N_RAD),
-              "normal_coord_chords": yn.round(6),
-              "layer_spacing_chords": layer_spacing.round(7),
-              "normal_coord_m": (yn*CHORD).round(6)}).to_csv(HERE/"mesh_radial_spacing.csv", index=False)
+              "normal_coord_chords": yn,
+              "layer_spacing_chords": layer_spacing,
+              "normal_coord_m": yn*CHORD}
+             ).to_csv(HERE/"mesh_radial_spacing.csv", index=False, float_format="%.9g")
 
 # ---- figures ----
 def plot_grid(ax, every_i=4, every_j=3, lw=0.4):
