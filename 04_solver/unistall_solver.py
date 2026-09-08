@@ -598,8 +598,11 @@ def reconstruct_field(naca_csv, c, U, M, alpha_deg, CL, CNv,
     # (79.1 -> 80.4 -> 84.6 m/s), the last cell jumped to 111.7 m/s -- above the
     # free stream, on the side of the aerofoil that must be slower than it. The
     # field is simply not resolved within one cell of the wall, so it is not
-    # published there. surface_cp probes at 0.015c, which is ~7 cells out on its
-    # own finer grid, so it is unaffected.
+    # published there. surface_cp is unaffected because it does not read this grid
+    # at all: it evaluates the panel solution exactly at the control points, with
+    # the source and vortex self-terms in closed form. (It used to probe 0.015c
+    # off the wall, which is where this comment's "~7 cells out" came from; that
+    # offset is gone.)
     from matplotlib.path import Path as MplPath
     poly = MplPath(np.column_stack([xp, yp]))
     inside = poly.contains_points(np.column_stack([X.ravel(), Y.ravel()])).reshape(X.shape)
@@ -703,8 +706,13 @@ def surface_load_closure(naca_csv, c, U, M, alpha_deg, CL, CNv, tau_over_Tvl):
     Gamma = 0.5*CL*U*c must return that C_L (Blasius), so any residual here is
     discretisation or a bug, never physics.
 
-    Also returns the trailing-edge pressure jump |Cp_upper - Cp_lower| there,
-    the second invariant: the Kutta condition demands it be zero.
+    Also returns the trailing-edge pressure jump |Cp_upper - Cp_lower| there.
+    That one is NOT an invariant and must not be read as one: it is zero only if
+    the imposed circulation is the inviscid attached value, which is what
+    kutta_reference_CL() computes. The reconstruction is deliberately handed the
+    indicial C_L instead, so the jump is a measure of how far the modelled flow
+    is from attached. It is linear in the imposed C_L, with a measured
+    jump/|CL - CL_kutta| of 2.4-2.5 over alpha = 2-19 deg.
 
     The integral is taken over the same panels the solution was built on, with
     Cp at the control points. It previously summed a mean of END-POINT Cp values
