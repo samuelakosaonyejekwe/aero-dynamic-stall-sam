@@ -1,12 +1,15 @@
 """
 06_postprocessing / make_3d_plots.py
 ------------------------------------
-3D engineering visualisations:
-  * fig3d_response_surface.png   CL_max response surface over (mean-α, k)  [+CSV]
-  * fig3d_cp_phase_surface.png   Cp(x/c, cycle-phase) carpet surface
-  * fig3d_field_surface_*.png    pressure / speed field as a 3D surface
-  * fig3d_section_vectors_*.png   pictorial blade section, pressure-coloured,
-                                  with 3D velocity vectors
+3D engineering visualisations. Figures go to 06_postprocessing/plots/, the one
+table to 05_solution/:
+  * fig3d_response_surface.png     CL_max response surface over (mean-α, k)
+  * response_surface.csv           the data behind it, written to 05_solution/
+  * fig3d_cp_phase_surface.png     Cp(x/c, cycle-phase) carpet surface
+  * fig3d_field_surface_Cp.png     pressure field as a 3D surface
+  * fig3d_field_surface_speed.png  speed field as a 3D surface
+  * fig3d_section_vectors.png      pictorial blade section, pressure-coloured,
+                                   with 3D velocity vectors
 No black; clean layouts; labels kept clear of the surfaces.
 """
 import sys, glob

@@ -7,6 +7,11 @@ record. The dynamic validation is performed against REAL digitised experimental
 loops in validate_nasa_real.py (NASA TM-84245), and the certification harness is
 validate_digitized.py.
 
+Outputs (all to 06_postprocessing/validation/):
+  validation_static.csv        model vs reference static polar, point by point
+  calibration_constants.csv    the constants the calibration produced
+  fig_validation_static_polar.png   model-vs-reference overlay
+
 STATIC SOURCES (recorded):
   [S1] Sheldahl & Klimas (1981) SAND80-2114, Sandia National Laboratories.
   [S2] Abbott & von Doenhoff (1959) "Theory of Wing Sections", Dover.

@@ -1,18 +1,28 @@
 """
 06_postprocessing / make_all_plots.py
 -------------------------------------
-Generates EVERY figure for the case study from the solution data:
-  * hysteresis loops (CL, CD, CM vs alpha) with stroke-direction arrows
-  * unsteady time histories & state variables (plots of every time-history CSV)
-  * static polar (model vs published reference)
-  * convergence / residual history
-  * surface Cp distributions at phases
-  * 2D contours: pressure (Cp), velocity magnitude + streamlines, vorticity,
-    local Mach, static & recovery temperature
-  * temperature profiles (surface recovery temperature vs x/c)
-  * velocity vector (quiver) fields
-  * 3D: load response surface, Cp(x/c, phase) surface, 3D field surface,
-    3D pictorial section with pressure colouring + velocity vectors
+Generates the 2-D figures for the case study from the solution data, all
+written to 06_postprocessing/plots/. The 3-D figures (fig3d_*.png) are NOT
+produced here -- they come from make_3d_plots.py, and this stage deliberately
+excludes them from its own count.
+
+Outputs, by family (<case> is A_validation or B_application, <phase> is
+rise|peak|fall|dsv with its incidence):
+  hyst_cl_<case>.png / hyst_cd_<case>.png / hyst_cm_<case>.png
+                                    hysteresis loops with stroke-direction arrows
+  timehist_loads_<case>.png         unsteady loads against time
+  states_<case>.png                 indicial state variables
+  static_polar_calibration.png      model against the published reference polar
+  convergence_residuals.png         cycle-to-cycle convergence
+  cp_distribution_<case>.png        surface Cp at the written phases
+  contour_Cp_<case>_<phase>.png     pressure field
+  contour_speed_stream_<case>_<phase>.png   speed magnitude + streamlines
+  contour_vorticity_<case>_<phase>.png      vorticity
+  contour_Mach_<case>_<phase>.png           local Mach number
+  contour_Tstatic_<case>_<phase>.png        static temperature
+  contour_Trecovery_<case>_<phase>.png      recovery (skin) temperature
+  contour_vectors_<case>_<phase>.png        velocity vectors (quiver)
+  temperature_profile_<case>_<phase>.png    surface recovery temperature vs x/c
 LAYOUT RULES (enforced): constrained_layout everywhere, colorbars on their own
 axes, titles padded, legends in clear regions -> text never overlaps a figure.
 No black is ever used (shared aero_style).

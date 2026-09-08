@@ -5,9 +5,12 @@ Drives the UNISTALL(TM) solver for both case-study configurations and writes
 all solution data to 05_solution/.  Outputs:
   time_history_<case>.csv      per-step unsteady loads & states (last cycle)
   cp_distribution_<case>.csv   surface Cp(x/c) at several phase angles
-  field_<case>_ph<deg>.csv     reconstructed 2D fields at key phases
+  field_<case>_<phase>_a<deg>.csv  reconstructed 2D fields at key phases;
+                               <phase> is rise|peak|fall|dsv and <deg> the
+                               incidence, e.g. field_A_validation_peak_a19.csv
   model_static_polar.csv       quasi-steady model polar (for validation)
   metrics_<case>.csv           engineering scalar metrics (deterministic)
+  summary_all_cases.csv        one row per case: the headline scalars
   runtime_environment.csv      the machine, and the CPU time the march took on it
   convergence/residuals_<case>.csv   cycle-to-cycle convergence
 """

@@ -4,6 +4,13 @@
 ------------------------------------------------------
 PRIMARY dynamic validation against REAL digitised experimental loops.
 
+Outputs (all to 06_postprocessing/validation/):
+  validation_nasa_real.csv         one row per frame: conditions, role, errors
+  validation_realdata_summary.csv  headline metrics over the held-out frames
+  exp_<frame>_CL.csv               digitised lift points extracted from each .mat
+  exp_<frame>_CM.csv               digitised moment points, likewise
+  fig_validation_nasa_real.png     model-vs-experiment overlay, all frames
+
 DATA PROVENANCE
   Digitised C_L(α), C_M(α) oscillating-airfoil loops from McCroskey, McAlister,
   Carr & Pucci (1982), NASA TM-84245 [S5], via the open repository

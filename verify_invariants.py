@@ -164,6 +164,28 @@ for _,row in res.iterrows():
     if abs(np.degrees(gv('alpha_0'))-float(row['alpha0_deg']))>0.06 or abs(gv('M')-float(row['M']))>5e-4: bad+=1
 ck("all 6 frame provenances match the .mat", bad==0)
 
+# --- every generated artifact must be DECLARED in some stage's docstring manifest.
+#     run_case.py's manifest listed a field-file pattern that no file has matched
+#     since the phase tags were introduced, and omitted summary_all_cases.csv
+#     entirely; make_3d_plots.py declared a wildcard for a file that has no
+#     suffix. Nothing checked the manifests against the artifacts, so they drifted.
+_docs=""
+for _f in sorted(glob.glob('0*/**/*.py',recursive=True)+glob.glob('*.py')):
+    _docs += (ast.get_docstring(ast.parse(open(_f,encoding='utf-8').read())) or "") + "\n"
+_decl=set(re.findall(r'[A-Za-z0-9_<>\-]+\.(?:csv|png|json|pdf|docx)', _docs))
+def _declared(name):
+    for d in _decl:
+        if d == name: return True
+        if '<' in d and re.fullmatch(re.sub(r'<[^>]+>', r'[A-Za-z0-9_\.]+', re.escape(d).replace('\\<','<').replace('\\>','>')), name):
+            return True
+    return False
+_gen=[f for f in subprocess.run(['git','ls-files'],capture_output=True,text=True).stdout.split()
+      if re.match(r'0[1-8]_', f) and f.endswith(('.csv','.png'))
+      and 'experimental' not in f]
+_undeclared=[f for f in _gen if not _declared(os.path.basename(f))]
+ck("every generated artifact is declared in a stage manifest",
+   not _undeclared, f"{len(_undeclared)} undeclared, e.g. {_undeclared[:3]}")
+
 # --- dead code / imports
 tot=0
 for f in sorted(glob.glob('0*/**/*.py',recursive=True)+glob.glob('*.py')):

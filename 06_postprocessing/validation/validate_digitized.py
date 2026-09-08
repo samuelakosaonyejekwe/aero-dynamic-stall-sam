@@ -2,6 +2,14 @@
 """
 06_postprocessing / validation / validate_digitized.py   (OPTION 2)
 ------------------------------------------------------------------
+Outputs (all to 06_postprocessing/validation/), ONLY when experimental data
+are present; otherwise a template is written instead, see below:
+  validation_digitized_<file>.csv     per-file error metrics
+  validation_digitized_summary.csv    one row per experimental file
+  fig_validation_digitized_<file>.png experiment-vs-model overlay
+  experimental/TEMPLATE_experiment.csv and experimental/conditions.csv are
+  written when no data are found.
+
 Certification-grade harness. Drop a CSV of EXPERIMENTAL points digitised from a
 specific figure of a cited report (e.g. McAlister TP-1100 / McCroskey TM-84245)
 into  06_postprocessing/validation/experimental/  and this script will:
