@@ -331,33 +331,60 @@ P("Air thermodynamic properties (solver input). c_p and the recovery factor are 
 add_csv(ROOT/"03_model_setup"/"material_thermo_properties.csv")
 
 H("4.9 Accuracy of the field reconstruction", 2)
-P("The reconstruction is a potential field and is reported as qualitative. Its two "
-  "checkable invariants are measured on every run rather than asserted:")
+P("The reconstruction is a potential field and is reported as qualitative. Its "
+  "checkable properties are measured on every run rather than asserted:")
 _mA_c = pd.read_csv(ROOT/"05_solution"/"metrics_A_validation.csv").set_index("metric")["value"]
 _mB_c = pd.read_csv(ROOT/"05_solution"/"metrics_B_application.csv").set_index("metric")["value"]
 bullet("Closure. Integrating the reconstructed surface C_p must return the C_L the "
        "reconstruction was given (Γ = ½ C_L U c). At peak incidence it returns it to "
        f"{_mA_c['Cp_closure_error_pct']} % (Case A) and {_mB_c['Cp_closure_error_pct']} % "
        "(Case B), published as Cp_closure_error_pct in metrics_*.csv.")
-bullet("Kutta condition. The upper/lower C_p difference at the first point off the "
-       "trailing edge must be zero. The panel solution alone closes it to 0.016 at "
-       "α = 5° and 0.11 at α = 19°. The Lamb–Oseen dynamic-stall vortex is added on "
-       "top of that solution rather than being part of it, so while it convects over "
-       "the aft chord it loads the two trailing-edge probes asymmetrically: over the "
-       "cycle phases written out the residual reaches "
-       f"{_mA_c['Cp_TE_jump_max_over_phases']} (Case A) and "
-       f"{_mB_c['Cp_TE_jump_max_over_phases']} (Case B). That maximum, not the milder "
-       "value at peak lift, is what is published as Cp_TE_jump_max_over_phases.")
-P("The surface C_p is evaluated directly from the panel singularities, so the closure "
-  "deficit is not a grid effect, and it does not vanish under refinement either — "
-  "doubling the panel count moves it by under a point. The cause is the C_p clip at "
-  "−8 that keeps the field bounded: a potential field at α = 19° draws a leading-edge "
-  "suction peak deeper than that, the clip truncates it, and the truncated area is the "
-  "missing lift. Standing the probe closer to the wall makes it worse rather than "
-  "better for exactly that reason (−19.7 % at 0.008c against −14.4 % at the 0.015c "
-  "used). The clip is kept because the real flow there is separated and could not "
-  "sustain such a peak either. Nothing in the reconstruction knows about separation; "
-  "the reported loads come from the UIBS core and do not depend on any of it.",
+bullet("Kutta condition. The trailing-edge C_p jump is NOT a residual that can be "
+       "driven to zero, and is no longer presented as one. It is linear in the "
+       "imposed C_L and passes through zero exactly at the inviscid attached "
+       "circulation, published beside it as CL_kutta_inviscid "
+       f"({_mA_c['CL_kutta_inviscid']} for Case A); imposing that value drives the "
+       "jump to about 0.001, and the measured ratio jump/|C_L − C_L,Kutta| is 2.4–2.5 "
+       "across α = 2–19°. The reconstruction is instead handed the indicial C_L, "
+       "which during dynamic stall departs from the attached value deliberately, so a "
+       "body carrying a non-Kutta circulation must show a jump. Over the cycle phases "
+       f"written out it reaches {_mA_c['Cp_TE_jump_max_over_phases']} (Case A) and "
+       f"{_mB_c['Cp_TE_jump_max_over_phases']} (Case B), published as "
+       "Cp_TE_jump_max_over_phases: a measure of how far the modelled flow is from "
+       "attached, not an error.")
+bullet("Dynamic-stall-vortex core depth, reported rather than tuned away. The "
+       "suction at the centre of the reconstructed vortex is published as "
+       f"Cp_DSV_core_min: {_mA_c['Cp_DSV_core_min']} (Case A) and "
+       f"{_mB_c['Cp_DSV_core_min']} (Case B), where a measured deep-stall core is "
+       "usually nearer −3 to −6. Deepening it means shrinking the core radius and "
+       "raising the circulation factor together, and neither constant can be "
+       "calibrated from anything this study ships: the experimental frames carry only "
+       "integrated C_L, C_D and C_M against incidence, with no surface-pressure or "
+       "field data to fit a core size to. Both are therefore named constants in the "
+       "solver (DSV_GAMMA_FACTOR, DSV_CORE_RADIUS_CHORDS) and the resulting depth is "
+       "published as a number, so the shallowness is checkable rather than an "
+       "adjective.")
+P("This closure figure was −12.4 % in an earlier revision of this study, and the "
+  "explanation recorded for it — the C_p clip at −8, together with the claim that the "
+  "deficit did not vanish under refinement — was tested and found false on both "
+  "counts: moving the clip to −10⁹ changed the closure by 0.00 points, and refining "
+  "160 → 1280 panels moved it monotonically from −11.5 % to −5.2 %. The three real "
+  "causes were all in the evaluation rather than the physics. The vortex sheet's own "
+  "tangential contribution (−γ/2, the velocity jump across a sheet) was omitted, worth "
+  "−48.7 % of the lift at the wall on its own. C_p was evaluated at the panel "
+  "end-points, stepped 0.015c off the wall, rather than at the control points where "
+  "flow tangency is actually imposed — an offset that was masking the missing term "
+  "rather than avoiding it, since the error grew toward −48.7 % as the probe "
+  "approached the surface. And a Prandtl–Glauert factor was applied to a C_p whose "
+  "circulation already carried compressibility, inflating the load a further 4.8 % at "
+  "M = 0.3. With all three corrected the closure converges: refining 160 → 1280 panels "
+  "now drives it monotonically to −0.04 %, which is what Blasius requires of an exact "
+  "potential solution and is the check that the formulation is right rather than "
+  "merely closer. Nothing is clipped; the field nonetheless bottoms out near C_p = "
+  "−5.2 because the near-wall ring carrying the leading-edge peak is masked, so the "
+  "contour plots understate the surface suction (about −15) by roughly three times. "
+  "Nothing in the reconstruction knows about separation; the reported loads come from "
+  "the UIBS core and do not depend on any of it.",
   italic=True, size=10)
 
 # ================================================================ 5 NOVELTY
