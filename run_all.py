@@ -25,6 +25,7 @@ STEPS = [
     ("Report (PDFs)",   "07_report/build_pdfs.py"),
     ("Report (consolidated PDF)", "07_report/build_report_pdf.py"),
     # last, so it checks the artifacts this run actually produced
+    ("Invariant check (physics & numerics)", "verify_invariants.py"),
     ("Claim check (README vs artifacts)", "check_claims.py"),
 ]
 for name, rel in STEPS:

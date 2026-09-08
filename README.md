@@ -201,14 +201,23 @@ python3 07_report/build_docx.py           # assembles case.docx
 python3 07_report/build_pdfs.py           # plots album + data dossier
 python3 07_report/build_report_pdf.py     # -> aero_dynamic_stall_report.pdf
 
+python3 verify_invariants.py  # asserts the physics and numerics still hold
 python3 check_claims.py    # asserts every number quoted below still matches the CSVs
 ```
 
-Or run all fourteen stages in the correct order with a single command:
+Or run all fifteen stages in the correct order with a single command:
 
 ```bash
 python3 run_all.py
 ```
+
+`verify_invariants.py` is the companion to `check_claims.py`: the latter guards
+the numbers quoted in prose, the former guards the properties the results must
+have — mesh validity, the reconstruction's closure against Blasius, the Kutta
+reference, positive cycle-mean drag, every response-surface point inside the
+calibration range, and the experimental provenance. Each of its checks
+corresponds to a defect that was found and fixed here, so it is a regression
+test rather than a formality; it fails the build on any violation.
 
 Every number, figure and table above is produced by these stages. The handful
 that are necessarily transcribed — the results quoted in this README and in
