@@ -68,8 +68,11 @@ ROW_BG   = colors.HexColor("#f3f6fa")
 # ---------------------------------------------------------------- fonts
 # DejaVu Sans Condensed: the family with the full Unicode coverage the document
 # needs (Greek alpha/beta/Xi/psi, plus the arrow, degree, +/- and (TM) glyphs).
-# The Condensed cut specifically -- the metrics of the regular cut are wider and
-# would repaginate the report, so it is not a drop-in substitute.
+# The Condensed cut specifically. This is not cosmetic: measured with
+# pdfmetrics.stringWidth on a representative line of this report's body text,
+# the regular cut sets 11.2% wider (1020.4 pt vs 917.9 pt at 10 pt), which is
+# 91 rather than 101 characters on a 6.5 in line. Substituting it would
+# repaginate the whole 73-page body, so it is not a drop-in replacement.
 #
 # The install location differs per distribution, so search rather than assume
 # one. This used to hardcode the Debian path, which was harmless while this
