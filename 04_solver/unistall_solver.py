@@ -19,6 +19,12 @@ time s = 2*U*t/c :
 Two auxiliary modules make the solver "universal" for engineering output:
   * Vortex/source field-reconstruction  -> 2D pressure, velocity, vorticity,
     streamlines + an explicit Lamb-Oseen dynamic-stall vortex.
+    LIMITATION: the reconstructed vortex carries circulation 1.4*CNv*U*c in a
+    core of radius 0.16c, giving a peak swirl of roughly 0.2*U. Its sign,
+    position and the flow reversal beneath it are physical, but the core is
+    weaker and more diffuse than a measured dynamic-stall vortex, so the core
+    suction it produces is shallow. The reconstruction is qualitative; the
+    reported loads come from the UIBS core and do not depend on it.
   * Compressible thermal module          -> static & recovery (skin) temperature.
 
 The model is calibrated PER CASE to a static polar and validated against
@@ -350,16 +356,16 @@ def reconstruct_field(naca_csv, c, U, M, alpha_deg, CL, CNv,
     # dynamic-stall vortex (Lamb-Oseen), convects along upper surface
     xv = (0.25 + 0.55*np.clip(tau_over_Tvl, 0, 1.3))*c
     yv = 0.10*c + 0.06*c*np.clip(tau_over_Tvl, 0, 1.3)
-    # NOTE ON SIGN. This is a KINEMATIC surrogate: the vortex is given the
-    # circulation that reproduces the extra upper-surface suction associated
-    # with the UIBS vortex load CNv. Because it sits ABOVE the surface, that
-    # makes its rotation opposite to a physical dynamic-stall vortex, which is
-    # a roll-up of upper-surface boundary-layer vorticity (same sense as the
-    # bound circulation) and augments lift through its own low-pressure core
-    # rather than by accelerating the surface flow. So in the vorticity plots
-    # the DSV appears with sign opposite to the bound sheet. The loads are NOT
-    # affected -- they come from the UIBS core, not from this reconstruction.
-    Gv = -1.4*max(CNv, 0.0)*U*c
+    # SIGN. The dynamic-stall vortex is a roll-up of upper-surface boundary-layer
+    # vorticity, so it rotates in the SAME sense as the bound circulation
+    # (clockwise here). This term must therefore carry the same sign as the
+    # bound sheet above. It does not need to supply the vortex lift -- Gamma is
+    # already matched to the full UIBS C_L, which contains CNv -- so giving the
+    # vortex its physical rotation costs nothing and buys the correct vorticity
+    # field and the flow reversal beneath the core that characterises the stall.
+    # The suction under the vortex comes from its low-pressure core (see
+    # _core_pressure_deficit), not from accelerating the surface flow.
+    Gv = 1.4*max(CNv, 0.0)*U*c
     rc = 0.16*c
     rx = X-xv; ry = Y-yv; r2 = rx*rx+ry*ry
     fcore = (1-np.exp(-r2/rc**2))
