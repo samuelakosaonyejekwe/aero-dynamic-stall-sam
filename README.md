@@ -72,11 +72,25 @@ compressible static & recovery (skin) temperature fields; aerodynamic damping
 frequency.
 
 The loads come from the UIBS core. The 2-D fields and surface Cp come from a
-separate potential-flow reconstruction driven by the UIBS circulation, and are
-qualitative: integrating the reconstructed surface Cp returns the C_L it was
-given to within -12.4 % (Case A) — a number the pipeline
-measures on every run and publishes as `Cp_closure_error_pct` in
-`05_solution/metrics_*.csv`, rather than a claim in a comment.
+separate potential-flow reconstruction driven by the UIBS circulation.
+Integrating the reconstructed surface Cp returns the C_L it was given to within
+**0.9 %** — 0.9 % (Case A) and 0.9 % (Case B) — a number the pipeline measures on every run and
+publishes as `Cp_closure_error_pct` in `05_solution/metrics_*.csv`, rather than
+a claim in a comment. It previously read -12.4 %, and the explanation recorded
+for that deficit was itself wrong; the three real causes (a missing vortex-sheet
+self-term, evaluation off the wall instead of at the panel control points, and a
+double-counted compressibility factor) are documented in `unistall_solver.py`.
+
+Two limitations of the reconstruction are published as numbers rather than
+described in prose. `Cp_TE_jump_max_over_phases` is the trailing-edge pressure
+jump; it cannot be driven to zero, because the reconstruction is handed the
+indicial C_L, which during dynamic stall departs deliberately from the inviscid
+attached circulation that the Kutta condition selects. That circulation is
+published beside it as `CL_kutta_inviscid`, and imposing it drives the jump to
+~0.001. `Cp_DSV_core_min` is the suction at the centre of the reconstructed
+dynamic-stall vortex; it reads about -0.4 where a measured deep-stall core is
+usually nearer -3 to -6, and it is reported rather than tuned because nothing
+this study ships (integrated cl/cd/cm only) could calibrate a core size.
 
 ### Headline results
 

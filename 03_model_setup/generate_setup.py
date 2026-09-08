@@ -160,19 +160,23 @@ config = {
         "grid_nx_solution": 220, "grid_ny_solution": 170,
         "domain_chords": [-1.0, 2.0, -1.2, 1.2],
         "near_wall_cells_masked": 1,
-        "surface_cp_probe_offset_chords": 0.015,
+        "surface_cp_evaluation": "panel control points, exact self-terms",
+        "field_cp_display_clip": -8.0,
         "comment": "grid_*_solution are the sizes written to 05_solution/field_*.csv. "
-                   "cp_distribution_*.csv is NOT read off any grid: the surface Cp is "
-                   "evaluated directly from the panel singularities at "
-                   "surface_cp_probe_offset_chords outside the wall, so it does not "
-                   "depend on a grid at all. That offset is the value at which the "
-                   "closure error is smallest (-14.4 % at alpha 19 deg, against "
-                   "-19.7 % at 0.008c and -17.0 % at 0.030c). near_wall_cells_masked "
+                   "cp_distribution_*.csv is NOT read off any grid, and is no longer "
+                   "probed at an offset either: the surface Cp is evaluated at the "
+                   "panel CONTROL POINTS, where flow tangency is imposed, with the "
+                   "source (sigma/2 normal) and vortex (-gam/2 tangential) self-terms "
+                   "added in closed form. The previous 0.015c probe offset was chosen "
+                   "because it minimised the closure error, but it was masking the "
+                   "missing vortex self-term rather than avoiding it -- the error grew "
+                   "to -48.7 % as the probe approached the wall. near_wall_cells_masked "
                    "is the ring of field cells left blank because the regularised "
-                   "surface sheet is not resolved there. Accuracy of the "
-                   "reconstruction is measured, not asserted: the "
-                   "Cp_closure_error_pct row of metrics_*.csv reports how well the "
-                   "integrated surface Cp reproduces the C_L it was given"},
+                   "surface sheet is not resolved there. field_cp_display_clip applies "
+                   "to the plotted FIELD only; the surface Cp and the closure metric "
+                   "are unclipped. Accuracy of the reconstruction is measured, not "
+                   "asserted: the Cp_closure_error_pct row of metrics_*.csv reports how "
+                   "well the integrated surface Cp reproduces the C_L it was given"},
     "calibration_state": "calibrated_per_case (static polar) + validated (dynamic)"
 }
 with open(HERE/"solver_config.json", "w") as fp:

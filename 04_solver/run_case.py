@@ -174,13 +174,16 @@ for name, C in CASES.items():
         GEO, C["c"], C["U"], C["M"], out["alpha_deg"][_j], out["CL"][_j],
         out["CNv"][_j], out["tau_v"][_j]/consts["Tvl"])
     # ---- Kutta residual. Reported as the WORST of the phases written to
-    #      cp_distribution_*.csv, not just the one at peak lift: the panel
-    #      solution on its own closes the trailing edge to ~0.03, but the
-    #      Lamb-Oseen dynamic-stall vortex is added on top of it and is not part
-    #      of that solution, so while it is convecting over the aft chord it
-    #      loads the two trailing-edge probes asymmetrically and the jump grows
-    #      by an order of magnitude. Quoting only the mild number would have
-    #      understated the limitation by 20x. ----
+    #      cp_distribution_*.csv, not just the one at peak lift.
+    #
+    #      This is NOT an error that can be driven to zero, and the published
+    #      CL_kutta_inviscid row is what makes that checkable. The trailing-edge
+    #      Cp jump is linear in the imposed C_L and vanishes exactly at the
+    #      inviscid attached circulation; the reconstruction is instead handed
+    #      the indicial C_L, which during dynamic stall departs from that value
+    #      on purpose. The jump is therefore a measure of how far the modelled
+    #      flow is from attached. A reader can verify the claim by imposing
+    #      CL_kutta_inviscid, which drives the jump to ~1e-3. ----
     cp_te_jump = 0.0
     for _tgt, _ups in [(C["a_mean"], True),
                        (C["a_mean"]+C["a_amp"]*0.7, True),
@@ -191,6 +194,20 @@ for name, C in CASES.items():
             GEO, C["c"], C["U"], C["M"], out["alpha_deg"][_k], out["CL"][_k],
             out["CNv"][_k], out["tau_v"][_k]/consts["Tvl"])
         cp_te_jump = max(cp_te_jump, _tj)
+    cl_kutta = us.kutta_reference_CL(GEO, C["c"], C["U"], C["M"],
+                                     float(out["alpha_deg"][_j]))
+    # ---- depth of the reconstructed dynamic-stall-vortex core. Published so
+    #      that "the core is diffuse" is a number a reader can check rather than
+    #      an adjective: it is the Cp at the vortex centre at the instant of
+    #      peak vortex loading. Neither DSV constant can be calibrated from the
+    #      data this study ships (integrated cl/cd/cm only), so the shallowness
+    #      is reported, not tuned away. ----
+    _v = int(np.argmax(out["CNv"]))
+    _F = us.reconstruct_field(GEO, C["c"], C["U"], C["M"], out["alpha_deg"][_v],
+                              out["CL"][_v], out["CNv"][_v],
+                              out["tau_v"][_v]/consts["Tvl"], T_inf=C["T_inf"])
+    _d = np.hypot(_F["X"]-_F["xv"], _F["Y"]-_F["yv"])
+    cp_dsv_core = float(_F["Cp"][np.unravel_index(np.nanargmin(_d), _d.shape)])
     met = pd.DataFrame({
         "metric": ["CL_max_dynamic", "alpha_at_CLmax_deg", "CL_max_static",
                    "dynamic_overshoot_ratio", "CM_min(c/4)", "alpha_at_CMmin_deg",
@@ -199,7 +216,8 @@ for name, C in CASES.items():
                    "aero_damping_Xi_normalised", "damping_neutral_band",
                    "stall_flutter_risk",
                    "CL_hysteresis_loop_area", "Cp_closure_error_pct",
-                   "Cp_TE_jump_max_over_phases",
+                   "Cp_TE_jump_max_over_phases", "CL_kutta_inviscid",
+                   "Cp_DSV_core_min",
                    "reduced_frequency_k", "mach_M", "mean_alpha_deg", "amp_alpha_deg"],
         "value": [round(CLmax,3), round(a[iCL],2), round(CL_static_max,3),
                   round(CLmax/CL_static_max,3), round(CMmin,3), round(a[iCM],2),
@@ -207,6 +225,7 @@ for name, C in CASES.items():
                   round(float(onset),2), round(xi,5),
                   round(xi_hat,4), us.DAMPING_TOL, verdict,
                   round(loopCL,4), round(cp_closure_pct,1), round(cp_te_jump,3),
+                  round(cl_kutta,3), round(cp_dsv_core,3),
                   C["k"], C["M"], C["a_mean"], C["a_amp"]],
     })
     met.to_csv(SOL/f"metrics_{name}.csv", index=False)

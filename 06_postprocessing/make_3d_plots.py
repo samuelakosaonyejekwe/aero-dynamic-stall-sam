@@ -64,7 +64,18 @@ SWEEP_NPC, SWEEP_NCYC = NPC//2, 3
 # sweep grid. Amplitude is held at the case-A value so the surface is a sweep in
 # (mean incidence, reduced frequency) about the reported case, not about a third
 # unrelated condition; the CSV records the amplitude with the data.
-means = np.linspace(6, 16, 6)
+# The upper bound on mean incidence is set by the calibration, not by taste.
+# f(alpha) is fitted by inverse Kirchhoff to static_polar_reference.csv, which is
+# tabulated to ALPHA_CAL_MAX; past that, calibrate_separation() decays f towards
+# full separation on an assumption rather than on data. With the amplitude held
+# at the case-A value the peak incidence is mean + amp, so the largest mean that
+# keeps every point on calibrated data is ALPHA_CAL_MAX - amp. This grid used to
+# run to a mean of 16 deg, i.e. a 26 deg peak, which put half of the 36 published
+# points on the extrapolated branch. They are no longer computed: an uncalibrated
+# result does not become safe by being labelled.
+ALPHA_CAL_MAX = float(stat["alpha_deg"].max())
+MEAN_MAX      = ALPHA_CAL_MAX - AA_A
+means = np.linspace(6, MEAN_MAX, 6)
 ks    = np.linspace(0.04, 0.16, 6)
 CLmax = np.zeros((len(means), len(ks)))
 CMmin = np.zeros_like(CLmax)
@@ -75,14 +86,9 @@ for i, am in enumerate(means):
                                    n_per_cycle=SWEEP_NPC, n_cycles=SWEEP_NCYC)
         CLmax[i, j] = o["CL"].max(); CMmin[i, j] = o["CM"].min()
 M, K = np.meshgrid(means, ks, indexing="ij")
-# Which points are EXTRAPOLATED. The separation law f(alpha) is calibrated on a
-# static polar tabulated to ALPHA_CAL_MAX; past that, calibrate_separation()
-# decays f exponentially towards full separation. With this sweep amplitude the
-# upper half of the grid drives the section to 26 deg, i.e. 18 of the 36 points
-# sit on that extrapolation. The surface used to present all 36 identically,
-# with nothing to say which half the model was calibrated for. (Both REPORTED
-# cases peak at exactly ALPHA_CAL_MAX, so neither of them extrapolates.)
-ALPHA_CAL_MAX = float(stat["alpha_deg"].max())
+# within_calibration is kept as a published invariant rather than a warning: the
+# grid is bounded so every point is True, and the assert below fails the build if
+# a future change to the sweep or to the polar ever breaks that.
 PEAK = M + AA_A
 IN_CAL = PEAK <= ALPHA_CAL_MAX
 pd.DataFrame({"alpha_mean_deg": M.ravel().round(3), "reduced_freq_k": K.ravel().round(4),
@@ -104,20 +110,13 @@ ax.set_zlabel("dynamic $C_{L,max}$")
 ax.set_title("Dynamic-stall lift response surface  $C_{L,max}(α_{mean}, k)$\n"
              "(NACA 0012, M=%.2f, α amplitude %.0f°)" % (M_A, AA_A), pad=18)
 cb = fig.colorbar(surf, ax=ax, pad=0.10, shrink=0.6); cb.set_label("$C_{L,max}$")
-# draw the calibration boundary on the surface and say what it means
-_a_edge = ALPHA_CAL_MAX - AA_A
-if means.min() < _a_edge < means.max():
-    _k = np.linspace(ks.min(), ks.max(), 60)
-    _z = np.array([np.interp(_a_edge, means, CLmax[:, j]) for j in range(len(ks))])
-    ax.plot(np.full_like(_k, _a_edge), _k, np.interp(_k, ks, _z),
-            color=PALETTE[1], lw=2.4, zorder=10)
-    _note = ("Red line: mean α = %.0f°, beyond which the peak incidence exceeds "
-             "the %.0f° the static polar is tabulated to.\n"
-             "%d of the %d points behind it are on the extrapolated branch of f(α), "
-             "not on calibrated data.\nBoth reported cases peak at exactly %.0f°."
-             % (_a_edge, ALPHA_CAL_MAX, int((~IN_CAL).sum()), IN_CAL.size, ALPHA_CAL_MAX))
-    fig.text(0.5, 0.015, _note, ha="center", va="bottom", fontsize=8.5,
-             color=INK_SOFT)
+# state the bound the grid is drawn inside, so the limit travels with the figure
+assert IN_CAL.all(), "response surface must not contain extrapolated points"
+_note = ("Every point lies on calibrated data: the mean incidence stops at %.0f° so the peak\n"
+         "(mean + %.0f° amplitude) never exceeds the %.0f° the static polar is tabulated to.\n"
+         "Both reported cases peak at exactly %.0f°."
+         % (MEAN_MAX, AA_A, ALPHA_CAL_MAX, ALPHA_CAL_MAX))
+fig.text(0.5, 0.015, _note, ha="center", va="bottom", fontsize=8.5, color=INK_SOFT)
 ax.view_init(elev=24, azim=-60); tidy3d(ax)
 fig.savefig(OUT/"fig3d_response_surface.png", bbox_inches="tight", pad_inches=0.35); plt.close(fig)
 

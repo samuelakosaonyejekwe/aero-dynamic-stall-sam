@@ -71,7 +71,8 @@ CLAIMS = [
      "metrics_B CL_max_dynamic / alpha_at_CLmax_deg"),
     ("README.md", f"C_M,c/4 break = {mB['CM_min(c/4)']}, onset at α = {f(mB['stall_onset_alpha_deg']):.2f}°",
      "metrics_B CM_min / stall onset"),
-    ("README.md", f"{mA['Cp_closure_error_pct']} % (Case A)", "metrics_A Cp_closure_error_pct"),
+    ("README.md", f"{mA['Cp_closure_error_pct']} % (Case A)) and {mB['Cp_closure_error_pct']} % (Case B)".replace("))", ")"),
+     "metrics_A/B Cp_closure_error_pct"),
     # ---- damping ----------------------------------------------------------
     ("README.md", f"{mA['aero_damping_Xi_normalised']} (Case A) and {mB['aero_damping_Xi_normalised']} (Case B)",
      "metrics_A/B aero_damping_Xi_normalised"),

@@ -607,14 +607,18 @@ for f in sorted(plots.glob("fig3d_*.png")):
 P("Response-surface data (head):", bold=True)
 _rsdf = pd.read_csv(ROOT/"05_solution"/"response_surface.csv")
 _n_ex = int((~_rsdf["within_calibration"]).sum())
+_a_cal = float(pd.read_csv(ROOT/'03_model_setup'/'static_polar_reference.csv')['alpha_deg'].max())
 add_table_from_df(_rsdf, max_rows=12)
-P(f"The sweep amplitude drives the section to {_rsdf['peak_alpha_deg'].max():.0f}° at the top of "
-  f"the grid, while the static polar the separation law is calibrated on is tabulated only to "
-  f"{float(pd.read_csv(ROOT/'03_model_setup'/'static_polar_reference.csv')['alpha_deg'].max()):.0f}°. "
-  f"{_n_ex} of the {len(_rsdf)} points therefore sit on the extrapolated branch of f(α) rather "
-  "than on calibrated data; the within_calibration column marks them and the red line on "
-  "Fig. 13.x is that boundary. Both reported cases (§11) peak at exactly the top of the "
-  "calibration range, so neither of them extrapolates.", italic=True, size=10)
+P(f"The grid is bounded by the calibration rather than by preference. The separation law "
+  f"f(α) is fitted by inverse Kirchhoff to a static polar tabulated to {_a_cal:.0f}°, so with "
+  f"the amplitude held at the case-A value the mean incidence stops at "
+  f"{_rsdf['alpha_mean_deg'].max():.1f}° and the peak never exceeds {_rsdf['peak_alpha_deg'].max():.0f}°. "
+  f"All {len(_rsdf)} points therefore rest on calibrated data ({_n_ex} extrapolated), which the "
+  "within_calibration column records and the build asserts. An earlier version of this sweep "
+  "ran to a 26° peak, placing half its points on the extrapolated branch of f(α); those points "
+  "are no longer computed, because an uncalibrated result is not made safe by a label. Both "
+  "reported cases (§11) peak at exactly the top of the calibration range.",
+  italic=True, size=10)
 
 # ================================================================ 14 DRAWINGS
 H("14. Engineering Drawings", 1)

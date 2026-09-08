@@ -14,8 +14,10 @@ aero_damping_Xi_normalised,-0.008
 damping_neutral_band,0.08
 stall_flutter_risk,neutral (within model resolution)
 CL_hysteresis_loop_area,0.1642
-Cp_closure_error_pct,-12.4
-Cp_TE_jump_max_over_phases,0.153
+Cp_closure_error_pct,0.9
+Cp_TE_jump_max_over_phases,1.33
+CL_kutta_inviscid,2.077
+Cp_DSV_core_min,-0.377
 reduced_frequency_k,0.1
 mach_M,0.3
 mean_alpha_deg,10.0

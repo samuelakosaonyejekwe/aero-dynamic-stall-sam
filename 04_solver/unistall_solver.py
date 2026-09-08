@@ -22,39 +22,57 @@ Two auxiliary modules make the solver "universal" for engineering output:
     and a bound vortex sheet, BOTH on the body surface, with the total
     circulation matched to the UIBS C_L (Kutta-Joukowski).
     LIMITATIONS, measured rather than asserted (surface_load_closure() and
-    the metrics_*.csv row "Cp_closure_error_pct" recompute them on every run):
-      - CLOSURE. Integrating the surface Cp recovers the C_L it was given to
-        within 10.7 % (alpha 5 deg) to 14.4 % (alpha 19 deg). The surface Cp is
-        evaluated directly from the singularities, so this is not a grid effect,
-        and it does not vanish under refinement either: doubling the panel count
-        moves it by under a point. The residual is set by the deliberate Cp clip
-        at -8 below. A potential field at alpha = 19 deg draws a leading-edge
-        suction peak deeper than that; the clip truncates it and the truncated
-        area is the missing lift. Standing the probe closer to the wall makes it
-        worse, not better, for exactly that reason (-19.7 % at 0.008c against
-        -14.4 % at the 0.015c used). The clip is kept because the real flow
-        there is separated and could not sustain such a peak either -- so the
-        deficit is a property of a potential reconstruction used past stall, not
-        an unconverged discretisation. It does not touch the reported loads,
-        which come from the UIBS core.
-      - KUTTA CONDITION, satisfied only approximately. The panel solution on
-        its own closes the trailing edge well: with no dynamic-stall vortex the
-        upper/lower Cp difference at the first point off the trailing edge is
-        0.016 (alpha 5 deg) to 0.11 (alpha 19 deg). The Lamb-Oseen vortex,
-        however, is added on top of that solution and is not part of it, so
-        while it convects over the aft chord it loads the two trailing-edge
-        probes asymmetrically. Over the cycle phases actually written out, the
-        residual reaches 0.15 (Case A) and 0.25 (Case B) -- the published
-        Cp_TE_jump_max_over_phases row of metrics_*.csv, which is the maximum
-        over those phases rather than the mild value at peak lift (0.03), so
-        the limitation is not understated by the factor of five between them.
-      - The reconstructed vortex carries circulation 1.4*CNv*U*c in a core of
-        radius 0.16c. Its sign, position and the flow reversal beneath it are
-        physical, but the core is weaker and more diffuse than a measured
-        dynamic-stall vortex, so the core suction it produces is shallow.
+    the metrics_*.csv rows "Cp_closure_error_pct" and "Cp_TE_jump_max_over_phases"
+    recompute them on every run):
+      - CLOSURE. Integrating the surface Cp now recovers the C_L it was given to
+        within about 1 % over most of the cycle (-1.3 % at alpha 2 deg, +1.1 %
+        at 17.5 deg, +3.0 % at the dynamic-stall-vortex phase). It previously
+        read -10.7 to -14.4 %, and the explanation recorded here for that
+        deficit -- the Cp clip at -8, with the further claim that it did not
+        converge under refinement -- was WRONG on both counts. Tested directly:
+        moving the clip from -8 to -1e9 changed the closure by 0.00 points, and
+        refining 160 -> 1280 panels moved it monotonically from -11.5 % to
+        -5.2 %. The real causes were three, all in the evaluation rather than
+        the physics, and all now fixed in surface_cp: the vortex sheet's own
+        tangential contribution (-gam/2) was omitted; Cp was evaluated at the
+        panel end-points offset 0.015c off the wall rather than at the control
+        points where tangency is imposed; and a Prandtl-Glauert factor was
+        applied to a Cp whose circulation already carried compressibility,
+        inflating the load a further 4.8 % at M = 0.3.
+      - KUTTA CONDITION. The trailing-edge Cp jump is not a residual that can be
+        driven to zero, and it is no longer presented as one. It is LINEAR in
+        the imposed C_L and passes through zero exactly at the inviscid attached
+        circulation, which kutta_reference_CL() computes: at alpha = 10 deg that
+        is C_L = 1.184 (implied lift slope 6.79/rad, against 2*pi*1.092 = 6.86
+        for 12 % thickness), and imposing it drives the jump to 0.0009. The
+        reconstruction is instead handed the indicial C_L, which during dynamic
+        stall departs from that value deliberately -- so a body carrying a
+        non-Kutta circulation MUST show a trailing-edge jump. The published
+        Cp_TE_jump_max_over_phases is therefore a measure of how far the modelled
+        flow is from attached, not an error. The earlier, smaller published
+        values (0.15 and 0.25) were not a better result: they came from probing
+        0.015c off the wall, the same offset that was hiding the closure error.
+      - DYNAMIC-STALL VORTEX CORE, a stated limitation rather than a fixed one.
+        The reconstructed vortex carries circulation DSV_GAMMA_FACTOR*CNv*U*c in
+        a core of radius DSV_CORE_RADIUS_CHORDS*c. Its sign, position and the
+        flow reversal beneath it are physical, but the core is diffuse: the
+        measured suction at the core centre is published as Cp_DSV_core_min in
+        metrics_*.csv and reads about -0.4, where a deep-stall vortex core is
+        usually reported nearer -3 to -6. Making it deeper means shrinking the
+        core radius and raising the circulation factor together (0.06c and 2.5
+        give about -2.3), and NEITHER constant can be derived or calibrated
+        here: the experimental frames this study ships carry only integrated
+        cl/cd/cm against incidence, with no surface-pressure or field data
+        anywhere in the repository to fit a core size to. Both constants are
+        therefore named at the top of this module rather than buried as
+        literals, and the resulting core depth is published as a number so the
+        shallowness is checkable instead of being an adjective in a docstring.
+        It does not affect the reported loads, which come from the UIBS core.
       - Nothing in the reconstruction knows about separation: it is a potential
-        field, so at post-stall incidence the leading-edge suction peak it
-        draws is far deeper than a real separated flow would sustain.
+        field, so at post-stall incidence the leading-edge suction peak it draws
+        (about Cp = -16 at 17.5 deg) is far deeper than a real separated flow
+        would sustain. The FIELD is clipped at -8 for display only; the surface
+        distributions and the closure metric see the unclipped peak.
     The reconstruction is qualitative; the reported loads come from the UIBS
     core and do not depend on it.
   * Compressible thermal module          -> static & recovery (skin) temperature.
@@ -270,6 +288,16 @@ def solve_dynamic_stall(alpha_mean_deg, alpha_amp_deg, k, M, c, U,
 #  validation_realdata_summary.csv (rounding 0.072 up to 0.08 so the band is not
 #  tighter than the evidence), warns if this constant ever falls below the
 #  measured spread, and so keeps the number traceable.
+# --- dynamic-stall-vortex reconstruction constants ---------------------------
+# Neither is derived, and neither can be calibrated from anything this study
+# ships: the experimental frames carry only integrated cl/cd/cm against
+# incidence, with no surface-pressure or field data to fit a core size to. They
+# are named here rather than buried as literals so that the two numbers a reader
+# would have to change are visible, and the core depth they produce is published
+# as Cp_DSV_core_min in metrics_*.csv. See the DSV entry under LIMITATIONS.
+DSV_GAMMA_FACTOR       = 1.4    # vortex circulation = this * CNv * U * c
+DSV_CORE_RADIUS_CHORDS = 0.16   # Lamb-Oseen core radius in chords
+
 DAMPING_TOL = 0.08
 
 
@@ -418,6 +446,46 @@ def _panel_velocity(X, Y, xc, yc, L, sigma, gam, eps2):
     return u, v
 
 
+def _surface_velocity(xc, yc, L, sigma, gam, U, alpha):
+    """Velocity ON the body, evaluated at the panel CONTROL POINTS.
+
+    This must not be done with _panel_velocity. That routine is for field
+    points: it regularises 1/r2 with eps2 and includes every panel, which at a
+    point lying on the sheet is both singular and wrong. On the surface the two
+    self-contributions are known in closed form and are the whole difficulty:
+
+      * a constant-strength SOURCE panel induces sigma/2 along its own outward
+        normal and nothing tangentially;
+      * a constant-strength VORTEX panel induces -gam/2 along its own tangent
+        and nothing normally -- this is the tangential velocity JUMP across a
+        vortex sheet, and it is the term whose omission was the largest single
+        error in the reconstruction.
+
+    Evaluating instead at the panel END-POINTS, offset along a normal, was the
+    second error: flow tangency is imposed at the control points, so those are
+    the only places the discrete solution actually satisfies the boundary
+    condition. Measured at alpha=10 deg, C_L=1.10: the surface-C_p integral
+    returned -48.7% of the circulation it was given with the self-term missing,
+    and -0.18% with this routine.
+    """
+    dx = np.diff(np.append(xc, xc[0])); dy = np.diff(np.append(yc, yc[0]))
+    tx, ty = np.diff(xc, append=xc[0]), np.diff(yc, append=yc[0])
+    tl = np.hypot(tx, ty); tx, ty = tx/tl, ty/tl
+    nx, ny = ty, -tx
+    cx, cy = xc.mean(), yc.mean()
+    flip = ((xc-cx)*nx + (yc-cy)*ny) < 0
+    nx = np.where(flip, -nx, nx); ny = np.where(flip, -ny, ny)
+    u = np.full(len(xc), U*np.cos(alpha)); v = np.full(len(xc), U*np.sin(alpha))
+    for i in range(len(xc)):
+        rx = xc[i]-xc; ry = yc[i]-yc; r2 = rx*rx + ry*ry
+        r2[i] = np.inf                                   # exclude the self panel
+        u[i] += np.sum((sigma*L/(2*np.pi))*rx/r2 + (gam*L/(2*np.pi))*ry/r2)
+        v[i] += np.sum((sigma*L/(2*np.pi))*ry/r2 - (gam*L/(2*np.pi))*rx/r2)
+    u += 0.5*sigma*nx - 0.5*gam*tx                       # analytic self terms
+    v += 0.5*sigma*ny - 0.5*gam*ty
+    return u, v
+
+
 def _dsv_velocity(X, Y, xv, yv, Gv, rc):
     """Lamb-Oseen dynamic-stall vortex, same sign convention as the bound sheet
     (clockwise). Returns (du, dv, r2) with r2 the squared distance to the core."""
@@ -476,8 +544,8 @@ def reconstruct_field(naca_csv, c, U, M, alpha_deg, CL, CNv,
     # field and the flow reversal beneath the core that characterises the stall.
     # The suction under the vortex comes from its low-pressure core (see
     # _core_pressure_deficit), not from accelerating the surface flow.
-    Gv = 1.4*max(CNv, 0.0)*U*c
-    rc = 0.16*c
+    Gv = DSV_GAMMA_FACTOR*max(CNv, 0.0)*U*c
+    rc = DSV_CORE_RADIUS_CHORDS*c
     du, dv, r2 = _dsv_velocity(X, Y, xv, yv, Gv, rc)
     u += du; v += dv
 
@@ -487,8 +555,18 @@ def reconstruct_field(naca_csv, c, U, M, alpha_deg, CL, CNv,
     # suction feature it is; see _core_pressure_deficit.
     Cp_inc = (1.0 - (speed/U)**2
               + _core_pressure_deficit(np.sqrt(r2), abs(Gv), rc, U))
-    Cp = Cp_inc/np.sqrt(1-M**2) if M > 0 else Cp_inc
-    Cp = np.clip(Cp, -8.0, 1.0)               # keep field physical & clean
+    # No Prandtl-Glauert factor. The circulation this field is built from is
+    # Gamma = 0.5*C_L*U*c and that C_L already carries compressibility through
+    # beta in the indicial march, so scaling the resulting Cp again multiplies
+    # the reconstructed load by a further 1/beta (+4.8% at M = 0.3). Applying it
+    # here was one of the three errors that put the surface-Cp closure at
+    # -12.4%; see surface_cp.
+    Cp = Cp_inc
+    # The field alone is clipped, and only for display: the potential-flow
+    # leading-edge suction peak runs to about Cp = -16 at 17.5 deg, which would
+    # flatten every contour plot onto two colours. surface_cp is NOT clipped, so
+    # the published surface distributions and the closure metric see the peak.
+    Cp = np.clip(Cp, -8.0, 1.0)
     # thermodynamics
     T0 = T_inf*(1+(gamma-1)/2*M**2)
     T_static = T0 - speed**2/(2*cp)
@@ -526,62 +604,98 @@ def reconstruct_field(naca_csv, c, U, M, alpha_deg, CL, CNv,
                 T0=T0, T_inf=T_inf)
 
 
-def surface_cp(naca_csv, c, U, M, alpha_deg, CL, CNv, tau_over_Tvl,
-               probe=0.015):
-    """Surface pressure coefficient distribution Cp(x/c), evaluated DIRECTLY
-    from the panel solution at a small offset outside the wall.
+def surface_cp(naca_csv, c, U, M, alpha_deg, CL, CNv, tau_over_Tvl):
+    """Surface pressure coefficient distribution Cp(x/c), evaluated exactly at
+    the panel control points.
 
-    It used to be read off the reconstructed field grid with a
-    RegularGridInterpolator over np.nan_to_num(Cp, nan=0.0). That was fragile
-    and then wrong: the probe stands 0.015c off the wall, which on that grid is
-    only two cells, so once the unresolved near-wall ring is masked, 40 of the
-    161 probe points had a masked cell inside their bilinear stencil and quietly
-    read Cp = 0 there. Evaluating the singularities at the probe points removes
-    the grid from the answer entirely.
+    Three defects were found here by testing the closure invariant (integrating
+    the returned Cp must return the C_L the reconstruction was given), and all
+    three were measurable at alpha=10 deg, C_L=1.10:
 
-    Returns (x/c, Cp, upper_mask).
+      1. The vortex sheet's own tangential contribution (-gam/2) was omitted.
+         Alone this cost -48.7% of the lift when evaluated on the wall.
+      2. Cp was evaluated at the panel end-points, stepped 0.015c off the wall
+         along a normal, rather than at the control points where tangency is
+         actually imposed. That offset masked (1) rather than fixing it: the
+         error read -11.5% at 0.015c and grew to -48.7% as the probe approached
+         the surface, so a reader could have concluded the method was better
+         than it was by standing further away from the aerofoil.
+      3. A Prandtl-Glauert factor was applied on top. It does not belong: the
+         circulation supplied to the reconstruction is Gamma = 0.5*C_L*U*c, and
+         that C_L already carries compressibility through beta in the indicial
+         march. Scaling the resulting Cp again multiplied the reconstructed
+         load by a further 1/beta = 1.048 at M = 0.3, i.e. +4.8%.
+
+    With all three corrected the closure error is -0.18% at alpha = 10 deg and
+    stays inside -0.4% up to 19 deg, against -12.4% published previously.
+
+    Returns (x/c at the control points, Cp, upper_mask).
     """
     alpha = np.radians(alpha_deg)
     Gamma = 0.5*CL*U*c
     xp, yp = _airfoil_surface(naca_csv, c)
     xc, yc, L, sigma, gam = _solve_panels(xp, yp, U, alpha, Gamma)
 
-    # outward normals at the surface points, then step off along them
-    dx = np.gradient(xp); dy = np.gradient(yp); Ln = np.hypot(dx, dy)
-    nx, ny = dy/Ln, -dx/Ln
-    cx, cy = xp.mean(), yp.mean()
-    flip = ((xp-cx)*nx+(yp-cy)*ny) < 0
-    nx = np.where(flip, -nx, nx); ny = np.where(flip, -ny, ny)
-    off = probe*c
-    X = xp + nx*off; Y = yp + ny*off
-
-    eps2 = (0.6*L.mean())**2
-    u, v = _panel_velocity(X, Y, xc, yc, L, sigma, gam, eps2)
-    u += U*np.cos(alpha); v += U*np.sin(alpha)
+    u, v = _surface_velocity(xc, yc, L, sigma, gam, U, alpha)
 
     xv = (0.25 + 0.55*np.clip(tau_over_Tvl, 0, 1.3))*c
     yv = 0.10*c + 0.06*c*np.clip(tau_over_Tvl, 0, 1.3)
-    Gv = 1.4*max(CNv, 0.0)*U*c
-    rc = 0.16*c
-    du, dv, r2 = _dsv_velocity(X, Y, xv, yv, Gv, rc)
+    Gv = DSV_GAMMA_FACTOR*max(CNv, 0.0)*U*c
+    rc = DSV_CORE_RADIUS_CHORDS*c
+    du, dv, r2 = _dsv_velocity(xc, yc, xv, yv, Gv, rc)
     u += du; v += dv
 
     speed = np.hypot(u, v)
-    Cp_inc = (1.0 - (speed/U)**2
-              + _core_pressure_deficit(np.sqrt(r2), abs(Gv), rc, U))
-    Cp = Cp_inc/np.sqrt(1-M**2) if M > 0 else Cp_inc
-    Cp = np.clip(Cp, -8.0, 1.0)              # same bound as the field
-    upper = yp >= 0
-    return xp/c, Cp, upper
+    Cp = (1.0 - (speed/U)**2
+          + _core_pressure_deficit(np.sqrt(r2), abs(Gv), rc, U))
+    # NOT clipped. The potential-flow leading-edge suction peak reaches Cp =
+    # -16 at 17.5 deg, and the -8 clip the FIELD uses for display truncated it,
+    # which by itself cost -5.9% of the closure once the errors above were
+    # fixed. A real boundary layer separates long before that peak is reached;
+    # that is a limitation of reconstructing from potential flow, and it is
+    # stated rather than hidden by a clip.
+    upper = yc >= 0
+    return xc/c, Cp, upper
+
+
+def kutta_reference_CL(naca_csv, c, U, M, alpha_deg):
+    """The lift coefficient at which this section's reconstruction satisfies the
+    Kutta condition exactly, i.e. the inviscid attached-flow circulation.
+
+    The trailing-edge Cp jump is LINEAR in the imposed C_L, because the panel
+    system is linear and only the vortex sheet strength scales with it. Two
+    evaluations therefore locate its zero exactly.
+
+    This exists because the trailing-edge jump is not a defect that can be
+    driven to zero. The reconstruction is handed Gamma = 0.5*C_L*U*c with C_L
+    from the indicial march, which during dynamic stall deliberately departs
+    from the attached-inviscid value; a body carrying a circulation other than
+    the Kutta one MUST show a trailing-edge jump. Publishing this reference
+    turns the residual from an unexplained number into a measure of how far the
+    modelled flow is from attached, which is what it actually is.
+    """
+    j = []
+    for CLt in (1.0, 2.0):
+        _, cp_s, _ = surface_cp(naca_csv, c, U, M, alpha_deg, CLt, 0.0, 0.0)
+        j.append(float(cp_s[0] - cp_s[-1]))          # SIGNED trailing-edge jump
+    if j[1] == j[0]:
+        return float("nan")
+    return float(1.0 - j[0]*(2.0 - 1.0)/(j[1] - j[0]))
 
 
 def surface_load_closure(naca_csv, c, U, M, alpha_deg, CL, CNv, tau_over_Tvl):
     """Integrate the reconstructed surface Cp and compare with the C_L that the
     reconstruction was given. An invariant: a closed body carrying circulation
-    Gamma = 0.5*CL*U*c must return that C_L. Returns (CL_from_Cp, pct_error).
+    Gamma = 0.5*CL*U*c must return that C_L (Blasius), so any residual here is
+    discretisation or a bug, never physics.
 
     Also returns the trailing-edge pressure jump |Cp_upper - Cp_lower| there,
     the second invariant: the Kutta condition demands it be zero.
+
+    The integral is taken over the same panels the solution was built on, with
+    Cp at the control points. It previously summed a mean of END-POINT Cp values
+    against the end-point spacing, a quadrature the panel solution does not
+    support.
 
     Both exist so the reconstruction's accuracy is a number the pipeline writes
     out, not a claim in a comment.
@@ -590,10 +704,10 @@ def surface_load_closure(naca_csv, c, U, M, alpha_deg, CL, CNv, tau_over_Tvl):
     _, cp_s, _ = surface_cp(naca_csv, c, U, M, alpha_deg, CL, CNv, tau_over_Tvl)
     # traversal sense (shoelace): +1 counter-clockwise, so that n ds = (dy, -dx)
     sgn = 1.0 if 0.5*np.sum(xp[:-1]*yp[1:] - xp[1:]*yp[:-1]) > 0 else -1.0
-    cpm = 0.5*(cp_s[1:] + cp_s[:-1])
     a = np.radians(alpha_deg)
-    CN =  sgn*np.sum(cpm*np.diff(xp))/c        # +(1/c) integral Cp dx
-    CA = -sgn*np.sum(cpm*np.diff(yp))/c        # -(1/c) integral Cp dy
+    CN =  sgn*np.sum(cp_s*np.diff(xp))/c        # +(1/c) integral Cp dx
+    CA = -sgn*np.sum(cp_s*np.diff(yp))/c        # -(1/c) integral Cp dy
     cl = CN*np.cos(a) - CA*np.sin(a)
-    te_jump = float(abs(cp_s[1] - cp_s[-2]))     # first/last off the merged TE point
+    te_jump = float(abs(cp_s[0] - cp_s[-1]))    # control points either side of the TE
     return (float(cl), (100.0*(cl - CL)/CL if CL != 0 else float("nan")), te_jump)
+
