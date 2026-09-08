@@ -64,7 +64,13 @@ pd.DataFrame([
 ).to_csv(HERE/"validation_static.csv", index=False)
 
 fig, ax = plt.subplots(figsize=(7.6, 5))
-ax.plot(mp["alpha_deg"], mp["Cl_model"], color=PALETTE[0], lw=2.4, label="UNISTALL model")
+# Solid only where the model was fitted; dashed past the reference's last point,
+# so the extrapolated branch is not presented as calibrated.
+_ACAL = float(ref["alpha_deg"].max())
+_c, _e = mp["alpha_deg"] <= _ACAL, mp["alpha_deg"] >= _ACAL
+ax.plot(mp["alpha_deg"][_c], mp["Cl_model"][_c], color=PALETTE[0], lw=2.4, label="UNISTALL model")
+ax.plot(mp["alpha_deg"][_e], mp["Cl_model"][_e], color=PALETTE[0], lw=2.4, ls=(0, (4, 2)),
+        label=f"extrapolated beyond {_ACAL:.0f}°")
 ax.plot(ref["alpha_deg"], ref["Cl"], "s", color=PALETTE[1], ms=6, label="published static [S1,S2,S3]")
 ax.set_xlabel("angle of attack  α [deg]"); ax.set_ylabel("$C_L$")
 ax.set_title("Static validation — NACA 0012 lift polar", pad=10)

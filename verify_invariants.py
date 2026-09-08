@@ -145,6 +145,18 @@ for _case in ('A_validation','B_application'):
         _worst=max(_worst, abs(100*(_cl-_CLs)/_CLs))
     ck(f"{_case} published Cp integrates to published CL (<2%)", _worst<2.0, f"worst {_worst:.2f}%")
 
+# --- the model static polar must say which of its rows are calibrated. It runs
+#     past the reference's last tabulated incidence, and the calibration figures
+#     drew the extrapolated tail exactly like the fitted part.
+_mp=pd.read_csv('05_solution/model_static_polar.csv')
+_acal=float(pd.read_csv('03_model_setup/static_polar_reference.csv')['alpha_deg'].max())
+ck("model polar flags its calibrated rows", 'within_calibration' in _mp.columns)
+if 'within_calibration' in _mp.columns:
+    ck("model polar within_calibration agrees with the reference range",
+       bool((_mp['within_calibration'] == (_mp['alpha_deg'] <= _acal + 1e-9)).all()))
+    ck("the model polar does extend past calibration (so the flag is not vacuous)",
+       bool((~_mp['within_calibration']).any()), "no extrapolated rows")
+
 # --- response surface within calibration
 rs=pd.read_csv('05_solution/response_surface.csv')
 ck("response surface fully calibrated", bool(rs['within_calibration'].all()))

@@ -133,11 +133,27 @@ for cs, meta in CASES.items():
 mp = pd.read_csv(SOL/"model_static_polar.csv")
 stat = pd.read_csv(SETUP/"static_polar_reference.csv")
 fig, axs = plt.subplots(1, 2, figsize=(11, 4.6))
-axs[0].plot(mp["alpha_deg"], mp["Cl_model"], color=PALETTE[0], lw=2.2, label="UNISTALL model")
+# The model polar and f(alpha) run to 22 deg while the reference they are fitted
+# to stops at ALPHA_CAL_MAX. Both curves used to be drawn as one solid line, so
+# the last two degrees -- the EXTRAPOLATED branch of f(alpha), which no reported
+# case uses -- looked exactly as calibrated as the rest. Drawn dashed beyond the
+# calibration limit and stated, the same standard the response surface is held to.
+_ACAL = float(stat["alpha_deg"].max())
+_cal, _ext = mp["alpha_deg"] <= _ACAL, mp["alpha_deg"] >= _ACAL
+axs[0].plot(mp["alpha_deg"][_cal], mp["Cl_model"][_cal], color=PALETTE[0], lw=2.2,
+            label="UNISTALL model")
+axs[0].plot(mp["alpha_deg"][_ext], mp["Cl_model"][_ext], color=PALETTE[0], lw=2.2,
+            ls=(0, (4, 2)), label=f"extrapolated beyond {_ACAL:.0f}°")
 axs[0].plot(stat["alpha_deg"], stat["Cl"], "s", color=PALETTE[1], ms=5, label="published ref.")
-axs[0].set_xlabel("α [deg]"); axs[0].set_ylabel("$C_L$"); axs[0].legend()
+axs[0].set_xlabel("α [deg]"); axs[0].set_ylabel("$C_L$"); axs[0].legend(fontsize=9)
 axs[0].set_title("Static lift polar (calibration)", pad=10)
-axs[1].plot(mp["alpha_deg"], mp["f_sep"], color=PALETTE[2], lw=2.2)
+axs[1].plot(mp["alpha_deg"][_cal], mp["f_sep"][_cal], color=PALETTE[2], lw=2.2)
+axs[1].plot(mp["alpha_deg"][_ext], mp["f_sep"][_ext], color=PALETTE[2], lw=2.2,
+            ls=(0, (4, 2)))
+axs[1].axvline(_ACAL, color=INK_SOFT, lw=0.9, ls=":")
+axs[1].text(_ACAL, 0.97, f" calibrated to {_ACAL:.0f}°;\n dashed is extrapolation",
+            transform=axs[1].get_xaxis_transform(), va="top", ha="left",
+            fontsize=8.5, color=INK_SOFT)
 axs[1].set_xlabel("α [deg]"); axs[1].set_ylabel("separation point  f")
 axs[1].set_title("Calibrated static separation  f(α)", pad=10)
 save(fig, "static_polar_calibration.png")

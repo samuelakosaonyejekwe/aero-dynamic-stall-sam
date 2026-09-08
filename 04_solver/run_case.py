@@ -8,7 +8,9 @@ all solution data to 05_solution/.  Outputs:
   field_<case>_<phase>_a<deg>.csv  reconstructed 2D fields at key phases;
                                <phase> is rise|peak|fall|dsv and <deg> the
                                incidence, e.g. field_A_validation_peak_a19.csv
-  model_static_polar.csv       quasi-steady model polar (for validation)
+  model_static_polar.csv       quasi-steady model polar, with
+                               within_calibration marking the rows inside the
+                               static reference's tabulated range
   metrics_<case>.csv           engineering scalar metrics (deterministic)
   summary_all_cases.csv        one row per case: the headline scalars
   runtime_environment.csv      the machine, and the CPU time the march took on it
@@ -54,8 +56,16 @@ CN_qs = CNALPHA*((1+np.sqrt(fq))/2)**2*np.radians(aq)
 CC_qs = ETA*CNALPHA*np.radians(aq)**2*np.sqrt(fq)
 CL_qs = CN_qs*np.cos(np.radians(aq)) + CC_qs*np.sin(np.radians(aq))
 CD_qs = CN_qs*np.sin(np.radians(aq)) - CC_qs*np.cos(np.radians(aq)) + CD0
+# within_calibration marks the rows the separation law was actually fitted to.
+# This polar runs past the static reference's last tabulated incidence, and the
+# figures drew the whole curve identically, so the extrapolated tail looked as
+# calibrated as the rest -- the same defect that was fixed in the response
+# surface, which is now bounded, and which the calibration figures now show
+# dashed. Publishing the flag makes it checkable rather than a drawing choice.
+_ACAL = float(stat["alpha_deg"].max())
 pd.DataFrame({"alpha_deg": aq.round(3), "Cl_model": CL_qs.round(4),
-              "Cd_model": CD_qs.round(4), "f_sep": fq.round(4)}
+              "Cd_model": CD_qs.round(4), "f_sep": fq.round(4),
+              "within_calibration": aq <= _ACAL}
              ).to_csv(SOL/"model_static_polar.csv", index=False)
 
 # ---- air thermodynamics: READ from 03_model_setup. These were previously only
