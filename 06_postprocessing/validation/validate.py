@@ -27,7 +27,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(ROOT))
-from aero_style import apply_style, PALETTE, INK, INK_SOFT
+from aero_style import apply_style, PALETTE, INK_SOFT
 import matplotlib.pyplot as plt
 apply_style(); plt.rcParams["figure.constrained_layout.use"] = True
 SOL = ROOT/"05_solution"; SETUP = ROOT/"03_model_setup"

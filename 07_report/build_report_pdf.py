@@ -155,13 +155,10 @@ def _style(name, size, align=TA_LEFT, colour=INK, bold=False, space_after=6,
                           leftIndent=left_indent, allowWidows=0, allowOrphans=0,
                           bulletFontName="Body", bulletFontSize=size)
 
-S_BODY   = _style("body", BODY_PT)
 S_BULLET = _style("bullet", BODY_PT, left_indent=16, space_after=3)
 S_H1 = _style("h1", 16.0, colour=ACC, bold=True, space_before=16, space_after=8)
 S_H2 = _style("h2", 13.5, colour=ACC, bold=True, space_before=12, space_after=6)
 S_H3 = _style("h3", 12.0, colour=ACC, bold=True, space_before=10, space_after=5)
-S_CELL   = _style("cell", 8.5, space_after=0, leading_mult=1.18)
-S_CELL_H = _style("cellh", 9.0, bold=True, space_after=0, leading_mult=1.18)
 _HEADING = {"Heading 1": S_H1, "Heading 2": S_H2, "Heading 3": S_H3}
 
 

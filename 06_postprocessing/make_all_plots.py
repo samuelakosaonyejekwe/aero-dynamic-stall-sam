@@ -24,12 +24,12 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
-sys.path.insert(0, str(ROOT)); sys.path.insert(0, str(ROOT/"04_solver"))
+sys.path.insert(0, str(ROOT))          # for aero_style only: this stage reads
+                                       # 05_solution CSVs and never imports the solver
 from aero_style import (apply_style, PALETTE, INK, INK_SOFT, 
                         CMAP_PRESSURE, CMAP_CP, CMAP_TEMP, CMAP_VORT)
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon as MplPoly
-import unistall_solver as us
 apply_style()
 plt.rcParams["figure.constrained_layout.use"] = True
 

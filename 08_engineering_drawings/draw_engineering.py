@@ -26,13 +26,12 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.patches import (Rectangle, Circle, Polygon, FancyBboxPatch, 
-                                Arc, PathPatch)
+from matplotlib.patches import Rectangle, Circle, Polygon, FancyBboxPatch
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 sys.path.insert(0, str(ROOT))
-from aero_style import apply_style, INK, INK_SOFT, PALETTE, GRID   # noqa: E402
+from aero_style import apply_style, INK, INK_SOFT, PALETTE   # noqa: E402
 
 apply_style()
 
@@ -226,7 +225,6 @@ def dim_v(ax, y1, y2, xdim, xref, text, fs=FS_DIM, side="left"):
     _ext_h(ax, y2, xref, xdim)
     ax.annotate("", xy=(xdim, y2), xytext=(xdim, y1), arrowprops=ARROW_KW)
     dx = -0.9 if side == "left" else 0.9
-    ha = "right" if side == "left" else "left"
     ax.text(xdim + dx, (y1 + y2) / 2, text, color=INK, fontsize=fs,
             ha="center", va="center", rotation=90, bbox=TEXT_BG, zorder=8)
 
@@ -645,7 +643,6 @@ def sheet2():
 
     # model coords: x fore(+)/aft, y port(+)/stbd, z up. Hub at (0,0,Hh).
     Hh, Hf = SPEC["Hh"], SPEC["Hf"]
-    Wf = SPEC["Wf"]
     Rdia, trdia = SPEC["Rdia"], SPEC["trdia"]
     track, wbase = SPEC["track"], SPEC["wbase"]
     L_fus = SPEC["L_fus"]

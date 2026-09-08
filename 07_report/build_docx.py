@@ -23,7 +23,7 @@ from docx.enum.table import WD_TABLE_ALIGNMENT
 
 ROOT = Path(__file__).resolve().parents[1]
 import sys; sys.path.insert(0, str(ROOT))
-from project_meta import AUTHOR, STUDY_DATE          # single source of truth
+from project_meta import AUTHOR, STUDY_DATE, METHOD  # single source of truth
 EQDIR = ROOT/"07_report"/"_equations"; EQDIR.mkdir(exist_ok=True)
 plt.rcParams["mathtext.fontset"] = "cm"   # Computer-Modern: standard math look
 _eqi = [0]
@@ -59,7 +59,7 @@ def EQ(latex, scale=1.0):
     fig.savefig(fn, dpi=200, transparent=True, bbox_inches="tight", pad_inches=0.03)
     plt.close(fig)
     from PIL import Image
-    w, h = Image.open(fn).size
+    w, _h = Image.open(fn).size
     # rendered at 12 pt; embed at TRUE size (w/200 in) so on-page font == 12 pt
     # (matches the 11 pt body text); only very long lines are capped to column.
     win = min(6.0, (w/200.0)*scale)
@@ -139,7 +139,7 @@ P("Prediction of Dynamic Stall on a Helicopter Main-Rotor Retreating Blade",
   size=20, bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, space=2)
 P("using the UNISTALL™ Universal Unsteady-Aerodynamics & Dynamic-Stall Solver",
   size=13, italic=True, align=WD_ALIGN_PARAGRAPH.CENTER, space=14)
-P("Core method: Unified Indicial–Beddoes State-Space (UIBS)",
+P(f"Core method: {METHOD}",
   size=12, align=WD_ALIGN_PARAGRAPH.CENTER, space=2)
 P(f"Author: {AUTHOR} (independent)", size=12, bold=True,
   align=WD_ALIGN_PARAGRAPH.CENTER, space=2)

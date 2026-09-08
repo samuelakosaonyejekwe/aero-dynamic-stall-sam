@@ -1,7 +1,7 @@
 """
 =============================================================================
  UNISTALL(TM)  —  Universal Unsteady-Aerodynamics & Dynamic-Stall Solver
- Core method : Unified Indicial-Beddoes State-Space (UIBS)
+ Core method : Unified Indicial–Beddoes State-Space (UIBS)
  Version     : 1.0.0
 =============================================================================
 A reduced-order, physics-based solver for unsteady airfoil aerodynamics and

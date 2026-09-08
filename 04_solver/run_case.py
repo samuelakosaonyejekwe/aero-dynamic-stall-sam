@@ -137,7 +137,7 @@ for name, C in CASES.items():
     th.to_csv(SOL/f"time_history_{name}.csv", index=False)
 
     # ---- engineering metrics ----
-    a = out["alpha_deg"]; up = out["alpha_dot"] > 0
+    a = out["alpha_deg"]
     CLmax = out["CL"].max(); iCL = out["CL"].argmax()
     CMmin = out["CM"].min(); iCM = out["CM"].argmin()
     CDmax = out["CD"].max()

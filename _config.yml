@@ -15,6 +15,12 @@ plugins:
 # assets/social-preview.png is the same 1280x640 image, lossless. It is NOT
 # referenced by the site: it is the master that GitHub's repository "Social
 # preview" setting is uploaded from by hand. Kept so that upload is repeatable.
+#
+# assets/icon-512.png is likewise referenced by nothing in this repository --
+# checked, not assumed. It is the 512x512 square that {% seo %} used to fall
+# back to before the image: line below existed, and is kept only as the master
+# for GitHub's own avatar/icon fields, which are also set by hand. If those are
+# not used it can be deleted with no effect on the site.
 image: /assets/social-preview.jpg
 twitter:
   card: summary_large_image

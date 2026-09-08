@@ -10,6 +10,9 @@ Writes ALL solver input data for the UNISTALL(TM) dynamic-stall case study:
                                      + validation reference; sources in CSV header)
 """
 import json
+import sys as _sys; from pathlib import Path as _P
+_sys.path.insert(0, str(_P(__file__).resolve().parents[1]))
+from project_meta import METHOD          # single source of truth for the method name
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -116,7 +119,7 @@ thermo.to_csv(HERE/"material_thermo_properties.csv", index=False)
 # ============================================================ SOLVER CONFIG
 config = {
     "solver_name": "UNISTALL(TM) Universal Unsteady-Aerodynamics & Dynamic-Stall Solver",
-    "core_method": "Unified Indicial-Beddoes State-Space (UIBS)",
+    "core_method": METHOD,
     "version": "1.0.0",
     "modules": ["attached_flow_indicial", "trailing_edge_separation",
                 "leading_edge_dynamic_stall_vortex", "compressibility_correction",

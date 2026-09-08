@@ -30,12 +30,12 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 EXP = HERE/"experimental"; EXP.mkdir(exist_ok=True)
 sys.path.insert(0, str(ROOT)); sys.path.insert(0, str(ROOT/"04_solver"))
-from aero_style import apply_style, PALETTE, INK
+from aero_style import apply_style, PALETTE
 import matplotlib.pyplot as plt
 import unistall_solver as us
 apply_style(); plt.rcParams["figure.constrained_layout.use"] = True
 
-SETUP = ROOT/"03_model_setup"; SOL = ROOT/"05_solution"
+SETUP = ROOT/"03_model_setup"
 cfg = json.load(open(SETUP/"solver_config.json"))
 CNALPHA = cfg["lift_curve_slope_CNalpha_per_rad"]
 FROZEN = dict(**cfg["indicial_circulatory"], **cfg["time_constants_semichords"])

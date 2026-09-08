@@ -153,7 +153,7 @@ def _table_page_one(pdf, df, title, max_rows, block_note):
     tbl.auto_set_font_size(False)
     fs = 8 if d.shape[1] <= 7 else 6.5
     tbl.set_fontsize(fs); tbl.scale(1, 1.35)
-    for (r, c), cell in tbl.get_celld().items():
+    for (r, _c), cell in tbl.get_celld().items():
         cell.set_edgecolor(INK_SOFT)
         if r == 0:
             cell.set_facecolor("#dfe8f2"); cell.get_text().set_color(INK)

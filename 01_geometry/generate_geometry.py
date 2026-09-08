@@ -24,7 +24,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
-from aero_style import apply_style, INK
+from aero_style import apply_style
 apply_style()
 
 # The chord is READ from 03_model_setup/flow_conditions.csv (case A, the
