@@ -6,8 +6,9 @@ written to 06_postprocessing/plots/. The 3-D figures (fig3d_*.png) are NOT
 produced here -- they come from make_3d_plots.py, and this stage deliberately
 excludes them from its own count.
 
-Outputs, by family (<case> is A_validation or B_application, <phase> is
-rise|peak|fall|dsv with its incidence):
+Outputs, by family. <case> is A_validation or B_application, <phase> is one of
+rise|peak|fall|dsv and <deg> the incidence in whole degrees, matching the field
+files run_case.py writes:
   hyst_cl_<case>.png / hyst_cd_<case>.png / hyst_cm_<case>.png
                                     hysteresis loops with stroke-direction arrows
   timehist_loads_<case>.png         unsteady loads against time
@@ -15,14 +16,16 @@ rise|peak|fall|dsv with its incidence):
   static_polar_calibration.png      model against the published reference polar
   convergence_residuals.png         cycle-to-cycle convergence
   cp_distribution_<case>.png        surface Cp at the written phases
-  contour_Cp_<case>_<phase>.png     pressure field
-  contour_speed_stream_<case>_<phase>.png   speed magnitude + streamlines
-  contour_vorticity_<case>_<phase>.png      vorticity
-  contour_Mach_<case>_<phase>.png           local Mach number
-  contour_Tstatic_<case>_<phase>.png        static temperature
-  contour_Trecovery_<case>_<phase>.png      recovery (skin) temperature
-  contour_vectors_<case>_<phase>.png        velocity vectors (quiver)
-  temperature_profile_<case>_<phase>.png    surface recovery temperature vs x/c
+  contour_Cp_<case>_<phase>_a<deg>.png     pressure field
+  contour_speed_stream_<case>_<phase>_a<deg>.png   speed magnitude + streamlines
+  contour_vorticity_<case>_<phase>_a<deg>.png      vorticity
+  contour_Mach_<case>_<phase>_a<deg>.png           local Mach number
+  contour_Tstatic_<case>_<phase>_a<deg>.png        static temperature
+  contour_Trecovery_<case>_<phase>_a<deg>.png      recovery (skin) temperature
+  contour_vectors_<case>_<phase>_a<deg>.png        velocity vectors (quiver)
+  temperature_profile_<case>.png    surface recovery temperature vs x/c, upper
+                                    and lower surface, at the PEAK-incidence
+                                    phase only (hence no phase in the name)
 LAYOUT RULES (enforced): constrained_layout everywhere, colorbars on their own
 axes, titles padded, legends in clear regions -> text never overlaps a figure.
 No black is ever used (shared aero_style).

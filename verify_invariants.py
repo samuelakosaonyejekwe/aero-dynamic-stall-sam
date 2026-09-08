@@ -173,11 +173,27 @@ _docs=""
 for _f in sorted(glob.glob('0*/**/*.py',recursive=True)+glob.glob('*.py')):
     _docs += (ast.get_docstring(ast.parse(open(_f,encoding='utf-8').read())) or "") + "\n"
 _decl=set(re.findall(r'[A-Za-z0-9_<>\-]+\.(?:csv|png|json|pdf|docx)', _docs))
+# Placeholders are bound to their real vocabularies. They used to expand to a
+# greedy [A-Za-z0-9_.]+, which let <case>_<phase> split "A_validation" as
+# case="A", phase="validation" -- so temperature_profile_<case>_<phase>.png
+# "matched" files that have no phase at all, and the wrong pattern went unnoticed.
+_CASE = r'(?:A_validation|B_application)'
+_PHASE = r'(?:rise|peak|fall|dsv)'
+_DEG  = r'\d+'
 def _declared(name):
     for d in _decl:
-        if d == name: return True
-        if '<' in d and re.fullmatch(re.sub(r'<[^>]+>', r'[A-Za-z0-9_\.]+', re.escape(d).replace('\\<','<').replace('\\>','>')), name):
+        if d == name:
             return True
+        if '<' in d:
+            pat = (re.escape(d).replace('<case>', _CASE)
+                              .replace('<phase>', _PHASE)
+                              .replace('<deg>', _DEG))
+            # unbound placeholders may contain underscores (<frame> is
+            # "frame_10118"); the bound ones above stop this being greedy
+            # enough to hide a wrong pattern.
+            pat = re.sub(r'<[^>]+>', r'[A-Za-z0-9_]+', pat)
+            if re.fullmatch(pat, name):
+                return True
     return False
 _gen=[f for f in subprocess.run(['git','ls-files'],capture_output=True,text=True).stdout.split()
       if re.match(r'0[1-8]_', f) and f.endswith(('.csv','.png'))
