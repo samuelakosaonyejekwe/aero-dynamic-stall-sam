@@ -25,8 +25,11 @@ Two auxiliary modules make the solver "universal" for engineering output:
     the metrics_*.csv rows "Cp_closure_error_pct" and "Cp_TE_jump_max_over_phases"
     recompute them on every run):
       - CLOSURE. Integrating the surface Cp now recovers the C_L it was given to
-        within about 1 % over most of the cycle (-1.3 % at alpha 2 deg, +1.1 %
-        at 17.5 deg, +3.0 % at the dynamic-stall-vortex phase). It previously
+        within 0.6 % over the whole cycle (-0.28 % at alpha 2 deg, -0.37 % at
+        10 deg, -0.58 % at 17.5 deg), and unlike before it CONVERGES: refining
+        160 -> 1280 panels drives it monotonically to -0.04 %, which is what
+        Blasius requires and is the check that the formulation is right rather
+        than merely better. It previously
         read -10.7 to -14.4 %, and the explanation recorded here for that
         deficit -- the Cp clip at -8, with the further claim that it did not
         converge under refinement -- was WRONG on both counts. Tested directly:
@@ -43,8 +46,10 @@ Two auxiliary modules make the solver "universal" for engineering output:
         driven to zero, and it is no longer presented as one. It is LINEAR in
         the imposed C_L and passes through zero exactly at the inviscid attached
         circulation, which kutta_reference_CL() computes: at alpha = 10 deg that
-        is C_L = 1.184 (implied lift slope 6.79/rad, against 2*pi*1.092 = 6.86
-        for 12 % thickness), and imposing it drives the jump to 0.0009. The
+        is C_L = 1.220 at the 160 panels used, converging to 1.213 by 1280
+        (implied lift slope 6.95/rad, against 2*pi*1.092 = 6.86 from the
+        thin-aerofoil thickness rule, itself approximate), and imposing it
+        drives the trailing-edge jump to ~1e-3. The
         reconstruction is instead handed the indicial C_L, which during dynamic
         stall departs from that value deliberately -- so a body carrying a
         non-Kutta circulation MUST show a trailing-edge jump. The published
@@ -446,7 +451,7 @@ def _panel_velocity(X, Y, xc, yc, L, sigma, gam, eps2):
     return u, v
 
 
-def _surface_velocity(xc, yc, L, sigma, gam, U, alpha):
+def _surface_velocity(xp, yp, xc, yc, L, sigma, gam, U, alpha):
     """Velocity ON the body, evaluated at the panel CONTROL POINTS.
 
     This must not be done with _panel_velocity. That routine is for field
@@ -468,9 +473,13 @@ def _surface_velocity(xc, yc, L, sigma, gam, U, alpha):
     returned -48.7% of the circulation it was given with the self-term missing,
     and -0.18% with this routine.
     """
-    dx = np.diff(np.append(xc, xc[0])); dy = np.diff(np.append(yc, yc[0]))
-    tx, ty = np.diff(xc, append=xc[0]), np.diff(yc, append=yc[0])
-    tl = np.hypot(tx, ty); tx, ty = tx/tl, ty/tl
+    # Tangents and normals come from the PANEL END-POINTS, which is what
+    # _solve_panels imposed tangency with. Taking them from control-point to
+    # control-point instead is a centred direction over two panels: it differs
+    # wherever the surface curves, i.e. exactly at the leading edge where the
+    # self-terms matter most, and measured 1.0 point of closure error at
+    # alpha = 17.5 deg (-0.58% with the panel tangent, +1.05% without).
+    tx, ty = np.diff(xp)/L, np.diff(yp)/L
     nx, ny = ty, -tx
     cx, cy = xc.mean(), yc.mean()
     flip = ((xc-cx)*nx + (yc-cy)*ny) < 0
@@ -636,7 +645,7 @@ def surface_cp(naca_csv, c, U, M, alpha_deg, CL, CNv, tau_over_Tvl):
     xp, yp = _airfoil_surface(naca_csv, c)
     xc, yc, L, sigma, gam = _solve_panels(xp, yp, U, alpha, Gamma)
 
-    u, v = _surface_velocity(xc, yc, L, sigma, gam, U, alpha)
+    u, v = _surface_velocity(xp, yp, xc, yc, L, sigma, gam, U, alpha)
 
     xv = (0.25 + 0.55*np.clip(tau_over_Tvl, 0, 1.3))*c
     yv = 0.10*c + 0.06*c*np.clip(tau_over_Tvl, 0, 1.3)
