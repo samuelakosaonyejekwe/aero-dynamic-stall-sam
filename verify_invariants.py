@@ -215,7 +215,75 @@ try:
         _key=_ti.replace('Appendix \u2014 ','').split('\u2014')[0].strip()[:24]
         if _key not in _t and _ti.split('.')[0]+'.' not in _t: _bad+=1
     ck("every outline entry lands on its own heading", _bad==0, f"{_bad} wrong targets")
+    # No table cell may break a filename mid-word. Widening the data inventory's
+    # folder column in this audit squeezed the file column until three filenames
+    # broke as "...peak_a19.pn" with an orphaned "g" on the next line -- no data
+    # lost, but it reads as a typo in a table whose purpose is exact filenames.
+    # Exact test, no heuristics: take the column names of every published CSV.
+    # If a name appears in the report with the newlines stripped out but NOT on a
+    # single line, the renderer broke it. Adjacent table cells cannot produce a
+    # false positive this way, which a line-adjacency heuristic could not avoid.
+    _pages=[_p.get_text() for _p in _rp]
+    _ids=set()
+    for _cf in subprocess.run(['git','ls-files'],capture_output=True,text=True).stdout.split():
+        if _cf.endswith('.csv') and re.match(r'0[1-8]_',_cf):
+            try: _ids.update(str(_c) for _c in pd.read_csv(_cf, nrows=0).columns)
+            except Exception: pass
+    _ids={i for i in _ids if len(i)>6 and re.fullmatch(r'[A-Za-z0-9_]+', i)}
+    # PER PAGE. Checking the whole document at once was useless: a name broken on
+    # one page but printed intact on another looked fine, and every one of these
+    # names appears in the section 15 inventory as well as in its own table.
+    # A split is ACCEPTABLE when it falls on a separator: "CLmax_" + "exp" is the
+    # deliberate behaviour. It is a defect only when a piece ends mid-word, e.g.
+    # "alpha_mean_de" + "g". So find the consecutive lines that reconstruct the
+    # name and check where the joins land.
+    def _split_ok(lines, ident):
+        for _a in range(len(lines)):
+            acc, parts = "", []
+            for _b in range(_a, min(_a + 6, len(lines))):
+                acc += lines[_b]; parts.append(lines[_b])
+                if acc == ident:
+                    return all(x.endswith(("_", "/")) for x in parts[:-1])
+                if not ident.startswith(acc):
+                    break
+        return None                     # not reconstructible: not this page's problem
+    _broken=set()
+    for _pt in _pages:
+        _lines=[l.strip() for l in _pt.splitlines() if l.strip()]
+        _pf=re.sub(r'\s+','',_pt)
+        for _i in _ids:
+            if _i in _pf and _i not in _pt:
+                if _split_ok(_lines, _i) is False:
+                    _broken.add(_i)
+    _broken=sorted(_broken)
+    ck("no CSV column name is broken across lines in the report", not _broken,
+       f"{len(_broken)} broken, e.g. {_broken[:4]}")
     _rp.close()
+except ImportError:
+    pass
+
+# --- section 15 promises "all generated files". It listed 135 of 137: the folder
+#     list was hardcoded and omitted validation/experimental/, so the two files
+#     the digitizer stage writes there were absent from an inventory whose title
+#     says it is complete.
+try:
+    import fitz as _fz2
+    _rp2=_fz2.open('aero_dynamic_stall_report.pdf'); _t2=_rp2.get_toc()
+    _st=[pg for lv,ti,pg in _t2 if ti.startswith('15.')]
+    _en=[pg for lv,ti,pg in _t2 if ti.startswith('16.')]
+    if _st and _en:
+        _inv="".join(_rp2[_i].get_text() for _i in range(_st[0]-1,_en[0]))
+        # normalise wrapping: a filename split across two lines by the table
+        # renderer is present, not missing, so newlines are removed first.
+        _flat=re.sub(r'\s+','',_inv)
+        _named=set(re.findall(r'[A-Za-z0-9_\-]+\.(?:csv|png|json)', _flat))
+        _gen=[f for f in subprocess.run(['git','ls-files'],capture_output=True,text=True).stdout.split()
+              if re.match(r'0[1-8]_',f) and f.endswith(('.csv','.png','.json'))]
+        _uncov=[f for f in _gen if os.path.basename(f) not in _named
+                and os.path.basename(f) not in _flat]
+        ck("data inventory lists every generated file", not _uncov,
+           f"{len(_uncov)} missing, e.g. {[os.path.basename(x) for x in _uncov[:3]]}")
+    _rp2.close()
 except ImportError:
     pass
 

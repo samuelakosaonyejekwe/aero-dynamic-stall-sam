@@ -660,20 +660,32 @@ for f, capt in [("sheet1_general_arrangement_3view.png", "Sheet 1 — general-ar
 
 # ================================================================ 15 INVENTORY
 H("15. Data Inventory (all generated files)", 1)
+# The folder list used to be hardcoded, and it omitted
+# 06_postprocessing/validation/experimental/, so two files the pipeline writes
+# (conditions.csv and TEMPLATE_experiment.csv) were missing from a section whose
+# title promises ALL generated files. Scanned instead, so a new output folder
+# cannot silently fall outside the inventory. 07_report is excluded: its
+# intermediates are rebuilt every run and are not part of the shipped data.
 inv = []
-for sub in ["01_geometry","02_mesh","03_model_setup","05_solution",
-            "05_solution/convergence","06_postprocessing/plots",
-            "06_postprocessing/validation","08_engineering_drawings"]:
+_subs = sorted({str(f.parent.relative_to(ROOT))
+                for pat in ("*.csv", "*.png", "*.json")
+                for f in ROOT.glob("0[1-8]_*/**/" + pat)
+                if "07_report" not in str(f)})
+for sub in _subs:
     d = ROOT/sub
     for f in sorted(d.glob("*.csv")):
         try: rows = sum(1 for _ in open(f))-1
         except: rows = "?"
-        inv.append([sub, f.name, "CSV", rows])
+        inv.append([sub, f.name, rows])
     for f in sorted(d.glob("*.png")):
-        inv.append([sub, f.name, "figure", "-"])
+        inv.append([sub, f.name, "-"])
     for f in sorted(d.glob("*.json")):
-        inv.append([sub, f.name, "config", "-"])
-add_table_from_df(pd.DataFrame(inv, columns=["folder","file","type","rows"]),
+        inv.append([sub, f.name, "-"])
+# The "type" column was dropped: it restated what the extension already says
+# (csv / png / json) while consuming width this table cannot spare. With a
+# 41-character folder path and a 45-character filename both present, the frame
+# could not hold four columns without breaking one of them mid-word.
+add_table_from_df(pd.DataFrame(inv, columns=["folder","file","rows"]),
                   max_rows=200)
 
 # ================================================================ 16 SOURCES

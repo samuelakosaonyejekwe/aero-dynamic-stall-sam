@@ -246,6 +246,23 @@ def _is_caption(par):
 # ---------------------------------------------------------------- tables
 PAD = 6.0            # left+right cell padding, pt
 
+def _col_floors(text_rows, ncol, hdr_pt, body_pt):
+    """Minimum width each column needs so no cell breaks mid-word: the widest
+    unbreakable token in it. Paths break at "/" and identifiers at "_", so those
+    separators end a token; a filename or a bare word does not break at all."""
+    floors = []
+    for j in range(ncol):
+        tokmax = 0.0
+        for i, row in enumerate(text_rows):
+            cell = row[j] if j < len(row) else ""
+            fn, pt = ("Body-Bold", hdr_pt) if i == 0 else ("Body", body_pt)
+            for tok in re.split(r"[\s/]+", cell):
+                if tok:
+                    tokmax = max(tokmax, pdfmetrics.stringWidth(tok, fn, pt))
+        floors.append(min(tokmax + PAD, 0.42*FRAME_W))
+    return floors
+
+
 def _col_widths(text_rows, ncol, hdr_pt, body_pt):
     """Column widths from content: every column must at least fit its longest
     unbreakable word, the rest of the frame is shared out in proportion to the
@@ -257,8 +274,15 @@ def _col_widths(text_rows, ncol, hdr_pt, body_pt):
             cell = row[j] if j < len(row) else ""
             fn, pt = ("Body-Bold", hdr_pt) if i == 0 else ("Body", body_pt)
             wmax = max(wmax, pdfmetrics.stringWidth(cell, fn, pt))
-            for tok in cell.split():
-                tokmax = max(tokmax, pdfmetrics.stringWidth(tok, fn, pt))
+            # A path is breakable at its separators, a filename is not. Splitting
+            # on "/" as well as whitespace stops a long folder path reserving a
+            # floor it does not need and starving the neighbouring column: adding
+            # 06_postprocessing/validation/experimental to the data inventory
+            # squeezed the file column until the three longest filenames broke
+            # mid-extension, which is data-lossless but reads as a typo.
+            for tok in re.split(r"[\s/]+", cell):
+                if tok:
+                    tokmax = max(tokmax, pdfmetrics.stringWidth(tok, fn, pt))
         nat.append(wmax + PAD)
         floor.append(min(tokmax + PAD, 0.42*FRAME_W))
     if sum(nat) <= FRAME_W:                       # fits: share out the slack
@@ -282,19 +306,48 @@ def _table_flowable(tbl):
         return None
     ncol = max(len(r) for r in text_rows)
 
-    # shrink the type a little if the unbreakable minimums cannot fit otherwise
+    # Shrink the type until every column's unbreakable minimum fits. This used to
+    # test "abs(sum(widths) - FRAME_W) < 1.0", which every branch of _col_widths
+    # satisfies by construction -- all three normalise to fill the frame -- so the
+    # condition was true on the first iteration and the font NEVER shrank. The
+    # visible cost was the summary table in section 11, whose eight columns were
+    # squeezed until every header broke mid-word: "CL_m/ax", "CM_m/in",
+    # "aero_dampin/g_Xi", "flutter_ri/sk", "A_validati/on".
     hdr_pt, body_pt = 9.0, 8.5
-    while body_pt > 5.5:
-        widths = _col_widths(text_rows, ncol, hdr_pt, body_pt)
-        if abs(sum(widths) - FRAME_W) < 1.0 and min(widths) > 8:
-            break
+    while body_pt > 5.5 and sum(_col_floors(text_rows, ncol, hdr_pt, body_pt)) > FRAME_W:
         hdr_pt -= 0.5; body_pt -= 0.5
+    widths = _col_widths(text_rows, ncol, hdr_pt, body_pt)
     s_h = _style("cellh%.1f" % hdr_pt, hdr_pt, bold=True, space_after=0, leading_mult=1.16)
     s_b = _style("cellb%.1f" % body_pt, body_pt, space_after=0, leading_mult=1.16)
 
+    def _fit(txt, j, fn, pt):
+        """Break an over-wide identifier at its own separators rather than let
+        reportlab break it mid-word. A 16-column time-history table cannot give
+        every column its full unbreakable width even at 5.5 pt, so headers such
+        as alpha_mean_deg were rendered as "alpha_mean_de" + "g". Underscores and
+        slashes are the natural break points; an explicit <br/> puts the break
+        there instead of one character from the column edge."""
+        esc = html.escape(txt)
+        if not txt or pdfmetrics.stringWidth(txt, fn, pt) <= widths[j] - PAD:
+            return esc
+        parts = re.split(r"(?<=[_/])", txt)          # keep the separator on the left
+        if len(parts) < 2:
+            return esc
+        out, cur = [], ""
+        for part in parts:
+            trial = cur + part
+            if cur and pdfmetrics.stringWidth(trial, fn, pt) > widths[j] - PAD:
+                out.append(cur); cur = part
+            else:
+                cur = trial
+        if cur:
+            out.append(cur)
+        return "<br/>".join(html.escape(o) for o in out)
+
     rows = []
     for i, row in enumerate(text_rows):
-        cells = [Paragraph(html.escape(row[j]) if j < len(row) else "",
+        fn, pt = ("Body-Bold", hdr_pt) if i == 0 else ("Body", body_pt)
+        cells = [Paragraph(_fit(row[j] if j < len(row) else "", j, fn, pt),
                            s_h if i == 0 else s_b) for j in range(ncol)]
         rows.append(cells)
     t = Table(rows, colWidths=widths, repeatRows=1, hAlign="CENTER")
