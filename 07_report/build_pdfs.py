@@ -110,7 +110,11 @@ with PdfPages(out1) as pdf:
 print(f"[pdf] plots album: {n} figure pages -> {out1.name}")
 
 # ======================================================= 2. DATA DOSSIER
-def table_page(pdf, df, title, max_rows=34, max_cols=10):
+# max_rows was 34, which cut the 36-row response-surface tables to 34 and
+# declared "first 34 of 36 rows" -- hiding two rows of a complete design
+# space for no gain. 38 shows them whole; measured to add no new overflow
+# (blocks outside the page rectangle unchanged) and no extra pages.
+def table_page(pdf, df, title, max_rows=38, max_cols=10):
     """Render one table. A table WIDER than max_cols is split across pages, each
     carrying the first (identifier) column plus a block of the rest, rather than
     truncated: the old "first 10 of 16 cols" quietly dropped CLmax_exp,
@@ -146,8 +150,19 @@ def _table_page_one(pdf, df, title, max_rows, block_note):
     if na:
         extra.append("\u2014 = not applicable / no value defined")
     fig = plt.figure(figsize=(11, 8.5)); ax = fig.add_axes([0.03, 0.03, 0.94, 0.88]); ax.axis("off")
-    ax.set_title(title + ("   (" + "; ".join(extra) + ")" if extra else ""),
-                 color=ACC, fontsize=13, weight="bold", pad=14, loc="left")
+    # Fit the title to the page. At a fixed 13 pt the longest of these ran 5.8 pt
+    # off the right edge and was clipped mid-word, so the page that says
+    # "first 34 of 721 rows" actually read "first 34 of 721 rov". Measure the
+    # rendered width and step the size down until it fits, which changes nothing
+    # for the titles that already did.
+    _title = title + ("   (" + "; ".join(extra) + ")" if extra else "")
+    _fs = 13
+    _r = fig.canvas.get_renderer()
+    for _fs in (13, 12, 11, 10, 9, 8):
+        _t = ax.set_title(_title, color=ACC, fontsize=_fs, weight="bold",
+                          pad=14, loc="left")
+        if _t.get_window_extent(renderer=_r).x1 <= fig.bbox.x1 - 6:
+            break
     tbl = ax.table(cellText=d.values, colLabels=list(d.columns),
                    loc="upper center", cellLoc="center")
     tbl.auto_set_font_size(False)
