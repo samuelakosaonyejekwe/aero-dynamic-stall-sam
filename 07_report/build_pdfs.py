@@ -223,16 +223,27 @@ with PdfPages(out2) as pdf:
     ax.set_title("What this dossier contains", color=ACC, fontsize=15,
                  weight="bold", loc="left", pad=16)
     _inc = "\n".join("    \u2022 " + t for t, _ in CSV_GROUPS)
+    # Which tables are SAMPLED is derived from the row counts against
+    # table_page's max_rows, not written by hand. The hand-written list had
+    # already drifted: raising max_rows to 38 made response_surface.csv (36
+    # rows) print in full while this page still called it a sample, and
+    # model_static_polar.csv (89 rows) became a sample without being listed.
+    _MAXROWS = table_page.__defaults__[0]
+    _sampled = []
+    for _t, _fs in CSV_GROUPS:
+        for _f in _fs:
+            if Path(_f).exists() and len(pd.read_csv(_f)) > _MAXROWS:
+                _sampled.append((Path(_f).name, len(pd.read_csv(_f))))
+    _sampled_txt = "".join("    \u2022 %s  \u2014 %d rows\n" % nr for nr in _sampled) \
+                   or "    \u2022 (none: every table below prints in full)\n"
     _n_field = len(sorted((ROOT/"05_solution").glob("field_*.csv")))
     _n_exp = len(sorted((ROOT/"06_postprocessing"/"validation").glob("exp_frame_*.csv")))
     ax.text(0, 0.98,
             "IN FULL, one page per table (wide tables continue over further pages):\n"
             + _inc
             + "\n\nAS CAPTIONED SAMPLES (row count given on each page):\n"
-              "    \u2022 time_history_*.csv  \u2014 721 rows per case, one converged cycle\n"
-              "    \u2022 cp_distribution_A_validation.csv  \u2014 surface Cp at four phases\n"
-              "    \u2022 response_surface.csv, mesh_radial_spacing.csv\n"
-              "\nNOT REPRODUCED HERE \u2014 too large to typeset, shipped as CSV in the "
+            + _sampled_txt
+            + "\nNOT REPRODUCED HERE \u2014 too large to typeset, shipped as CSV in the "
               "repository:\n"
               f"    \u2022 05_solution/field_*.csv  \u2014 {_n_field} reconstructed 2-D fields, "
               "37 400 rows each\n"
