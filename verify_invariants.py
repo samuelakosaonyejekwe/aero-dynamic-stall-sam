@@ -117,6 +117,34 @@ for case,m in (('A_validation',mA),('B_application',mB)):
     ck(f"{case} damping Xi", abs(-np.trapz(CMc,ar)-float(m['aero_damping_Xi']))<2e-4)
     ck(f"{case} CD cycle mean positive (no net propulsion)", CD_.mean()>0)
 
+# --- the PUBLISHED cp_distribution must integrate back to the solver's own C_L at
+#     the same phase. This guards the written artifact rather than the code that
+#     wrote it: the two mesh files that failed this class of check were both cases
+#     of data published in a form that could not reproduce its own metric.
+_geo=pd.read_csv(G); _gu=_geo[_geo.y_over_c>=0].sort_values('x_over_c'); _gl=_geo[_geo.y_over_c<=0].sort_values('x_over_c')
+for _case in ('A_validation','B_application'):
+    _cc=float(fl['case_'+_case[0]+('_validation' if _case[0]=='A' else '_application')]['chord_c'])
+    _d=pd.read_csv(f'05_solution/cp_distribution_{_case}.csv')
+    _th=pd.read_csv(f'05_solution/time_history_{_case}.csv').iloc[-720:]
+    _ad=np.gradient(_th.alpha_deg.values)
+    _worst=0.0
+    for _ph,_g in _d.groupby('phase_tag'):
+        _a=float(_g['alpha_deg'].iloc[0]); _dn='down' in _ph
+        _sub=_th[(_ad<0) if _dn else (_ad>0)]
+        _CLs=float(_th.loc[(_sub.alpha_deg-_a).abs().idxmin(),'CL'])
+        _u=_g[_g.surface=='upper'].sort_values('x_c'); _l=_g[_g.surface=='lower'].sort_values('x_c',ascending=False)
+        _X=np.concatenate([_u.x_c.values,_l.x_c.values])*_cc
+        _Y=np.concatenate([np.interp(_u.x_c.values,_gu.x_over_c,_gu.y_over_c),
+                           np.interp(_l.x_c.values,_gl.x_over_c,_gl.y_over_c)])*_cc
+        _CP=np.concatenate([_u.Cp.values,_l.Cp.values])
+        _Xc,_Yc,_CPc=np.append(_X,_X[0]),np.append(_Y,_Y[0]),np.append(_CP,_CP[0])
+        _cpm=0.5*(_CPc[1:]+_CPc[:-1]); _ar=np.radians(_a)
+        _sg=1.0 if 0.5*np.sum(_Xc[:-1]*_Yc[1:]-_Xc[1:]*_Yc[:-1])>0 else -1.0
+        _CN=_sg*np.sum(_cpm*np.diff(_Xc))/_cc; _CA=-_sg*np.sum(_cpm*np.diff(_Yc))/_cc
+        _cl=_CN*np.cos(_ar)-_CA*np.sin(_ar)
+        _worst=max(_worst, abs(100*(_cl-_CLs)/_CLs))
+    ck(f"{_case} published Cp integrates to published CL (<2%)", _worst<2.0, f"worst {_worst:.2f}%")
+
 # --- response surface within calibration
 rs=pd.read_csv('05_solution/response_surface.csv')
 ck("response surface fully calibrated", bool(rs['within_calibration'].all()))
