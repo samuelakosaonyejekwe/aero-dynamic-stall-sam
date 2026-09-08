@@ -200,6 +200,25 @@ _undoc=[t for t in _tops if not t.startswith('.') and t not in _skip
         and f'`{t}/`' not in _sec and f'`{t}`' not in _sec]
 ck("README structure table covers everything that ships", not _undoc, f"missing {_undoc}")
 
+# --- the consolidated report must be navigable, and its outline must point at the
+#     right pages. It shipped with no contents page and no PDF outline at all.
+try:
+    import fitz as _fz
+    _rp=_fz.open('aero_dynamic_stall_report.pdf'); _toc=_rp.get_toc()
+    ck("report has a PDF outline", len(_toc)>=18, f"{len(_toc)} entries")
+    _nums={int(t[1].split('.')[0]) for t in _toc if t[0]==1 and t[1][:1].isdigit()}
+    ck("outline covers every top-level section", not (set(range(1,17))-_nums),
+       f"missing {sorted(set(range(1,17))-_nums)}")
+    _bad=0
+    for _lvl,_ti,_pg in _toc:
+        _t=_rp[_pg-1].get_text()
+        _key=_ti.replace('Appendix \u2014 ','').split('\u2014')[0].strip()[:24]
+        if _key not in _t and _ti.split('.')[0]+'.' not in _t: _bad+=1
+    ck("every outline entry lands on its own heading", _bad==0, f"{_bad} wrong targets")
+    _rp.close()
+except ImportError:
+    pass
+
 # --- dead code / imports
 tot=0
 for f in sorted(glob.glob('0*/**/*.py',recursive=True)+glob.glob('*.py')):

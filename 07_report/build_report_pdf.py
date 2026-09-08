@@ -35,6 +35,7 @@ if _MISSING:
         "         The solver pipeline itself does not need any of these."
     )
 
+import re
 import fitz                                   # PyMuPDF, for the final merge
 from docx import Document
 from docx.oxml.ns import qn
@@ -408,6 +409,36 @@ if __name__ == "__main__":
         for p in parts:
             with fitz.open(str(p)) as src:
                 merged.insert_file(str(p)); counts.append((p.name, src.page_count))
+        # ---- navigation. A 211-page report shipped with no contents page and no
+        #      PDF outline at all, so a reader had no way to reach section 12 or
+        #      the drawings except by scrolling. The outline is DERIVED from the
+        #      headings already on the pages -- top-level "N. Title" in the body,
+        #      then one entry per appendix volume and per album section divider --
+        #      so it cannot disagree with the document it indexes.
+        _toc = []
+        _seen = set()
+        for _i in range(n_body):
+            # every heading on the page, not just the first: sections 2, 3 and 7
+            # share a page with the one before them, and breaking after the first
+            # match silently dropped all three from the outline.
+            for _ln in merged[_i].get_text().splitlines():
+                _m = re.match(r'^\s*(\d{1,2})\.\s+(\S.{2,70})$', _ln.strip())
+                if _m and _m.group(1) not in _seen:
+                    _seen.add(_m.group(1))
+                    _toc.append([1, f"{_m.group(1)}. {_m.group(2).strip()}", _i + 1])
+        _at = n_body
+        for _name, _cnt in counts:
+            _label = ("Appendix — Data & Tables Dossier" if "dossier" in _name.lower()
+                      else "Appendix — Figures & Contours Album" if "album" in _name.lower()
+                      else _name)
+            _toc.append([1, _label, _at + 1])
+            for _j in range(_at, _at + _cnt):          # album/dossier section dividers
+                _lines = [l for l in merged[_j].get_text().splitlines() if l.strip()]
+                if len(_lines) == 1 and len(_lines[0]) < 45:
+                    _toc.append([2, _lines[0].strip(), _j + 1])
+            _at += _cnt
+        if _toc:
+            merged.set_toc(_toc)
         merged.set_metadata({"title": f"{TITLE} — {SOLVER}", "author": AUTHOR,
                              "subject": "Prediction of dynamic stall on a helicopter "
                                         "main-rotor retreating blade (UIBS core)",
