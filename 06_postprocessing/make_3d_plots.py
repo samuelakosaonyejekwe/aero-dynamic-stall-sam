@@ -63,6 +63,14 @@ NPC = cfg["numerics"]["steps_per_cycle"]; NCYC = cfg["numerics"]["n_cycles"]
 # both numbers are declared here rather than buried as literals
 SWEEP_NPC, SWEEP_NCYC = NPC//2, 3
 
+# ---- preconditions, checked BEFORE any work. This used to sit two hundred
+#      lines down, immediately before the field figures, so a missing solver
+#      output was only discovered AFTER the 36-point response-surface sweep had
+#      been run and written. Fail before spending the sweep, not after.
+_PEAK_FIELDS = sorted(glob.glob(str(SOL/"field_A_validation_peak*.csv")))
+if not _PEAK_FIELDS:
+    raise SystemExit("[3d] no field_A_validation_peak*.csv — run 04_solver/run_case.py first")
+
 # ====================================================== 1. RESPONSE SURFACE
 # sweep grid. Amplitude is held at the case-A value so the surface is a sweep in
 # (mean incidence, reduced frequency) about the reported case, not about a third
@@ -94,6 +102,11 @@ M, K = np.meshgrid(means, ks, indexing="ij")
 # a future change to the sweep or to the polar ever breaks that.
 PEAK = M + AA_A
 IN_CAL = PEAK <= ALPHA_CAL_MAX
+# Validate BEFORE writing, not after: the assert used to sit further down, so a
+# grid containing extrapolated points would have been published to
+# response_surface.csv and only then rejected. Same defect as the one fixed
+# in 02_mesh/generate_mesh.py.
+assert IN_CAL.all(), "response surface must not contain extrapolated points"
 pd.DataFrame({"alpha_mean_deg": M.ravel().round(3), "reduced_freq_k": K.ravel().round(4),
               "alpha_amp_deg": AA_A, "mach_M": M_A, "chord_m": C_A,
               "steps_per_cycle": SWEEP_NPC, "n_cycles": SWEEP_NCYC,
@@ -114,7 +127,6 @@ ax.set_title("Dynamic-stall lift response surface  $C_{L,max}(α_{mean}, k)$\n"
              "(NACA 0012, M=%.2f, α amplitude %.0f°)" % (M_A, AA_A), pad=18)
 cb = fig.colorbar(surf, ax=ax, pad=0.10, shrink=0.6); cb.set_label("$C_{L,max}$")
 # state the bound the grid is drawn inside, so the limit travels with the figure
-assert IN_CAL.all(), "response surface must not contain extrapolated points"
 _note = ("Every point lies on calibrated data: the mean incidence stops at %.0f° so the peak\n"
          "(mean + %.0f° amplitude) never exceeds the %.0f° the static polar is tabulated to.\n"
          "Both reported cases peak at exactly %.0f°."
@@ -156,10 +168,7 @@ def load_field(path):
     flds = {c: df[c].values.reshape(ny, nx) for c in df.columns if c not in ("x_m", "y_m")}
     return xu, yu, flds
 
-_pk = sorted(glob.glob(str(SOL/"field_A_validation_peak*.csv")))
-if not _pk:
-    raise SystemExit("[3d] no field_A_validation_peak*.csv — run 04_solver/run_case.py first")
-peakA = _pk[0]
+peakA = _PEAK_FIELDS[0]
 xu, yu, F = load_field(peakA)
 X, Y = np.meshgrid(xu, yu)
 for key, cmap, lab, fn in [("Cp", CMAP_CP, "$C_p$", "Cp"),

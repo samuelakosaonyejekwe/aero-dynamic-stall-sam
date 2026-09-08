@@ -92,6 +92,21 @@ def model_branches(o):
     return br
 
 rows = []
+# The chord-independence invariant is checked HERE, before any result is
+# written. It used to run at the END of the script, after every output file
+# had already been published -- so a march that violated the assumption the
+# whole validation rests on would have left those results standing as if
+# they were sound.
+# ---- invariant: the march really is chord/speed independent, as claimed above
+def _frame_independence_check():
+    o1 = us.solve_dynamic_stall(10.0, 10.0, 0.10, 0.30, 0.30, 0.30*A_SND, f_static,
+                                CNalpha=CNALPHA, consts=FROZEN, n_per_cycle=360, n_cycles=3)
+    o2 = us.solve_dynamic_stall(10.0, 10.0, 0.10, 0.30, 1.70, 0.30*A_SND, f_static,
+                                CNalpha=CNALPHA, consts=FROZEN, n_per_cycle=360, n_cycles=3)
+    d = float(np.max(np.abs(o1["CL"] - o2["CL"])))
+    assert d < 1e-10, f"march is NOT chord-independent: max |dCL| = {d:.3e}"
+_frame_independence_check()
+
 fig, axs = plt.subplots(len(FRAMES), 2, figsize=(11, 3.0*len(FRAMES)))
 for i, (fn, airfoil, role) in enumerate(FRAMES):
     fr = loadframe(fn); U = fr["M"]*A_SND
@@ -178,12 +193,3 @@ print(f"[nasa-real] {len(ho)} held-out NACA0012 frames: meanRMS_CL={ho.RMS_CL.me
       f"Xi_hat model-exp spread mean={dxi.mean():.3f} max={dxi.max():.3f} "
       f"(solver band {us.DAMPING_TOL})")
 
-# ---- invariant: the march really is chord/speed independent, as claimed above
-def _frame_independence_check():
-    o1 = us.solve_dynamic_stall(10.0, 10.0, 0.10, 0.30, 0.30, 0.30*A_SND, f_static,
-                                CNalpha=CNALPHA, consts=FROZEN, n_per_cycle=360, n_cycles=3)
-    o2 = us.solve_dynamic_stall(10.0, 10.0, 0.10, 0.30, 1.70, 0.30*A_SND, f_static,
-                                CNalpha=CNALPHA, consts=FROZEN, n_per_cycle=360, n_cycles=3)
-    d = float(np.max(np.abs(o1["CL"] - o2["CL"])))
-    assert d < 1e-10, f"march is NOT chord-independent: max |dCL| = {d:.3e}"
-_frame_independence_check()

@@ -235,9 +235,17 @@ metrics = pd.DataFrame({
               round(pct_skew_gt_05,3), float("%.2e"%area_abs.min()), n_inverted,
               float("%.2e"%_dwall[_iLE]), float("%.2e"%_dwall[0])],
 })
-metrics.to_csv(HERE/"mesh_quality_metrics.csv", index=False)
+# Validate BEFORE writing anything. The guard used to sit immediately AFTER
+# this file was written, so a run that failed validation still published
+# mesh_quality_metrics.csv with inverted_cells set to a non-zero value,
+# overwriting the last good metrics with numbers describing a grid the stage had
+# just declared invalid. Verified by injecting a folded cell: the guard fired
+# and exited 1, and left "inverted_cells,1" in the published file. Raising first
+# leaves the previous, valid artifacts untouched.
 if n_inverted:
-    raise SystemExit("[mesh] FAILED: %d inverted cells — grid is not valid" % n_inverted)
+    raise SystemExit("[mesh] FAILED: %d inverted cells — grid is not valid; "
+                     "no artifacts written" % n_inverted)
+metrics.to_csv(HERE/"mesh_quality_metrics.csv", index=False)
 
 # nodes csv (subsampled to keep file reasonable: every node)
 ii, jj = np.meshgrid(np.arange(I), np.arange(J), indexing="ij")
