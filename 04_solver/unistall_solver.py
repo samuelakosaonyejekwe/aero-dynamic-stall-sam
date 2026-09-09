@@ -88,24 +88,30 @@ Two auxiliary modules make the solver "universal" for engineering output:
         solution at the vortex centre with the vortex excluded. See the
         constants block for the derivation, and for the shear-layer-flux
         alternative that was tried and rejected for breaking the budget.
-        Published in metrics_*.csv, and all of it recomputed by
-        verify_invariants: Gamma_v = 0.121*U*c (DSV_circulation_over_Uc),
-        rc = 0.0112c (DSV_core_radius_chords), peak swirl 1.10*U
-        (DSV_peak_swirl_over_U) and a core suction of Cp = -4.22
-        (Cp_DSV_core_min), evaluated AT the vortex centre by dsv_core_cp rather
-        than sampled off a grid. Measurements put a dynamic-stall core at -3 to
-        -6, so the depth lands where it should without having been fitted there.
-        The pair this replaces -- 1.4*CNv*U*c in a 0.16c core -- gave -0.36.
+        The panel solution and the vortex are solved CONSISTENTLY with each
+        other -- the core radius depends on the edge speed and the panel
+        solution depends on the vortex -- by sweeping until the edge speed stops
+        moving; see _solve_with_dsv, and the defect that comes of not doing it.
+        Every number is published in metrics_*.csv and every one is recomputed
+        by verify_invariants against a fresh solve, so none of them can describe
+        a solution the study does not ship: DSV_circulation_over_Uc,
+        DSV_core_radius_chords, DSV_peak_swirl_over_U, DSV_edge_speed_over_U,
+        DSV_induced_at_wall_over_U and Cp_DSV_core_min, the last evaluated AT
+        the vortex centre by dsv_core_cp rather than sampled off a grid.
+        Measurements put a dynamic-stall core at -3 to -6 and the derived depth
+        lands there -- the invariant asserts the band, not a value -- without
+        having been fitted to it. The chosen pair this replaces (1.4*CNv*U*c in
+        a 0.16c core) gave -0.36.
         The core is SMALL, and the published field grid does not resolve it:
-        rc is 0.79 of a cell, published as DSV_core_radius_cells. The depth is
-        still exact because it is evaluated off the grid, and the vortex is
-        still represented correctly in the field because its vorticity is added
-        in closed form rather than differenced (integrating the published
-        vorticity around the core returns its circulation to 0.4 %).
-        It does NOT reverse the flow at the wall beneath it: it induces 0.121*U
-        upstream there against a local 1.098*U. Three places in this study
-        asserted a reversal the fields never showed; the numbers that settle it
-        are now published rather than the adjective.
+        DSV_core_radius_cells says by how much. The depth is still exact because
+        it is evaluated off the grid, and the vortex is still represented
+        correctly in the field because its vorticity is added in closed form
+        rather than differenced (integrating the published vorticity around the
+        core returns its circulation to 0.4 %).
+        It does NOT reverse the flow at the wall beneath it, and that is a
+        measured comparison rather than an assertion: DSV_induced_at_wall_over_U
+        against DSV_edge_speed_over_U. Three places in this study asserted a
+        reversal the fields never showed.
         It does not affect the reported loads, which come from the UIBS core.
       - Nothing in the reconstruction knows about separation: it is a potential
         field, so at post-stall incidence the leading-edge suction peak it draws
@@ -401,15 +407,16 @@ DAMPING_TOL = 0.08
 #
 #       rc = LAMB_OSEEN_PEAK*Gamma_v/(2*pi*Ve).
 #
-# Neither expression contains a fitted number. For Case A at the vortex maximum
-# they give Gamma_v = 0.121*U*c and rc = 0.0112c, and hence a core suction of
-# Cp = -4.22 -- against the -3 to -6 that dynamic-stall measurements report, and
-# without having been fitted to it. The chosen pair gave -0.36, an order of
-# magnitude too shallow.
+# Neither expression contains a fitted number, and the core suction they give
+# lands in the -3 to -6 that dynamic-stall measurements report without having
+# been fitted to it. The values are published per case (Cp_DSV_core_min and the
+# DSV_* rows of metrics_*.csv) rather than quoted here, because quoting them
+# here is how DSV_edge_speed_over_U went stale once already. The chosen pair
+# gave -0.36, an order of magnitude too shallow.
 #
 # WHAT THE VORTEX THEN IS, and is not. It is small and intense rather than
-# broad and weak: rc = 0.0112c is 0.79 of a cell of the published field grid, so
-# the FIELD does not resolve the core even though its depth is right. That is
+# broad and weak: rc is well under a cell of the published field grid, so the
+# FIELD does not resolve the core even though its depth is right. That is
 # published as DSV_core_radius_cells and is the same kind of statement the
 # leading-edge suction peak already carries -- the surface reaches -15 where the
 # field bottoms out far shallower, a property of the grid. The vortex's own
@@ -417,8 +424,8 @@ DAMPING_TOL = 0.08
 # is still sampled correctly: integrating the published vorticity around the
 # core returns its circulation to 0.4 % on that grid.
 # It does not reverse the flow at the wall beneath it, and that is a measured
-# comparison rather than an assertion: it induces 0.121*U upstream there against
-# a local 1.098*U (DSV_induced_at_wall_over_U against DSV_edge_speed_over_U).
+# comparison rather than an assertion: DSV_induced_at_wall_over_U against
+# DSV_edge_speed_over_U.
 # Three places in this study once asserted a reversal the fields never showed.
 # It does not affect the reported loads, which come from the UIBS core.
 #
@@ -516,10 +523,11 @@ def _solve_panels(xp, yp, U, alpha, Gamma, extra=None):
     points by anything else in the field -- in practice the dynamic-stall
     vortex. It belongs in the boundary condition: a free vortex added to the
     solution AFTERWARDS drives flow straight through the body, because nothing
-    ever asked the sources to cancel its normal component. That was survivable
-    while the vortex was a hundredth of the bound circulation; with the derived
-    vortex, at 1.79*U*c, it put reversed flow on the PRESSURE side, under the
-    aerofoil, where the vortex's own field simply passed through the section.
+    ever asked the sources to cancel its normal component. Measured at the
+    Case-A vortex maximum, the vortex drives 7.53 m/s through the wall at worst
+    -- 7.4 % of the free stream, 4.3 % rms -- and admitting it to the boundary
+    condition changes the surface C_p by up to 1.41. It was left out for as long
+    as the vortex was a chosen constant weak enough for that to look like noise.
 
     Returns panel midpoints, lengths, source strengths and the sheet strength.
     """
@@ -650,16 +658,32 @@ def _surface_velocity(xp, yp, xc, yc, L, sigma, gam, U, alpha):
     return u, v
 
 
-def _solve_with_dsv(naca_csv, c, U, alpha, CL, CNv, tau_over_Tvl, Tvl):
-    """Panel solution WITH the dynamic-stall vortex in the boundary condition.
+#  Picard tolerance and cap for the panel <-> vortex coupling below. Ve settles
+#  to machine precision in two sweeps at every condition this study solves; the
+#  cap is there so a pathological input cannot spin.
+DSV_COUPLING_TOL = 1e-10
+DSV_COUPLING_MAX = 12
 
-    Two steps, because the two depend on each other: the vortex's circulation is
-    derived from the edge speed at its centre, which comes from the panel
-    solution, and the panel solution must cancel the vortex's normal velocity on
-    the body. Solve without the vortex, derive it, then solve again with it --
-    one Picard step, and the matrix is unchanged so only the right-hand side is
-    rebuilt. The second solve is what keeps the section a streamline; without it
-    the vortex's field passes straight through the aerofoil.
+
+def _solve_with_dsv(naca_csv, c, U, alpha, CL, CNv, tau_over_Tvl):
+    """Panel solution WITH the dynamic-stall vortex in the boundary condition,
+    the two solved CONSISTENTLY with each other.
+
+    They depend on each other both ways: the vortex's core radius is derived
+    from the edge speed at its centre, which comes from the panel solution, and
+    the panel solution has to cancel the vortex's normal velocity on the body.
+    So sweep until the edge speed stops moving. It takes two sweeps.
+
+    A single sweep is NOT enough, and shipping one was a defect of its own: the
+    edge speed published as DSV_edge_speed_over_U was then the value from the
+    solution BEFORE the vortex entered the boundary condition, 1.098*U against
+    the converged 1.057*U, and the core radius derived from it was 3.9 % out.
+    The number described a solution the study did not ship. Worse, the invariant
+    that the peak swirl equals the edge speed still passed, because both sides
+    of it were computed from the same stale iterate.
+
+    The matrix is the same every sweep -- only the right-hand side changes --
+    so a sweep costs one 160x160 solve.
 
     Returns (xp, yp, xc, yc, L, sigma, gam, xv, yv, Gv, rc, Ve).
     """
@@ -667,19 +691,24 @@ def _solve_with_dsv(naca_csv, c, U, alpha, CL, CNv, tau_over_Tvl, Tvl):
     xp, yp = _airfoil_surface(naca_csv, c)
     xc, yc, L, sigma, gam = _solve_panels(xp, yp, U, alpha, Gamma)
     xv, yv, Gv, rc, Ve = _dsv_state(xc, yc, L, sigma, gam, U, alpha, c,
-                                    CNv, tau_over_Tvl, Tvl)
-    if Gv > 0.0:
+                                    CNv, tau_over_Tvl)
+    if Gv <= 0.0:
+        return xp, yp, xc, yc, L, sigma, gam, xv, yv, Gv, rc, Ve
+    for _ in range(DSV_COUPLING_MAX):
         du, dv, _ = _dsv_velocity(xc, yc, xv, yv, Gv, rc)
         xc, yc, L, sigma, gam = _solve_panels(xp, yp, U, alpha, Gamma, extra=(du, dv))
+        xv, yv, Gv, rc, Ve_new = _dsv_state(xc, yc, L, sigma, gam, U, alpha, c,
+                                            CNv, tau_over_Tvl)
+        if abs(Ve_new - Ve) <= DSV_COUPLING_TOL*max(abs(Ve_new), 1.0):
+            Ve = Ve_new
+            break
+        Ve = Ve_new
     return xp, yp, xc, yc, L, sigma, gam, xv, yv, Gv, rc, Ve
 
 
-def _dsv_state(xc, yc, L, sigma, gam, U, alpha, c, CNv, tau_over_Tvl, Tvl=None):
+def _dsv_state(xc, yc, L, sigma, gam, U, alpha, c, CNv, tau_over_Tvl):
     """Position, circulation and core radius of the reconstructed dynamic-stall
     vortex, all derived (see the constants block). Returns (xv, yv, Gv, rc, Ve).
-
-    Tvl is accepted so that every entry point in this module takes the same
-    arguments; the derivation does not use it.
 
     One definition, shared by reconstruct_field, surface_cp and dsv_core_cp.
     The four lines it replaces were written out three times, so a change to the
@@ -740,7 +769,7 @@ def reconstruct_field(naca_csv, c, U, M, alpha_deg, CL, CNv,
     # condition -- see there for why that matters.
     (xp, yp, xc, yc, L, sigma, gam,
      xv, yv, Gv, rc, _Ve) = _solve_with_dsv(naca_csv, c, U, alpha, CL, CNv,
-                                            tau_over_Tvl, Tvl)
+                                            tau_over_Tvl)
     Gamma = 0.5*CL*U*c
 
     x0, x1, y0, y1 = domain
@@ -888,7 +917,7 @@ def surface_cp(naca_csv, c, U, M, alpha_deg, CL, CNv, tau_over_Tvl,
     alpha = np.radians(alpha_deg)
     (xp, yp, xc, yc, L, sigma, gam,
      xv, yv, Gv, rc, _Ve) = _solve_with_dsv(naca_csv, c, U, alpha, CL, CNv,
-                                            tau_over_Tvl, Tvl)
+                                            tau_over_Tvl)
     u, v = _surface_velocity(xp, yp, xc, yc, L, sigma, gam, U, alpha)
     du, dv, r2 = _dsv_velocity(xc, yc, xv, yv, Gv, rc)
     u += du; v += dv
@@ -935,7 +964,7 @@ def dsv_vortex_state(naca_csv, c, U, M, alpha_deg, CL, CNv, tau_over_Tvl,
     alpha = np.radians(alpha_deg)
     (_xp, _yp, _xc, _yc, _L, _sig, _gam,
      xv, yv, Gv, rc, Ve) = _solve_with_dsv(naca_csv, c, U, alpha, CL, CNv,
-                                           tau_over_Tvl, Tvl)
+                                           tau_over_Tvl)
     if U <= 0.0:
         return dict(Gamma_over_Uc=float("nan"), rc_chords=float("nan"),
                     peak_swirl_over_U=float("nan"),
@@ -957,10 +986,12 @@ def dsv_core_cp(naca_csv, c, U, M, alpha_deg, CL, CNv, tau_over_Tvl,
     This is what metrics_*.csv publishes as Cp_DSV_core_min. It used to be read
     off the reconstructed field as the value at whichever grid node happened to
     lie nearest the vortex centre, which made a grid-independent quantity look
-    as though it were not: the same instant of Case A gave -0.425 on a 110x85
-    grid, -0.381 at 220x170, -0.358 at 440x340 and -0.368 at 880x680 -- drift
-    and non-monotonicity that were entirely the sampling point moving, not the
-    reconstruction changing. Evaluated here there is one number.
+    as though it were not, and the derived core -- under a cell wide -- makes it
+    far worse than it was: sampling the nearest node at one unchanged Case-A
+    instant gives -3.99 on a 110x85 grid, -4.75 at 220x170, -3.70 at 440x340 and
+    -4.29 at 880x680, a spread of 1.04 that is not even monotone. That is
+    entirely the sampling point moving, not the reconstruction changing.
+    Evaluated here there is one number, -3.92.
 
     The panel regularisation used is the panel-spacing one only; the field's
     eps2 also carries a grid term, which has no meaning away from a grid, and
@@ -971,7 +1002,7 @@ def dsv_core_cp(naca_csv, c, U, M, alpha_deg, CL, CNv, tau_over_Tvl,
     alpha = np.radians(alpha_deg)
     (xp, yp, xc, yc, L, sigma, gam,
      xv, yv, Gv, rc, _Ve) = _solve_with_dsv(naca_csv, c, U, alpha, CL, CNv,
-                                            tau_over_Tvl, Tvl)
+                                            tau_over_Tvl)
     X = np.array([xv]); Y = np.array([yv])
     du_p, dv_p = _panel_velocity(X, Y, xc, yc, L, sigma, gam, (0.6*L.mean())**2)
     du_v, dv_v, r2 = _dsv_velocity(X, Y, xv, yv, Gv, rc)
@@ -1018,11 +1049,11 @@ def surface_load_closure(naca_csv, c, U, M, alpha_deg, CL, CNv, tau_over_Tvl,
     and it converges to zero under panel refinement.
 
     With the dynamic-stall vortex present that is no longer true and must not be
-    read as an error. A free vortex of circulation 1.79*U*c standing 0.16c off
-    the body exerts a real force on it, so the residual is the vortex's induced
-    lift; it converges under refinement to that force, not to zero. run_case
-    therefore measures Cp_closure_error_pct with the vortex OFF and publishes
-    the difference the vortex makes separately, as DSV_induced_lift_dCL.
+    read as an error. A free vortex standing off the body exerts a real force on
+    it, so the residual is the vortex's induced lift; it converges under
+    refinement to that force, not to zero. run_case therefore measures
+    Cp_closure_error_pct with the vortex OFF and publishes the difference the
+    vortex makes separately, as DSV_induced_lift_dCL.
 
     Also returns the trailing-edge pressure jump |Cp_upper - Cp_lower| there.
     That one is NOT an invariant and must not be read as one: it is zero only if

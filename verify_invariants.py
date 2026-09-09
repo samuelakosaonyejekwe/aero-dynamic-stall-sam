@@ -13,7 +13,8 @@ this project, so each one is a regression test rather than a hypothetical:
   * setup thermodynamics    - flow_conditions.csv was once internally
                               over-determined, with rho and U disagreeing; rho,
                               a, M and Re are all re-derived from the
-                              independent quantities.
+                              independent quantities, and the kinematics are
+                              re-derived from the conditions AS PUBLISHED.
   * geometry                - the section is checked against the analytic NACA
                               0012 polynomial and its exact enclosed area.
   * mesh validity           - 22 folded cells were once hidden by an abs() in
@@ -56,6 +57,8 @@ this project, so each one is a regression test rather than a hypothetical:
                               silence: the solver config printed 82 of its 97
                               lines and every long table 33 of the 38 rows its
                               caption claimed.
+  * report completeness     - every paragraph, table cell and image of
+                              case.docx must reach the rendered PDF.
   * experimental provenance - the frame conditions must match the .mat files.
   * config vs code          - solver_config.json must still describe the
                               solver: f_min, n_panels, the default grid, the
@@ -92,6 +95,23 @@ for case in ('case_A_validation','case_B_application'):
     _re=float(col['air_density_rho'])*float(col['freestream_velocity_U'])*float(col['chord_c'])/float(col['dynamic_viscosity_mu'])
     ck(f"{case[5:6]} Re=rho*U*c/mu", abs(_re-float(col['reynolds_number_Re_c']))/_re<5e-4,
        f"{_re:.4g} vs {col['reynolds_number_Re_c']}")
+
+# --- the kinematics must recompute from the flow conditions AS PUBLISHED.
+#     They did not: omega was derived from the full-precision U while
+#     flow_conditions.csv published U rounded to 2 dp, so kinematics.csv said
+#     68.058 rad/s and the solver -- which reads the published U and recomputes
+#     omega = 2kU/c itself -- marched at 68.060. Two published files, two
+#     different motions, neither recomputable from the other.
+_kin=pd.read_csv('03_model_setup/kinematics.csv').set_index('case_id')
+for _cid,_col in (('A_validation_rig','case_A_validation'),
+                  ('B_application_rotor','case_B_application')):
+    _k=_kin.loc[_cid]; _U=float(fl[_col]['freestream_velocity_U']); _c=float(fl[_col]['chord_c'])
+    _w=2.0*float(_k['reduced_freq_k'])*_U/_c
+    ck(f"{_cid} omega recomputes from the published U and c",
+       abs(_w-float(_k['omega_rad_s']))<5e-4, f"{_w:.5f} vs {_k['omega_rad_s']}")
+    ck(f"{_cid} frequency and period agree with that omega",
+       abs(_w/(2*np.pi)-float(_k['freq_Hz']))<5e-4
+       and abs(2*np.pi/_w-float(_k['period_s']))<5e-6)
 
 # --- geometry
 gg=pd.read_csv(G); xc,yc=gg['x_over_c'].values,gg['y_over_c'].values
@@ -305,6 +325,21 @@ for _case,_m in (('A_validation',mA),('B_application',mB)):
     # the field does not resolve that core, and publishes by how much
     ck(f"{_case} the under-resolution of the core is published",
        0.0 < float(_m['DSV_core_radius_cells']) < 3.0, _m['DSV_core_radius_cells'])
+    # THE COUPLING MUST BE CONVERGED. The core radius depends on the edge speed
+    # and the panel solution depends on the vortex, so a single sweep publishes
+    # an edge speed belonging to the solution BEFORE the vortex entered the
+    # boundary condition -- 1.098*U was shipped that way against a converged
+    # 1.057*U, with the core radius 3.9 % out. Rebuild the state from the
+    # solution the reconstruction actually uses and require it to be unchanged.
+    _a_ = np.radians(float(_rc_.alpha_deg))
+    _sol = us._solve_with_dsv(G, _cc, _uu, _a_, float(_rc_.CL),
+                              float(_rc_.CN_vortex), float(_rc_.tau_v_semichords)/_tvl)
+    _re = us._dsv_state(_sol[2], _sol[3], _sol[4], _sol[5], _sol[6], _uu, _a_, _cc,
+                        float(_rc_.CN_vortex), float(_rc_.tau_v_semichords)/_tvl)
+    ck(f"{_case} the vortex/panel coupling is converged, not a single sweep",
+       abs(_re[4]/_uu - _st['edge_speed_over_U']) < 1e-9
+       and abs(_re[3]/_cc - _st['rc_chords']) < 1e-9,
+       f"resolved Ve/U {_re[4]/_uu:.6f} vs published {_st['edge_speed_over_U']:.6f}")
 # the Lamb-Oseen peak-swirl coefficient must be the swirl one (0.6382), not the
 # enclosed-circulation one (0.7153) -- they differ by 12 % and were confused
 ck("LAMB_OSEEN_PEAK is the peak-swirl coefficient",
@@ -514,6 +549,51 @@ try:
     ck("no CSV column name is broken across lines in the report", not _broken,
        f"{len(_broken)} broken, e.g. {_broken[:4]}")
     _rp.close()
+except ImportError:
+    pass
+
+# --- the rendered report must contain EVERYTHING case.docx does. The docx is
+#     assembled from the solver outputs and then rendered by build_report_pdf;
+#     nothing between the two may silently drop content, and the dossier showed
+#     this study can lose content without any trace (a clipped page leaves
+#     nothing behind to notice). Paragraphs, table cells and images, all three.
+#
+#     Page numbers are stripped before the comparison, and a paragraph that
+#     spans a page break is joined across it: PyMuPDF puts the footer number at
+#     the START of some pages' text, so a naive concatenation drops a page
+#     number into the middle of such a paragraph and reports three false
+#     absences.
+try:
+    import fitz as _fz5
+    from docx import Document as _Doc
+    if os.path.exists('07_report/case.docx') and os.path.exists('aero_dynamic_stall_report.pdf'):
+        _rp5=_fz5.open('aero_dynamic_stall_report.pdf')
+        _nb=_rp5.page_count
+        for _cv in ('UNISTALL_data_dossier.pdf','UNISTALL_plots_album.pdf'):
+            if os.path.exists(_cv):
+                with _fz5.open(_cv) as _c5: _nb-=_c5.page_count
+        _txt=[]
+        for _i in range(_nb):
+            _t=_rp5[_i].get_text()
+            _t=re.sub(r'^\s*%d\s*\n' % (_i+1), '', _t)      # leading page number
+            _t=re.sub(r'\n\s*%d\s*\n?$' % (_i+1), '\n', _t)  # trailing page number
+            _txt.append(_t)
+        _flatb=re.sub(r'\s+','', "".join(_txt))
+        _dx=_Doc('07_report/case.docx')
+        _ps=[x.text.strip() for x in _dx.paragraphs if x.text.strip()]
+        _miss=[x for x in _ps if re.sub(r'\s+','',x) not in _flatb]
+        ck("every case.docx paragraph reaches the rendered report", not _miss,
+           f"{len(_miss)} missing, e.g. {[m[:60] for m in _miss[:2]]}")
+        _cl=[" ".join(y.text for y in cc.paragraphs).strip()
+             for t in _dx.tables for r in t.rows for cc in r.cells]
+        _cl=[x for x in _cl if x]
+        _mc=[x for x in _cl if re.sub(r'\s+','',x) not in _flatb]
+        ck("every case.docx table cell reaches the rendered report", not _mc,
+           f"{len(_mc)} of {len(_cl)} missing")
+        _ni=sum(len(_rp5[_i].get_images()) for _i in range(_nb))
+        ck("every case.docx image reaches the rendered report",
+           _ni == len(_dx.inline_shapes), f"{_ni} placed vs {len(_dx.inline_shapes)} in the docx")
+        _rp5.close()
 except ImportError:
     pass
 

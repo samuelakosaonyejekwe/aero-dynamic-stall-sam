@@ -113,13 +113,13 @@ same relation the bound sheet uses, so it carries exactly the C_N^v/C_N share of
 the circulation the lift implies (0.121 U c for Case A)
 and the circulation budget closes — and its core is the radius at which that
 circulation swirls at the edge speed of the shear layer that rolls it up
-(0.0112 c, swirling at 1.098 U).
+(0.0116 c, swirling at 1.057 U).
 The core suction that follows, `Cp_DSV_core_min`, is
--4.222 (Case A) and -4.26 (Case B) — against
+-3.921 (Case A) and -4.075 (Case B) — against
 the -3 to -6 a measured deep-stall core shows, landing there without having been
 fitted to it. The two constants this replaces were chosen rather than derived and
 gave -0.36, an order of magnitude too shallow. The derived core is small:
-0.79 of a cell of the published field grid, so the
+0.82 of a cell of the published field grid, so the
 *field* does not resolve it (`DSV_core_radius_cells`) even though its depth is
 exact, because the depth is evaluated at the vortex centre and the vortex's
 vorticity is added to the field in closed form rather than differenced.

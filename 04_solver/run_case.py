@@ -192,13 +192,12 @@ for name, C in CASES.items():
     #      back to the C_L it was handed? Published so the field-reconstruction
     #      accuracy is a measured number rather than a claim in a docstring. ----
     #      Measured with the VORTEX OFF. With it on the surface integral does
-    #      not return the imposed C_L and should not: a free vortex of 1.79*U*c
-    #      standing 0.16c off the body exerts a real force on it, so that
-    #      residual is the vortex's induced lift, not a closure error. It is
-    #      published beside this row as DSV_induced_lift_dCL. The two used to be
-    #      conflated -- the with-vortex figure was quoted as the closure error
-    #      and read as a discretisation bound -- which was survivable only while
-    #      the vortex carried an eighth of its derived strength.
+    #      not return the imposed C_L and should not: a free vortex standing off
+    #      the body exerts a real force on it, so that residual is the vortex's
+    #      induced lift, not a closure error. It is published beside this row as
+    #      DSV_induced_lift_dCL, and at the derived circulation it is small. The
+    #      two used to be conflated -- the with-vortex figure was quoted as the
+    #      closure error and read as a discretisation bound.
     _j = int(np.argmax(out["CL"]))
     _clcp, cp_closure_pct, _ = us.surface_load_closure(
         GEO, C["c"], C["U"], C["M"], out["alpha_deg"][_j], out["CL"][_j],
@@ -265,10 +264,12 @@ for name, C in CASES.items():
     #
     #      Evaluated AT the vortex centre by us.dsv_core_cp, not read off the
     #      reconstructed field at whichever grid node lay nearest it. The grid
-    #      version made a grid-independent quantity look grid-dependent: the same
-    #      Case-A instant gave -0.425 at 110x85, -0.381 at 220x170, -0.358 at
-    #      440x340 and -0.368 at 880x680, drifting and then reversing purely
-    #      because the sampling point moved. It also used reconstruct_field's
+    #      version makes a grid-independent quantity look grid-dependent, and
+    #      the derived core -- which is under a cell wide -- makes that much
+    #      worse than it was: sampling the nearest node at the same Case-A
+    #      instant gives -3.99 (110x85), -4.75 (220x170), -3.70 (440x340) and
+    #      -4.29 (880x680), a spread of 1.04 that is not even monotone, against
+    #      the one exact value of -3.92. It also used reconstruct_field's
     #      260x200 DEFAULT grid rather than the 220x170 the published fields are
     #      written on, so it described no field this study ships. ----
     _v = int(np.argmax(out["CNv"]))

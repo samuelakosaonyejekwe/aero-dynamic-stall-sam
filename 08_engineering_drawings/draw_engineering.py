@@ -114,6 +114,15 @@ SPEC["blade_chord"] = float(_flowB["chord_c"])*1000.0        # m -> mm
 SPEC["fwd_of_nose"] = max(0.0, SPEC["R"] - SPEC["hub_from_nose"])
 SPEC["aft_of_tail"] = SPEC["tailrotor_from_nose"] + SPEC["trdia"]/2.0 - SPEC["L_fus"]
 SPEC["L_ovl"] = SPEC["fwd_of_nose"] + SPEC["L_fus"] + max(0.0, SPEC["aft_of_tail"])
+# Overall HEIGHT of the drawn envelope, derived the same way the overall length
+# is. It is the tail-rotor disc that sets it, not the hub and not the fin: the
+# disc reaches 5175 mm against a 3760 mm hub and a 4000 mm fin tip. Sheet 2's
+# notes gave "OVERALL HEIGHT 3760 (HUB)", which is a true statement about the
+# hub and a false one about the envelope, on a drawing whose job is the
+# envelope -- the same defect as the overall LENGTH that once started aft of the
+# aircraft's forward-most point.
+SPEC["H_ovl"] = max(SPEC["Hh"], SPEC["Hf"],
+                    SPEC["tailrotor_hub_z"] + SPEC["trdia"]/2.0)
 
 ARROW_KW = dict(arrowstyle="<->", color=INK, lw=0.8, mutation_scale=7,
                 shrinkA=0, shrinkB=0)
@@ -842,8 +851,8 @@ def sheet2():
                 ["1.  PICTORIAL VIEW; ENVELOPE DIMS",
                  "     NOMINAL, mm.",
                  f"2.  OVERALL LENGTH INCL ROTOR {int(round(L_ovl))}.",
-                 f"3.  OVERALL HEIGHT {int(Hh)} (HUB),",
-                 f"     FIN TIP {int(Hf)}.",
+                 f"3.  OVERALL HEIGHT {int(round(SPEC['H_ovl']))} (TAIL-ROTOR",
+                 f"     DISC); HUB {int(Hh)}, FIN TIP {int(Hf)}.",
                  "4.  ROTOR DISC SHOWN AS SWEPT",
                  "     ENVELOPE (BROKEN LINE).",
                  "5.  GENERAL TOL. \u00b125 mm."])

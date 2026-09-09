@@ -56,7 +56,22 @@ A_A, A_B     = np.sqrt(GAMMA*R_GAS*T_A), np.sqrt(GAMMA*R_GAS*T_B)
 RHO_A, RHO_B = P_A/(R_GAS*T_A), P_B/(R_GAS*T_B)
 U_A          = M_A*A_A                              # rig: Mach is the test point
 U_B          = OMEGA*R_ROT*(R_STA - ADV)            # retreating blade at psi=270 deg
-M_B          = U_B/A_B
+
+# ROUND ONCE, THEN DERIVE. Everything downstream -- the kinematics below, the
+# Reynolds numbers, case B's Mach, and every stage that reads flow_conditions.csv
+# -- is computed from the values as PUBLISHED, not from the full-precision ones.
+#
+# Otherwise the published files disagree with each other. They did: the
+# kinematics were derived from U_A = 102.08726 while flow_conditions.csv
+# published U = 102.09, so kinematics.csv gave omega = 68.058 rad/s while the
+# solver, which reads the published U and recomputes omega = 2kU/c itself, was
+# marching at 68.060. Two published files describing two different motions, and
+# neither recomputable from the other. Same rule as the mesh nodes and the
+# radial spacing: what is published must reproduce what is derived from it.
+A_A, A_B     = round(A_A, 2), round(A_B, 2)
+RHO_A, RHO_B = round(RHO_A, 4), round(RHO_B, 4)
+U_A, U_B     = round(U_A, 2), round(U_B, 2)
+M_B          = round(U_B/A_B, 4)
 RE_A = RHO_A*U_A*CH_A/MU
 RE_B = RHO_B*U_B*CH_B/MU
 
@@ -66,10 +81,10 @@ flow = pd.DataFrame([
                                 "Retreating-blade section, r/R=0.75, mu=0.32", "-"],
     ["airfoil",                 "NACA 0012", "NACA 0012", "-"],
     ["chord_c",                 CH_A, CH_B, "m"],
-    ["freestream_mach_M",       round(M_A, 4), round(M_B, 4), "-"],
-    ["freestream_velocity_U",   round(U_A, 2), round(U_B, 2), "m/s"],
-    ["speed_of_sound_a",        round(A_A, 2), round(A_B, 2), "m/s"],
-    ["air_density_rho",         round(RHO_A, 4), round(RHO_B, 4), "kg/m^3"],
+    ["freestream_mach_M",       M_A, M_B, "-"],
+    ["freestream_velocity_U",   U_A, U_B, "m/s"],
+    ["speed_of_sound_a",        A_A, A_B, "m/s"],
+    ["air_density_rho",         RHO_A, RHO_B, "kg/m^3"],
     ["static_pressure_p_inf",   P_A, P_B, "Pa"],
     ["static_temperature_T_inf",T_A, T_B, "K"],
     ["dynamic_viscosity_mu",    MU, MU, "Pa.s"],
@@ -198,6 +213,7 @@ config = {
 }
 with open(HERE/"solver_config.json", "w") as fp:
     json.dump(config, fp, indent=2)
+    fp.write("\n")            # json.dump writes none; every other file here ends with one
 
 # ============================================================ STATIC POLAR REF
 # Representative published NACA 0012 static aerodynamics, Re ~ 2-3e6, low Mach.
