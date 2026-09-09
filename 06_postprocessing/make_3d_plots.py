@@ -278,8 +278,10 @@ ax.text2D(0.02, 0.03, "arrows: velocity on the mid-span plane, "
           transform=ax.transAxes, fontsize=8.5, color=INK_SOFT)
 ax.set_xlim(WIN_X[0], WIN_X[1]); ax.set_zlim(-WIN_Y, WIN_Y); ax.set_ylim(0, span)
 ax.set_xlabel("x [m]"); ax.set_ylabel("span z [m]"); ax.set_zlabel("y [m]")
-ax.set_title("Pictorial blade section with reconstructed velocity field (peak incidence)",
-             pad=20)
+# names its case, like the two field surfaces and the Cp-phase surface: it is
+# built from C_A and the case-A peak field, and said neither
+ax.set_title("Pictorial blade section with reconstructed velocity field "
+             "(Case A, peak incidence)", pad=20)
 ax.set_yticks(np.linspace(0, span, 4))
 ax.view_init(elev=18, azim=-68); tidy3d(ax)
 ax.set_box_aspect((1.4, 0.8, 0.7))

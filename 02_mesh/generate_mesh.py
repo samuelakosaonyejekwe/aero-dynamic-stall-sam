@@ -350,12 +350,33 @@ pd.DataFrame({"layer_j": np.arange(N_RAD),
 
 # ---- figures ----
 def plot_grid(ax, every_i=4, every_j=3, lw=0.4):
+    """Draw the grid, subsampled, and SAY so on the axes.
+
+    Every grid figure here draws a fraction of the lines -- at full density the
+    near-wall clustering is a solid block of ink. That is normal, but the
+    full-grid figure titled itself "257x121 nodes" while showing one line in
+    four each way, so what the reader saw was a 65x31 grid, and the coarse
+    circumferential steps between mid-chord nodes read as a faceted, badly
+    distributed mesh. The stride is taken from the arguments actually used, so
+    the note cannot drift from the picture.
+    """
     for j in range(0, J, every_j):
         ax.plot(Xg[:, j]*CHORD, Yg[:, j]*CHORD, color=INK_SOFT, lw=lw)
     for i in range(0, I, every_i):
         ax.plot(Xg[i, :]*CHORD, Yg[i, :]*CHORD, color=INK_SOFT, lw=lw)
     ax.fill(xw*CHORD, yw*CHORD, color=PALETTE[0], alpha=0.35)
     ax.set_aspect("equal"); ax.grid(False)
+    _shown = ("showing every %s wrap line and every %s normal line"
+              % (_ord(every_i), _ord(every_j))).replace(" every  ", " every ")
+    ax.text(0.5, -0.105, _shown, transform=ax.transAxes, ha="center", va="top",
+            fontsize=8.0, color=INK_SOFT)
+    return every_i, every_j
+
+
+def _ord(n):
+    """"2nd", "3rd", "4th" ... and nothing at all for a stride of 1, so the note
+    reads "every normal line" rather than "every 1st normal line"."""
+    return "" if n == 1 else {2: "2nd", 3: "3rd"}.get(n, "%dth" % n)
 
 fig, ax = plt.subplots(figsize=(7.5, 7.5))
 plot_grid(ax, 4, 4)

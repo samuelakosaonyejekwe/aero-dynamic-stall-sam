@@ -15,13 +15,15 @@ all solution data to 05_solution/.  Outputs:
                                including the surface-Cp closure both at peak
                                lift and at its worst over the reported cycle
   summary_all_cases.csv        one row per case: the headline scalars
-  runtime_environment.csv      the machine, and the CPU time the march took on it
+  runtime_environment.csv      the machine, the library versions and the CPU
+                               time the march took on it
   convergence/residuals_<case>.csv   cycle-to-cycle convergence (the limit cycle
                                is reached) -- NOT time-step convergence
   convergence/timestep_refinement.csv  the step-refinement study behind the
                                steps_per_cycle the config declares
 """
 import sys, json, time, platform
+import importlib.metadata as _md
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -39,6 +41,8 @@ GEO   = ROOT/"01_geometry"/"naca0012_coordinates.csv"
 cfg = json.load(open(SETUP/"solver_config.json"))
 CNALPHA = cfg["lift_curve_slope_CNalpha_per_rad"]
 NPC  = cfg["numerics"]["steps_per_cycle"]
+# where the trailing-edge panel oscillation lives: the last half-percent of chord
+CP_TE_ZONE = 0.995
 NCYC = cfg["numerics"]["n_cycles"]
 # field-reconstruction grid: READ from the config, which declares these as "the
 # sizes written to 05_solution/field_*.csv". They used to be inline literals in
@@ -247,6 +251,8 @@ for name, C in CASES.items():
     #      flow is from attached. A reader can verify the claim by imposing
     #      CL_kutta_inviscid, which drives the jump to ~1e-3. ----
     cp_te_jump = 0.0
+    cp_te_local = 0.0
+    cp_far_max = 0.0
     for _tgt, _ups in [(C["a_mean"], True),
                        (C["a_mean"]+C["a_amp"]*0.7, True),
                        (min(C["a_mean"]+C["a_amp"], ALPHA_SAMPLE_MAX), True),
@@ -256,6 +262,28 @@ for name, C in CASES.items():
             GEO, C["c"], C["U"], C["M"], out["alpha_deg"][_k], out["CL"][_k],
             out["CNv"][_k], out["tau_v"][_k]/consts["Tvl"], consts["Tvl"])
         cp_te_jump = max(cp_te_jump, _tj)
+        # The jump compares the two surfaces at the LAST control point only, so
+        # it cannot see what happens just upstream of it. It should: the
+        # published section has an OPEN trailing edge (0.252 % of chord, which
+        # is what the NACA 0012 polynomial gives) and the panel reconstruction
+        # closes it by collapsing both end points onto their midpoint, so the
+        # panels there are the shortest on the body; the imposed circulation is
+        # not the Kutta one either, and the result is a local oscillation
+        # reaching |Cp| ~ 6
+        # over the final half-percent of chord -- five times the jump the metric
+        # reports. Switching the vortex off leaves it almost unchanged (-5.2
+        # against -6.6 at alpha 19 deg), so it is the discretisation, not the
+        # dynamic-stall vortex. Publish its size and the chord fraction it lives
+        # on, so a reader sees the artifact instead of reading those spikes off
+        # the Cp figure as flow features.
+        _xc, _cp, _upx = us.surface_cp(
+            GEO, C["c"], C["U"], C["M"], out["alpha_deg"][_k], out["CL"][_k],
+            out["CNv"][_k], out["tau_v"][_k]/consts["Tvl"], consts["Tvl"])
+        _near = _xc >= CP_TE_ZONE
+        if _near.any():
+            cp_te_local = max(cp_te_local, float(np.max(np.abs(_cp[_near]))))
+        _far = ~_near
+        cp_far_max = max(cp_far_max, float(np.max(np.abs(_cp[_far]))))
     cl_kutta = us.kutta_reference_CL(GEO, C["c"], C["U"], C["M"],
                                      float(out["alpha_deg"][_j]))
     # ---- depth of the reconstructed dynamic-stall-vortex core. Published so
@@ -311,8 +339,19 @@ for name, C in CASES.items():
                    "CL_hysteresis_loop_area", "Cp_closure_error_pct",
                    "Cp_closure_worst_dCL_cycle",
                    "Cp_closure_worst_dCL_pct_of_CLmax",
-                   "Cp_TE_jump_max_over_phases", "CL_kutta_inviscid",
+                   "Cp_TE_jump_max_over_phases",
+                   "Cp_TE_panel_oscillation_max_abs",
+                   "Cp_TE_panel_oscillation_zone_x_c",
+                   "Cp_max_abs_outside_TE_zone", "CL_kutta_inviscid",
                    "Cp_DSV_core_min", "DSV_circulation_over_Uc",
+                   # DSV_peak_swirl_over_U and DSV_edge_speed_over_U are equal
+                   # by construction, not by coincidence and not as a check:
+                   # the core radius is DEFINED as the radius at which the
+                   # vortex swirls at the shear-layer edge speed, so the two
+                   # collapse to the same number (verified identical to 1e-16).
+                   # Both are published because each is the natural name in a
+                   # different argument, but a reader should not read them as
+                   # two independent results.
                    "DSV_core_radius_chords", "DSV_peak_swirl_over_U",
                    "DSV_core_radius_cells", "DSV_induced_at_wall_over_U",
                    "DSV_edge_speed_over_U", "DSV_induced_lift_dCL",
@@ -325,6 +364,7 @@ for name, C in CASES.items():
                   round(loopCL,4), round(cp_closure_pct,1),
                   round(cp_closure_worst_dCL,4),
                   round(100.0*cp_closure_worst_dCL/CLmax,2), round(cp_te_jump,3),
+                  round(cp_te_local,3), CP_TE_ZONE, round(cp_far_max,3),
                   round(cl_kutta,3), round(cp_dsv_core,3),
                   round(dsv["Gamma_over_Uc"],3), round(dsv["rc_chords"],4),
                   round(dsv["peak_swirl_over_U"],3),
@@ -453,18 +493,34 @@ pd.DataFrame(summary_rows, columns=["case","CL_max","alpha_CLmax_deg","CM_min",
 # the timings in metrics_*.csv mean nothing without the machine they were taken
 # on, so it is recorded alongside them rather than left implicit
 _cpu_A = solve_cpu["A_validation"]
+# The library versions the run actually used. requirements.txt carried a
+# "Verified on" line naming them, and nothing generated them -- a claim about
+# the environment with no artifact behind it, which is the one kind of claim
+# this study does not otherwise make. Recorded here, where they are produced
+# rather than remembered; verify_invariants checks them against the bounds
+# requirements.txt declares.
+_libs = []
+for _pkg in ("numpy", "scipy", "pandas", "matplotlib", "python-docx", "pillow",
+             "reportlab", "PyMuPDF"):
+    try:
+        _libs.append((f"version_{_pkg}", _md.version(_pkg)))
+    except _md.PackageNotFoundError:
+        _libs.append((f"version_{_pkg}", "not installed"))
+
 pd.DataFrame({"property": ["python", "platform", "processor", "steps_per_cycle",
                            "n_cycles", "solve_cpu_time_s_case_A",
                            "solve_cpu_time_s_case_B", "solve_cpu_ms_per_cycle_case_A",
-                           "solve_cpu_us_per_step", "timing_note"],
+                           "solve_cpu_us_per_step"]
+                          + [k for k, _ in _libs] + ["timing_note"],
               "value": [platform.python_version(), platform.platform(),
                         platform.processor() or "unknown", NPC, NCYC,
                         round(_cpu_A, 2), round(solve_cpu["B_application"], 2),
                         round(1000.0*_cpu_A/NCYC, 0),
-                        round(1e6*_cpu_A/(NPC*NCYC), 0),
-                        "CPU time, not wall time: wall time on this machine varied "
+                        round(1e6*_cpu_A/(NPC*NCYC), 0)]
+                       + [v for _, v in _libs]
+                       + ["CPU time, not wall time: wall time on this machine varied "
                         "0.57-3.96 s for identical code purely from background load. "
                         "Machine-dependent, so it lives here and not in metrics_*.csv, "
-                        "which stays bit-reproducible."]}
+                          "which stays bit-reproducible."]}
              ).to_csv(SOL/"runtime_environment.csv", index=False)
 print("[run] done. solution written to 05_solution/")

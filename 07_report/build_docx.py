@@ -603,7 +603,7 @@ P("A body-fitted O-grid (the wall line wraps the whole surface; there is no wake
 add_csv(ROOT/"02_mesh"/"mesh_quality_metrics.csv")
 add_image(ROOT/"02_mesh"/"fig_mesh_full.png", 5.4, "Fig. 8.1 Body-fitted O-grid (near field).")
 add_image(ROOT/"02_mesh"/"fig_mesh_le_zoom.png", 4.6, "Fig. 8.2 Leading-edge boundary-layer clustering.")
-add_image(ROOT/"02_mesh"/"fig_mesh_te_zoom.png", 4.6, "Fig. 8.3 Trailing-edge / near-wake clustering.")
+add_image(ROOT/"02_mesh"/"fig_mesh_te_zoom.png", 4.6, "Fig. 8.3 Trailing-edge clustering (O-grid: no wake cut).")
 add_image(ROOT/"02_mesh"/"fig_mesh_wall_spacing.png", 5.6, "Fig. 8.4 Wall-normal spacing law.")
 
 # ================================================================ 9 SETUP/INPUT

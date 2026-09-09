@@ -22,6 +22,11 @@ pillow>=9.0          # image sizing for the consolidated PDF
 reportlab>=4.0       # renders case.docx to PDF
 PyMuPDF>=1.23        # merges the report body with the dossier and plots album
 
-# Verified on (full run_all.py, all stages green):
-#   Python 3.12.3, numpy 1.26.4, scipy 1.11.4, pandas 3.0.3, matplotlib 3.6.3,
-#   python-docx 1.2.0, pillow 10.2.0, reportlab 5.0.1, PyMuPDF 1.27.2.3
+# The versions the published results were actually produced with are NOT listed
+# here. They were, as a hand-written line, and that made them the one claim in
+# this study with nothing generating it -- free to drift from the environment the
+# artifacts came out of, with no check able to notice. They are recorded by the
+# run itself, in 05_solution/runtime_environment.csv (python, platform and one
+# version_<pkg> row per library), and verify_invariants.py checks that every
+# recorded version satisfies the bounds declared above, that every library the
+# run used is declared here, and that none is missing.

@@ -4,8 +4,16 @@ platform,Linux-6.18.33.1-microsoft-standard-WSL2-x86_64-with-glibc2.39
 processor,x86_64
 steps_per_cycle,720
 n_cycles,6
-solve_cpu_time_s_case_A,1.05
-solve_cpu_time_s_case_B,0.81
-solve_cpu_ms_per_cycle_case_A,175.0
-solve_cpu_us_per_step,244.0
+solve_cpu_time_s_case_A,1.17
+solve_cpu_time_s_case_B,1.29
+solve_cpu_ms_per_cycle_case_A,196.0
+solve_cpu_us_per_step,272.0
+version_numpy,1.26.4
+version_scipy,1.11.4
+version_pandas,3.0.3
+version_matplotlib,3.6.3
+version_python-docx,1.2.0
+version_pillow,10.2.0
+version_reportlab,5.0.1
+version_PyMuPDF,1.27.2.3
 timing_note,"CPU time, not wall time: wall time on this machine varied 0.57-3.96 s for identical code purely from background load. Machine-dependent, so it lives here and not in metrics_*.csv, which stays bit-reproducible."

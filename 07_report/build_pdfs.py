@@ -11,7 +11,9 @@ Generates the two PDF deliverables that accompany case.docx:
                                   page is a contents list naming exactly what is
                                   in it and what is not (the reconstructed 2-D
                                   fields and the digitised experimental loops
-                                  are too large to typeset and ship as CSV).
+                                  are too large to typeset and ship as CSV; the
+                                  case-B Cp table is left out because it would
+                                  repeat the case-A one, not for its size).
 Author: Akosa Samuel Onyejekwe (independent).  No black is used anywhere.
 """
 import sys, json, textwrap
@@ -138,7 +140,9 @@ def table_page(pdf, df, title, max_rows=38, max_cols=10):
         for bi, cols in enumerate(blocks, 1):
             _table_page_one(pdf, df[[key] + cols], title, max_rows,
                             f"columns {bi} of {len(blocks)}: {key} + "
-                            f"{cols[0]}..{cols[-1]}")
+                            # a block of one column read "CM_min..CM_min"
+                            + (cols[0] if len(cols) == 1
+                               else f"{cols[0]}..{cols[-1]}"))
         return
     _table_page_one(pdf, df, title, max_rows, None)
 
@@ -298,12 +302,12 @@ with PdfPages(out2) as pdf:
             + _inc
             + "\n\nAS CAPTIONED SAMPLES (row count given on each page):\n"
             + _sampled_txt
-            + "\nNOT REPRODUCED HERE \u2014 too large to typeset, shipped as CSV in the "
-              "repository:\n"
+            + "\nNOT REPRODUCED HERE \u2014 shipped as CSV in the repository "
+              "(reason given per entry):\n"
               f"    \u2022 05_solution/field_*.csv  \u2014 {_n_field} reconstructed 2-D fields, "
               f"{_field_rows} rows each\n"
-              "    \u2022 05_solution/cp_distribution_B_application.csv  \u2014 the case-B "
-              "counterpart of the sampled case-A table\n"
+              "    \u2022 05_solution/cp_distribution_B_application.csv  \u2014 same size as "
+              "the case-A table printed above, and would only repeat it\n"
               f"    \u2022 06_postprocessing/validation/exp_frame_*.csv  \u2014 {_n_exp} "
               f"digitised C_L / C_M curves from {_n_exp_frames} experimental loops "
               "(NASA TM-84245)\n"
@@ -322,7 +326,9 @@ with PdfPages(out2) as pdf:
     # textwrap.wrap() collapses newlines, so wrapping the whole blob destroys the
     # JSON indentation. Wrap each line individually and keep its leading indent.
     lines = []
-    for ln in json.dumps(cfg, indent=2).splitlines():
+    # ensure_ascii=False: the default re-escapes non-ASCII, so the config page
+    # printed "Unified Indicial\u2013Beddoes" instead of the en-dash.
+    for ln in json.dumps(cfg, indent=2, ensure_ascii=False).splitlines():
         indent = " " * (len(ln) - len(ln.lstrip()))
         lines += textwrap.wrap(ln, 108, initial_indent="", subsequent_indent=indent + "    ",
                                drop_whitespace=False, replace_whitespace=False) or [""]

@@ -432,8 +432,14 @@ for _case,_m in (('A_validation',mA),('B_application',mB)):
            abs(_st[_k]-float(_m[_row]))<1e-3, f"{_st[_k]:.4f} vs {_m[_row]}")
     # the core must be self-consistent: peak swirl = the edge speed it was
     # derived from, and rc = LAMB_OSEEN_PEAK*Gamma/(2 pi Ve)
-    ck(f"{_case} peak swirl equals the shear-layer edge speed",
-       abs(_st['peak_swirl_over_U']-_st['edge_speed_over_U'])<2e-3)
+    # These are the SAME number: rc is defined as LAMB_OSEEN_PEAK*Gv/(2 pi Ve),
+    # so LAMB_OSEEN_PEAK*Gv/(2 pi rc) collapses to Ve exactly. Measured
+    # difference 1.1e-16. The tolerance was 2e-3 -- thirteen orders of magnitude
+    # loose, so it would have passed a construction that merely approximated the
+    # identity instead of one that is the identity.
+    ck(f"{_case} peak swirl IS the shear-layer edge speed (identical, not close)",
+       abs(_st['peak_swirl_over_U']-_st['edge_speed_over_U']) < 1e-12,
+       f"{abs(_st['peak_swirl_over_U']-_st['edge_speed_over_U']):.3e}")
     ck(f"{_case} core radius follows from the circulation and that speed",
        abs(_st['rc_chords']-us.LAMB_OSEEN_PEAK*_st['Gamma_over_Uc']
            /(2*np.pi*_st['edge_speed_over_U']))<1e-4)
@@ -1152,6 +1158,147 @@ if _PIL is not None:
     ck(f"no published figure has content cut off at its edge ({_scanned} scanned)",
        not _clipped, "; ".join(_clipped[:5]))
 
+# --- THE TRAILING-EDGE OSCILLATION. The Cp figures spike to |Cp| ~ 6-10 over the
+#     last half-percent of chord. The published Cp_TE_jump metric cannot see it:
+#     that compares the two surfaces at the LAST control point only (1.269 for
+#     case A) while the local excursion just upstream reaches 6.624. The figure
+#     now shades the zone and calls it a discretisation artifact, so that claim
+#     has to be checked. The published section has an OPEN trailing edge (0.252 %
+#     of chord) and the reconstruction closes it onto a point, so the panels
+#     there are the shortest on the body; the imposed circulation is not the
+#     Kutta one either, and the dynamic-stall vortex is NOT the cause.
+_thA = pd.read_csv('05_solution/time_history_A_validation.csv')
+_r = _thA.iloc[(_thA.alpha_deg - 19.0).abs().idxmin()]
+_geo = '01_geometry/naca0012_coordinates.csv'
+_cA = float(fl['case_A_validation']['chord_c']); _UA = float(fl['case_A_validation']['freestream_velocity_U'])
+_MA = float(fl['case_A_validation']['freestream_mach_M'])
+_zone = float(mA['Cp_TE_panel_oscillation_zone_x_c'])
+_peak = {}
+for _cnv, _lab in ((float(_r.CN_vortex), 'on'), (0.0, 'off')):
+    _x, _cp, _up = us.surface_cp(_geo, _cA, _UA, _MA, float(_r.alpha_deg), float(_r.CL),
+                                 _cnv, float(_r.tau_v_semichords)/us.TVL_DEFAULT)
+    _peak[_lab] = float(np.max(np.abs(_cp[_x >= _zone])))
+ck("the trailing-edge spike is the panelling, not the vortex (removing the DSV barely changes it)",
+   abs(_peak['on'] - _peak['off'])/_peak['on'] < 0.35,
+   f"DSV on {_peak['on']:.2f} vs off {_peak['off']:.2f}")
+ck("the published TE-oscillation metric is the value in the zone",
+   abs(_peak['on'] - float(mA['Cp_TE_panel_oscillation_max_abs'])) < 0.05,
+   f"{_peak['on']:.3f} vs {float(mA['Cp_TE_panel_oscillation_max_abs'])}")
+# and it must be strictly bigger than the jump, or the jump metric would have
+# been sufficient and this one is noise
+ck("the local oscillation exceeds the TE jump the study already published",
+   float(mA['Cp_TE_panel_oscillation_max_abs']) > 2.0*float(mA['Cp_TE_jump_max_over_phases']))
+for _cs, _m in (('A_validation', mA), ('B_application', mB)):
+    ck(f"{_cs} the TE artifact is not the largest Cp on the body (the LE peak is)",
+       float(_m['Cp_max_abs_outside_TE_zone']) > float(_m['Cp_TE_panel_oscillation_max_abs']),
+       f"outside {float(_m['Cp_max_abs_outside_TE_zone'])} vs zone {float(_m['Cp_TE_panel_oscillation_max_abs'])}")
+
+# --- THE ALBUM must be exactly the published figures: every one, once each,
+#     nothing else. Checked by page geometry rather than the page resource dict,
+#     which is shared across the document and reports every image on every page
+#     -- a first attempt using it "found" all 90 figures duplicated on all 105
+#     pages, which is an artifact of how PDF resources are stored, not a defect.
+try:
+    import fitz as _fz7
+    _alb = _fz7.open('UNISTALL_plots_album.pdf')
+    _caps, _multi = set(), []
+    for _i in range(_alb.page_count):
+        _info = _alb[_i].get_image_info()
+        if not _info:
+            continue                       # title page or a section divider
+        if len(_info) != 1:
+            _multi.append(_i+1)
+        _lines = [l.strip() for l in _alb[_i].get_text().strip().splitlines() if l.strip()]
+        if len(_lines) >= 2:
+            _caps.add(_lines[-2].replace(" ", "_"))
+    _pubfigs = {os.path.basename(f)[:-4] for f in
+                subprocess.run(['git','ls-files'],capture_output=True,text=True).stdout.split()
+                if f.endswith('.png') and not f.startswith('assets/')}
+    ck("every page of the album carries exactly one figure", not _multi, str(_multi[:5]))
+    ck("the album contains every published figure",
+       not (_pubfigs - _caps), str(sorted(_pubfigs - _caps)[:5]))
+    ck("the album contains nothing that is not published",
+       not (_caps - _pubfigs), str(sorted(_caps - _pubfigs)[:5]))
+    ck(f"the album has one page per figure ({len(_caps)})", len(_caps) == len(_pubfigs),
+       f"album {len(_caps)} vs published {len(_pubfigs)}")
+    _alb.close()
+except Exception as _e:
+    ck("album structure is checkable", False, repr(_e))
+
+# --- NO ESCAPE SEQUENCE may reach a typeset page. json.dumps defaults to
+#     ensure_ascii=True, so the config page printed the literal text
+#     "Unified Indicial–Beddoes" where the en-dash belonged -- and the
+#     stored solver_config.json read the same way in the repository. Both now
+#     write the character. This catches the whole class, not that one instance.
+_esc = []
+for _pdf in ('aero_dynamic_stall_report.pdf', 'UNISTALL_data_dossier.pdf',
+             'UNISTALL_plots_album.pdf'):
+    if not os.path.exists(_pdf):
+        continue
+    _dd = _fz.open(_pdf)
+    for _i in range(_dd.page_count):
+        for _m in re.findall(r'\\[uU][0-9a-fA-F]{4}|\\x[0-9a-fA-F]{2}', _dd[_i].get_text()):
+            _esc.append(f"{_pdf} p{_i+1}: {_m}")
+    _dd.close()
+ck("no escape sequence is printed on a typeset page", not _esc, "; ".join(_esc[:5]))
+
+# --- THE PROVENANCE TABLE must account for every constant the solver uses. Typed
+#     out by hand it had gone incomplete without any signal: k0, k2, kappa and
+#     eta were in solver_config.json and in the march, and in no row of the table
+#     that exists to say where the constants came from. It is generated from the
+#     config now; this is the check that it stays complete.
+_cal = json.load(open('03_model_setup/solver_config.json'))["calibrated_constants"]
+_ct = pd.read_csv('06_postprocessing/validation/calibration_constants.csv')
+_listed = " ".join(str(v) for v in _ct["constant"])
+_missing = [k for k in _cal if k != "comment"
+            and not re.search(r'(?<![A-Za-z0-9_])' + re.escape(k) + r'(?![A-Za-z0-9_])', _listed)]
+ck("the calibration record names every constant the config carries",
+   not _missing, f"undocumented: {sorted(_missing)}")
+ck("every row of the calibration record has a basis and a status",
+   bool(_ct["basis"].notna().all() and _ct["status"].notna().all()
+        and (_ct["basis"].astype(str).str.strip() != "").all()))
+ck("the calibration record distinguishes fixed from tuned",
+   set(_ct["status"]) >= {"fixed", "tuned"}, str(sorted(set(_ct["status"]))))
+
+# --- THE DECLARED DEPENDENCIES must actually admit the environment that produced
+#     the results. requirements.txt carried a "Verified on" line naming eight
+#     library versions and nothing generated them -- the only claim in this study
+#     with no artifact behind it. run_case.py records them now; these checks bind
+#     the record to the declared bounds. Bounds, not pins: an equality check
+#     would fail for anyone else who cloned this and ran it, which is the
+#     opposite of what a dependency declaration is for.
+_env = pd.read_csv('05_solution/runtime_environment.csv').set_index('property')['value']
+_recorded = {k[len('version_'):]: str(v) for k, v in _env.items()
+             if str(k).startswith('version_')}
+ck("the run records the library versions it used", len(_recorded) >= 8,
+   f"{len(_recorded)} recorded")
+ck("no dependency is missing from the environment that produced the results",
+   not [k for k, v in _recorded.items() if v == 'not installed'],
+   str([k for k, v in _recorded.items() if v == 'not installed']))
+try:
+    from packaging.requirements import Requirement as _Req
+    from packaging.version import Version as _Ver
+    _viol, _undeclared = [], []
+    _declared = {}
+    for _ln in open('requirements.txt', encoding='utf-8'):
+        _ln = _ln.split('#')[0].strip()
+        if not _ln:
+            continue
+        _r = _Req(_ln)
+        _declared[_r.name] = _r
+        _got = _recorded.get(_r.name)
+        if _got is None or _got == 'not installed':
+            _viol.append(f"{_r.name}: not recorded")
+        elif not _r.specifier.contains(_Ver(_got), prereleases=True):
+            _viol.append(f"{_r.name} {_got} violates '{_r.specifier}'")
+    ck("every recorded library version satisfies the bound requirements.txt declares",
+       not _viol, "; ".join(_viol))
+    _undeclared = [k for k in _recorded if k not in _declared]
+    ck("every library the run records is declared in requirements.txt",
+       not _undeclared, str(_undeclared))
+except ImportError:
+    pass
+
 # --- stale prose
 # This file is EXCLUDED from its own scan. It necessarily quotes the phrases it
 # forbids, so including it makes every stale-prose check match itself and fail --
@@ -1166,7 +1313,11 @@ for pat in (r'surface_cp probes at', r'demands it be zero', r'the 0\.015c\s*used
             # of the old chosen names, or the wrong Lamb-Oseen coefficient,
             # would mean the derivation had been unwired
             r'DSV_GAMMA_FACTOR\s*=\s*[0-9]', r'DSV_CORE_RADIUS_CHORDS\s*=\s*[0-9]',
-            r'0\.7152\*Gv'):
+            r'0\.7152\*Gv',
+            # the vorticity fields are on a symmetric-log scale that reaches the
+            # vortex core; the old clipped scale hid the feature the figure is
+            # named after behind a note admitting it was off the end of the bar
+            r'scale clipped to the 98th percentile'):
     ck(f"no stale prose: {pat}", len(re.findall(pat,allsrc))==0)
 
 print()

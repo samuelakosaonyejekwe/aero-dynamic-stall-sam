@@ -18,6 +18,9 @@ Cp_closure_error_pct,-0.5
 Cp_closure_worst_dCL_cycle,0.0226
 Cp_closure_worst_dCL_pct_of_CLmax,1.3
 Cp_TE_jump_max_over_phases,1.656
+Cp_TE_panel_oscillation_max_abs,9.875
+Cp_TE_panel_oscillation_zone_x_c,0.995
+Cp_max_abs_outside_TE_zone,14.071
 CL_kutta_inviscid,1.915
 Cp_DSV_core_min,-4.075
 DSV_circulation_over_Uc,0.073

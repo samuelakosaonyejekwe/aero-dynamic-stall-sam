@@ -212,7 +212,10 @@ config = {
     "calibration_state": "calibrated_per_case (static polar) + validated (dynamic)"
 }
 with open(HERE/"solver_config.json", "w") as fp:
-    json.dump(config, fp, indent=2)
+    # ensure_ascii=False so the en-dash in "Unified Indicial-Beddoes" is written
+    # as the character. Escaped, it reached the data dossier as the literal text
+    # \u2013 on a typeset page, and it reads the same way in the repository.
+    json.dump(config, fp, indent=2, ensure_ascii=False)
     fp.write("\n")            # json.dump writes none; every other file here ends with one
 
 # ============================================================ STATIC POLAR REF

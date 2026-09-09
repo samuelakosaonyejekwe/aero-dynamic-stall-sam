@@ -2,7 +2,7 @@
 ### UNISTALL™ Universal Unsteady-Aerodynamics & Dynamic-Stall Solver (UIBS core)
 
 **Author:** Akosa Samuel Onyejekwe (independent)
-**Date:** 9 September 2026
+**Date:** 10 September 2026
 
 ---
 
@@ -100,14 +100,22 @@ for that deficit was itself wrong; the three real causes (a missing vortex-sheet
 self-term, evaluation off the wall instead of at the panel control points, and a
 double-counted compressibility factor) are documented in `unistall_solver.py`.
 
-Two limitations of the reconstruction are published as numbers rather than
+Three limitations of the reconstruction are published as numbers rather than
 described in prose. `Cp_TE_jump_max_over_phases` is the trailing-edge pressure
 jump; it cannot be driven to zero, because the reconstruction is handed the
 indicial C_L, which during dynamic stall departs deliberately from the inviscid
 attached circulation that the Kutta condition selects. That circulation is
 published beside it as `CL_kutta_inviscid`, and imposing it drives the jump to
 ~0.001; the measured ratio jump/|C_L - C_L_kutta| is 1.91-2.02 across 2-19°,
-falling monotonically with incidence. The dynamic-stall vortex has **no chosen constants**: its circulation is
+falling monotonically with incidence. Separately, the last few control points
+carry a panel-discretisation oscillation: the published section has an open
+trailing edge and the reconstruction closes it onto a point, so those panels are
+the shortest on the body. `Cp_TE_panel_oscillation_max_abs` measures it — 6.624
+for case A over x/c > 0.995, against a leading-edge suction peak of 16.051
+outside that zone — and switching the dynamic-stall vortex off barely changes
+it, so it is the panelling and not the vortex. The Cp figures shade the zone and
+say so, and the integrated loads are unaffected: the surface-Cp closure is
+within 2 %. The dynamic-stall vortex has **no chosen constants**: its circulation is
 Kutta–Joukowski on its own normal-force contribution, Γ_v = ½ C_N^v U c — the
 same relation the bound sheet uses, so it carries exactly the C_N^v/C_N share of
 the circulation the lift implies (0.121 U c for Case A)

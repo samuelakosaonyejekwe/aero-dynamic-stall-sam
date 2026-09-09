@@ -84,18 +84,46 @@ fig.savefig(HERE/"fig_validation_static_polar.png"); plt.close(fig)
 import json
 cfg = json.load(open(SETUP/"solver_config.json")); cc = cfg["calibrated_constants"]
 ic = cfg["indicial_circulatory"]; tc = cfg["time_constants_semichords"]
-pd.DataFrame([
+# This table is the study's account of where every constant comes from, so it is
+# BUILT FROM THE CONFIG rather than typed out beside it. Written by hand it had
+# silently gone incomplete: k0, k2, kappa and eta -- four of the eleven
+# calibrated constants -- appeared in solver_config.json and in the solver, and
+# in no row of the provenance table. The assertion below makes that impossible:
+# a constant with no documented basis stops the build.
+_BASIS = {
+    "CN1":     ("CN1 (DSV onset criterion)", "near static CLmax", "tuned"),
+    "Tf":      ("Tf (boundary-layer lag)", "calibrated to real frame 9302", "tuned"),
+    "Tv":      ("Tv (vortex decay)", "calibrated to real frame 9302", "tuned"),
+    "Tvl":     ("Tvl (vortex convection clock)", "calibrated to real frame 9302", "tuned"),
+    "k0":      ("k0 (attached CP offset)",
+                "0 by definition: attached CP is at c/4, which CM0 carries", "fixed"),
+    "k1":      ("k1 (CP aft-travel, linear in separation)",
+                "calibrated to real frame 9302 C_M", "tuned"),
+    "k2":      ("k2 (CP travel, mid-separation shaping)",
+                "calibrated to real frame 9302 C_M", "tuned"),
+    "kappa":   ("kappa (exponent of the k2 shaping term)",
+                "calibrated to real frame 9302 C_M", "tuned"),
+    "eta":     ("eta (leading-edge suction recovery in the chord force)",
+                "calibrated to real frame 9302 C_D", "tuned"),
+    "cpv_amp": ("cpv_amp (vortex CP travel amplitude)",
+                "calibrated to real frame 9302 C_M", "tuned"),
+    "Bv":      ("Bv (vortex-feed gain)",
+                "calibrated to real frame 9302 C_L overshoot", "tuned"),
+}
+_undocumented = [k for k in cc if k != "comment" and k not in _BASIS]
+assert not _undocumented, (
+    "solver_config.json carries calibrated constants with no documented basis: "
+    + ", ".join(sorted(_undocumented)))
+_rows = [
  ["A1, A2 (indicial circulatory)", f"{ic['A1']:.2f}, {ic['A2']:.2f}", "literature [S6]", "fixed"],
  ["b1, b2 (indicial circulatory)", f"{ic['b1']:.2f}, {ic['b2']:.2f}", "literature [S6]", "fixed"],
  ["Tp (pressure lag)", str(tc["Tp"]), "literature [S6]", "fixed"],
- ["Tf (boundary-layer lag)", str(cc["Tf"]), "calibrated to real frame 9302", "tuned"],
- ["Tv, Tvl (vortex)", f"{cc['Tv']}, {cc['Tvl']}", "calibrated to real frame 9302", "tuned"],
- ["CN1 (DSV onset)", str(cc["CN1"]), "near static CLmax", "tuned"],
- ["k1 (CP aft-travel)", str(cc["k1"]), "calibrated to real frame 9302 C_M", "tuned"],
- ["cpv_amp (vortex CP travel)", str(cc["cpv_amp"]), "calibrated to real frame 9302 C_M", "tuned"],
- ["Bv (vortex-feed gain)", str(cc["Bv"]), "calibrated to real frame 9302 C_L overshoot", "tuned"],
- ["f(α) Kirchhoff fit", "from static polar", "calibrated to [S1,S2,S3]", "calibrated"],
-], columns=["constant","value","basis","status"]).to_csv(HERE/"calibration_constants.csv", index=False)
+]
+_rows += [[_BASIS[k][0], str(cc[k]), _BASIS[k][1], _BASIS[k][2]]
+          for k in cc if k != "comment"]
+_rows += [["f(α) Kirchhoff fit", "from static polar", "calibrated to [S1,S2,S3]", "calibrated"]]
+pd.DataFrame(_rows, columns=["constant", "value", "basis", "status"]
+             ).to_csv(HERE/"calibration_constants.csv", index=False)
 
 print("[validate] static: slope err %.1f%%, CLmax err %.1f%%, stall err %.1f°, RMSE %.3f"
       % (100*abs(sm-sr)/sr, 100*abs(clmax_m-clmax_r)/clmax_r, abs(ast_m-ast_r), rmse))

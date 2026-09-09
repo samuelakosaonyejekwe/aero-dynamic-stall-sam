@@ -87,6 +87,15 @@ CLAIMS = [
     ("README.md", f"μ = {f(B['advance_ratio_mu']):.2f}", "flow_conditions advance_ratio_mu"),
     ("README.md", f"= {f(B['freestream_velocity_U']):.2f} m/s", "flow_conditions U (B)"),
     ("README.md", f"Mach is {f(B['freestream_mach_M']):.4f}", "flow_conditions M (B), 4 dp"),
+    # The near-trailing-edge panel oscillation and the leading-edge peak it is
+    # measured against: both are metrics, so both are guarded like every other
+    # transcribed number.
+    ("README.md", f"{f(mA['Cp_TE_panel_oscillation_max_abs']):.3f}",
+     "metrics_A Cp_TE_panel_oscillation_max_abs"),
+    ("README.md", f"{f(mA['Cp_max_abs_outside_TE_zone']):.3f}",
+     "metrics_A Cp_max_abs_outside_TE_zone"),
+    ("README.md", f"x/c > {f(mA['Cp_TE_panel_oscillation_zone_x_c']):.3f}",
+     "metrics_A Cp_TE_panel_oscillation_zone_x_c"),
     # ---- headline results -------------------------------------------------
     ("README.md", f"C_L,max = {mA['CL_max_dynamic']} at α = {f(mA['alpha_at_CLmax_deg']):.1f}°",
      "metrics_A CL_max_dynamic / alpha_at_CLmax_deg"),

@@ -395,7 +395,15 @@ def sheet1():
                  f"3.  MAIN ROTOR {SPEC['n_blades']} BLADES, Ø{int(Rdia)}.",
                  f"4.  TAIL ROTOR {SPEC['n_blades']} BLADES, Ø{int(trdia)}, PORT.",
                  f"5.  OVERALL LENGTH {int(round(L_ovl))} INCL ROTOR.",
-                 f"6.  PROJECTION: {PROJECTION}."])
+                 # The front and side views dimension the hub (3760) and the fin
+                 # tip (4000) and neither is the envelope, which the tail-rotor
+                 # disc sets at 5175. Sheet 2 already says so; without it here a
+                 # reader takes the largest dimension on the sheet for the
+                 # overall height, which is the same defect sheet 2's note was
+                 # corrected for. Same source, so the two sheets cannot diverge.
+                 f"6.  OVERALL HEIGHT {int(round(SPEC['H_ovl']))} (TAIL-ROTOR DISC);",
+                 f"     HUB {int(Hh)}, FIN TIP {int(Hf)}.",
+                 f"7.  PROJECTION: {PROJECTION}."])
 
     finalise(ax, "GENERAL ARRANGEMENT - CS-MUH REFERENCE",
              "UN-CSMUH-001", "1:270", "GA / OML")

@@ -1,6 +1,6 @@
 {
   "solver_name": "UNISTALL(TM) Universal Unsteady-Aerodynamics & Dynamic-Stall Solver",
-  "core_method": "Unified Indicial\u2013Beddoes State-Space (UIBS)",
+  "core_method": "Unified Indicial–Beddoes State-Space (UIBS)",
   "version": "1.0.0",
   "modules": [
     "attached_flow_indicial",

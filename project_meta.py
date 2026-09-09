@@ -25,5 +25,5 @@ TITLE  = "Prediction of Dynamic Stall on a Helicopter Main-Rotor Retreating Blad
 SOLVER = "UNISTALL™ Universal Unsteady-Aerodynamics & Dynamic-Stall Solver"
 METHOD = "Unified Indicial–Beddoes State-Space (UIBS)"   # used by 03_model_setup + 07_report
 
-STUDY_DATE_ISO = "2026-09-09"        # ISO form, used in drawing title blocks
-STUDY_DATE     = "9 September 2026"  # long form, used on report covers
+STUDY_DATE_ISO = "2026-09-10"        # ISO form, used in drawing title blocks
+STUDY_DATE     = "10 September 2026"  # long form, used on report covers

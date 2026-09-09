@@ -43,6 +43,7 @@ sys.path.insert(0, str(ROOT))          # for aero_style only: this stage reads
 from aero_style import (apply_style, PALETTE, INK, INK_SOFT,
                         CMAP_PRESSURE, CMAP_CP, CMAP_TEMP, CMAP_VORT)
 import matplotlib.pyplot as plt
+from matplotlib.colors import SymLogNorm as _SymLogNorm
 from matplotlib.patches import Polygon as MplPoly
 apply_style()
 plt.rcParams["figure.constrained_layout.use"] = True
@@ -64,6 +65,19 @@ CASES = {"A_validation":  _case("case_A_validation",
                                 "Case A — validation rig (NACA0012, M=%.2f, k=%.2f, α=%.0f°±%.0f°)"),
          "B_application": _case("case_B_application",
                                 "Case B — rotor retreating blade (r/R=0.75, M=%.2f, k=%.3f, α=%.0f°±%.0f°)")}
+
+# Every per-case figure carried a title that did not say which case it was, so
+# the A and B versions of the hysteresis loops, the time histories, the internal
+# states, the Cp distributions, the contours and the temperature profiles were
+# titled identically -- 56 of the 90 published figures in indistinguishable
+# pairs, and each PNG also ships on its own. The label that resolves it was
+# already being built from the published flow conditions and kinematics at the
+# top of this file, and then used nowhere. It is used here.
+def case_title(ax, main, cs, pad=22):
+    ax.set_title(main, pad=pad)
+    ax.text(0.5, 1.012, CASES[cs]["label"], transform=ax.transAxes, ha="center",
+            va="bottom", fontsize=8.5, color=INK_SOFT)
+
 
 AIRFOIL_FC = "#e3e9f0"
 
@@ -94,8 +108,8 @@ for cs, meta in CASES.items():
                 lw=1.3, label="static (published ref.)")
         stroke_arrows(ax, a, th[var].values)
         ax.set_xlabel("angle of attack  α  [deg]"); ax.set_ylabel(lab)
-        ax.set_title("Dynamic-stall hysteresis loop — " + var.replace("_c4", " (c/4)"),
-                     pad=10)
+        case_title(ax, "Dynamic-stall hysteresis loop — "
+                   + var.replace("_c4", " (c/4)"), cs)
         ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.16), ncol=2, frameon=True)
         save(fig, f"hyst_{fname}_{cs}.png")
 
@@ -113,7 +127,7 @@ for cs, meta in CASES.items():
         ax.plot(t, th[col], color=col_c, lw=2)
         ax.set_ylabel(lab)
     axs[-1].set_xlabel("time  [ms]")
-    axs[0].set_title("Unsteady load time histories (one converged cycle)", pad=10)
+    case_title(axs[0], "Unsteady load time histories (one converged cycle)", cs)
     save(fig, f"timehist_loads_{cs}.png")
 
     # state variables: separation point, vortex normal force, CN'
@@ -126,7 +140,7 @@ for cs, meta in CASES.items():
             lw=1.5, ls="--", label="$C_N'$ (norm.)")
     ax.set_xlabel("cycle phase  ωt  [deg]"); ax.set_ylabel("state value")
     ax.set_ylim(-0.05, 1.18)
-    ax.set_title("UIBS internal states — separation & dynamic-stall vortex", pad=10)
+    case_title(ax, "UIBS internal states — separation & dynamic-stall vortex", cs)
     ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.16), ncol=3, frameon=True)
     save(fig, f"states_{cs}.png")
 
@@ -271,7 +285,20 @@ for cs, meta in CASES.items():
                 label=f"{tg}  (α={adeg:.1f}°)")
     ax.invert_yaxis()
     ax.set_xlabel("x/c"); ax.set_ylabel("$C_p$")
-    ax.set_title("Surface pressure coefficient at cycle phases", pad=10)
+    case_title(ax, "Surface pressure coefficient at cycle phases", cs)
+    # The last few control points carry a discretisation oscillation, not a flow
+    # feature: the panels there are the shortest on the body and the imposed
+    # circulation is not the Kutta one. Switching the dynamic-stall vortex off
+    # barely changes it, so it is the panelling. Say so on the figure, with the
+    # size read from the published metric rather than restated here.
+    _mt = pd.read_csv(SOL/f"metrics_{cs}.csv").set_index("metric")["value"]
+    _zone = float(_mt["Cp_TE_panel_oscillation_zone_x_c"])
+    ax.axvspan(_zone, 1.0, color=INK_SOFT, alpha=0.12, lw=0)
+    fig.get_layout_engine().set(rect=(0, 0.05, 1, 0.95))
+    fig.text(0.5, 0.008, "shaded x/c > %.3f: panel-discretisation oscillation where the "
+             "reconstruction closes the open trailing edge, |C_p| up to %.1f — not a flow feature"
+             % (_zone, float(_mt["Cp_TE_panel_oscillation_max_abs"])),
+             ha="center", va="bottom", fontsize=8, color=INK_SOFT)
     ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.16), ncol=2, fontsize=9, frameon=True)
     save(fig, f"cp_distribution_{cs}.png")
 
@@ -296,9 +323,23 @@ _cpmin = min(float(pd.read_csv(f, usecols=["Cp"])["Cp"].min()) for f in field_fi
 CP_SCALE = (float(np.floor(_cpmin*2.0)/2.0), 1.0)
 print(f"[plots] common Cp scale {CP_SCALE} (deepest published field value {_cpmin:.2f})")
 
+def _symlog_ticks(lin, top):
+    """0 and one tick per DECADE out to the peak -- a readable set for a
+    symmetric-log bar, instead of one tick per contour level.
+
+    The decades are true powers of ten, not multiples of the linear threshold:
+    starting at the threshold put ticks at 0.72 and 7.2, which the formatter
+    then printed as "1" and "7". A tick may be rounded in position, never in
+    its label."""
+    first = int(np.ceil(np.log10(lin)))
+    last = int(np.floor(np.log10(top)))
+    dec = [10.0**k for k in range(first, last+1)] or [top]
+    return [-t for t in reversed(dec)] + [0.0] + dec
+
+
 def contour_plot(xu, yu, Z, title, cbar_label, cmap, c, fname,
                  lines=False, levels=24, vector=None, stream=None, vlim=None,
-                 note=None):
+                 note=None, case_key=None, norm=None, cticks=None):
     X, Y = np.meshgrid(xu, yu)
     fig, ax = plt.subplots(figsize=(7.8, 5.2))
     # The reconstruction masks the body AND the one ring of cells touching it
@@ -308,8 +349,13 @@ def contour_plot(xu, yu, Z, title, cbar_label, cmap, c, fname,
     # axes background with the aerofoil fill makes the unresolved ring read as
     # part of the body, which is the honest reading: there is no field there.
     ax.set_facecolor(AIRFOIL_FC)
-    lv = np.linspace(vlim[0], vlim[1], levels) if vlim else levels
-    cf = ax.contourf(X, Y, Z, levels=lv, cmap=cmap, extend="both")
+    # `levels` may arrive as an explicit array (the symmetric-log vorticity
+    # scale), in which case it is used as given and vlim does not apply.
+    if np.ndim(levels) > 0:
+        lv = levels
+    else:
+        lv = np.linspace(vlim[0], vlim[1], levels) if vlim else levels
+    cf = ax.contourf(X, Y, Z, levels=lv, cmap=cmap, extend="both", norm=norm)
     if lines:
         ax.contour(X, Y, Z, levels=12, colors=[INK_SOFT], linewidths=0.4, alpha=0.6)
     if stream is not None:
@@ -341,13 +387,23 @@ def contour_plot(xu, yu, Z, title, cbar_label, cmap, c, fname,
     # bars was placing at least one tick out of range this way. The colour
     # limits are read back off the mappable so this holds for the fixed scales
     # too, not just the percentile ones.
-    _lo, _hi = cf.get_clim()
-    cb.set_ticks([t for t in cb.get_ticks() if _lo - 1e-9 <= t <= _hi + 1e-9])
+    if cticks is not None:
+        # An explicit set, for the symmetric-log vorticity bar. Left to itself
+        # the colorbar puts a tick on every contour level, and the log-spaced
+        # levels bunch at both ends: the labels printed on top of each other
+        # (75000 over 50000 over 25000, twice).
+        cb.set_ticks(cticks)
+    else:
+        _lo, _hi = cf.get_clim()
+        cb.set_ticks([t for t in cb.get_ticks() if _lo - 1e-9 <= t <= _hi + 1e-9])
     cb.set_label(cbar_label)
     ax.set_aspect("equal"); ax.grid(False)
     ax.set_xlim(xu.min(), xu.max()); ax.set_ylim(yu.min(), yu.max())
     ax.set_xlabel("x [m]"); ax.set_ylabel("y [m]")
-    ax.set_title(title, pad=10)
+    if case_key is None:
+        ax.set_title(title, pad=10)
+    else:
+        case_title(ax, title, case_key)
     if note:
         # constrained_layout does not reserve space for figure-level text, so
         # shrink the layout rect first -- otherwise the note lands on top of the
@@ -372,15 +428,16 @@ for ff in field_files:
     # be compared with each other; the colorbar extends at both ends and nothing
     # is clipped in the data.
     contour_plot(xu, yu, F["Cp"], f"Pressure coefficient $C_p$ — {tag} ({adeg.replace('a','α=')}°)",
-                 "$C_p$", CMAP_CP, c, f"contour_Cp_{pre}.png", lines=True, vlim=CP_SCALE)
+                 "$C_p$", CMAP_CP, c, f"contour_Cp_{pre}.png", lines=True, vlim=CP_SCALE,
+                 case_key=cs)
     # velocity magnitude + streamlines
     contour_plot(xu, yu, F["speed_ms"], f"Velocity magnitude + streamlines — {tag}",
                  "|V| [m/s]", CMAP_PRESSURE, c, f"contour_speed_stream_{pre}.png",
-                 stream=(F["u_ms"], F["v_ms"]), vlim=(0, 1.7*U))
+                 stream=(F["u_ms"], F["v_ms"]), vlim=(0, 1.7*U), case_key=cs)
     # velocity vectors
     contour_plot(xu, yu, F["speed_ms"], f"Velocity vector field — {tag}",
                  "|V| [m/s]", CMAP_PRESSURE, c, f"contour_vectors_{pre}.png",
-                 vector=(F["u_ms"], F["v_ms"]), vlim=(0, 1.7*U))
+                 vector=(F["u_ms"], F["v_ms"]), vlim=(0, 1.7*U), case_key=cs)
     # vorticity (DSV). The scale is a robust percentile, and it has to be: the
     # dynamic-stall vortex's core is far more intense than the bound sheet
     # around the body, so an unclipped scale renders everything except the
@@ -389,13 +446,28 @@ for ff in field_files:
     # small feature at the colorbar's value when it is orders of magnitude past
     # the end of it.
     _w = F["vorticity_1s"]
-    vmax = np.nanpercentile(np.abs(_w), 98)
-    contour_plot(xu, yu, np.clip(_w, -vmax, vmax),
+    # A LINEAR scale cannot show this field. The bound sheet on the body sits at
+    # tens of 1/s while the dynamic-stall vortex core reaches ~1e5, so clipping
+    # to the 98th percentile (33 1/s) rendered the vortex -- the feature the
+    # figure is named after -- as a four-pixel dot, with a note admitting the
+    # core was 2600x off the end of the bar. A symmetric log scale shows both:
+    # the sheet keeps its structure and the core is on the same bar rather than
+    # past it. The linear threshold is the 90th percentile of |w|, so the noise
+    # floor stays linear and only the real structure is logarithmic.
+    _wa = np.abs(_w[np.isfinite(_w)])
+    _lin = max(float(np.nanpercentile(_wa, 90)), 1e-3)
+    _top = float(np.nanmax(_wa))
+    _dec = np.log10(_top/_lin)
+    _lv = np.concatenate([-_lin*np.logspace(_dec, 0, 9), [0.0],
+                          _lin*np.logspace(0, _dec, 9)])
+    contour_plot(xu, yu, _w,
                  f"Vorticity (dynamic-stall vortex) — {tag}",
                  "ω_z [1/s]", CMAP_VORT, c, f"contour_vorticity_{pre}.png",
-                 note="scale clipped to the 98th percentile of |ω_z|, ±%.0f 1/s; "
-                      "the vortex core reaches %.0f 1/s and is saturated."
-                      % (vmax, np.nanmin(_w)))
+                 levels=_lv, norm=_SymLogNorm(linthresh=_lin, vmin=-_top, vmax=_top),
+                 cticks=_symlog_ticks(_lin, _top),
+                 note="symmetric-log scale: linear within ±%.2g 1/s (the bound sheet), "
+                      "logarithmic beyond, to the vortex core at %.3g 1/s. Nothing is clipped."
+                      % (_lin, np.nanmin(_w)), case_key=cs)
     # Local Mach and the two temperature fields have long thin tails at the
     # vortex core. Auto-scaling to the full range put ~99 % of the domain into
     # one or two colour bands, so those three plots came out essentially blank;
@@ -405,13 +477,13 @@ for ff in field_files:
         return (float(a[0]), float(a[1])) if a[1] > a[0] else None
     contour_plot(xu, yu, F["Mach_local"], f"Local Mach number — {tag}",
                  "$M_{local}$", CMAP_PRESSURE, c, f"contour_Mach_{pre}.png",
-                 lines=True, vlim=rlim(F["Mach_local"]))
+                 lines=True, vlim=rlim(F["Mach_local"]), case_key=cs)
     contour_plot(xu, yu, F["T_static_K"], f"Static air temperature — {tag}",
                  "T [K]", CMAP_TEMP, c, f"contour_Tstatic_{pre}.png",
-                 lines=True, vlim=rlim(F["T_static_K"]))
+                 lines=True, vlim=rlim(F["T_static_K"]), case_key=cs)
     contour_plot(xu, yu, F["T_recovery_K"], f"Recovery (skin) temperature — {tag}",
                  "$T_r$ [K]", CMAP_TEMP, c, f"contour_Trecovery_{pre}.png",
-                 lines=True, vlim=rlim(F["T_recovery_K"]))
+                 lines=True, vlim=rlim(F["T_recovery_K"]), case_key=cs)
 
 # ============================================================ 7. TEMPERATURE PROFILE
 # surface recovery temperature vs x/c at the 'peak' phase for each case
@@ -449,8 +521,8 @@ for cs in CASES:
         Tq = itp(np.column_stack([sgn*(yt + OFF), xq]))
         ax.plot(xq/c, Tq, color=col, lw=2, label=lab)
     ax.set_xlabel("x/c"); ax.set_ylabel("recovery temperature  $T_r$ [K]")
-    ax.set_title("Recovery (skin) temperature %.1f%%c off the surface — peak incidence"
-                 % (100*OFF/c), pad=10)
+    case_title(ax, "Recovery (skin) temperature %.1f%%c off the surface — peak incidence"
+               % (100*OFF/c), cs)
     ax.legend(loc="best")
     save(fig, f"temperature_profile_{cs}.png")
 
