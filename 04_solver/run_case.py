@@ -16,7 +16,10 @@ all solution data to 05_solution/.  Outputs:
                                lift and at its worst over the reported cycle
   summary_all_cases.csv        one row per case: the headline scalars
   runtime_environment.csv      the machine, and the CPU time the march took on it
-  convergence/residuals_<case>.csv   cycle-to-cycle convergence
+  convergence/residuals_<case>.csv   cycle-to-cycle convergence (the limit cycle
+                               is reached) -- NOT time-step convergence
+  convergence/timestep_refinement.csv  the step-refinement study behind the
+                               steps_per_cycle the config declares
 """
 import sys, json, time, platform
 import numpy as np
@@ -334,7 +337,12 @@ for name, C in CASES.items():
     summary_rows.append([name, round(CLmax,3), round(a[iCL],2), round(CMmin,3),
                          round(CDmax,3), round(xi,5), round(xi_hat,4), verdict])
 
-    # ---- convergence ----
+    # ---- CYCLE convergence: that the march has reached its limit cycle ----
+    #      This is NOT time-step convergence, and the two were conflated: the
+    #      residuals below go to zero once the cycle repeats, which says nothing
+    #      about whether the step is fine enough. steps_per_cycle = 720 was
+    #      asserted in the config and justified nowhere. The refinement study
+    #      written after this loop is the missing evidence.
     pd.DataFrame({"cycle": np.arange(1, len(out["cycle_peakCL"])+1),
                   "peak_CL": out["cycle_peakCL"].round(5),
                   "min_CM": out["cycle_minCM"].round(5),
@@ -402,6 +410,42 @@ for name, C in CASES.items():
           f"CNvmax={out['CNv'].max():.3f}@a{out['alpha_deg'][int(np.argmax(out['CNv']))]:.1f} "
           f"CDmax={CDmax:.3f} Xi={xi:.5f} (norm {xi_hat:+.4f} -> {verdict}) "
           f"fields={[f[0] for f in fphases]}")
+
+# ---- TIME-STEP REFINEMENT ------------------------------------------------
+# The cycle residuals above prove the limit cycle is reached. They do not prove
+# the step resolves it, and nothing in this study did: steps_per_cycle = 720 was
+# a number in the config with no evidence behind it. This sweep is that
+# evidence, written out so the choice is checkable rather than asserted.
+#
+# Run for Case A only -- the march is chord- and speed-independent and depends
+# on (k, M) alone, and Case B differs only in those, so a second sweep would
+# re-measure the same discretisation property at a slightly different operating
+# point. The reported resolution and its deviation from the finest grid are both
+# published, and verify_invariants asserts the deviation is small.
+_CA = CASES["A_validation"]
+_ref_n = NPC
+_rows = []
+for _n in (180, 360, 720, 1440, 2880, 5760):
+    _oc = us.solve_dynamic_stall(_CA["a_mean"], _CA["a_amp"], _CA["k"], _CA["M"],
+                                 _CA["c"], _CA["U"], f_static, CNalpha=CNALPHA,
+                                 CD0=CD0, CM0=cfg["zero_lift_CM0"], consts=consts,
+                                 n_per_cycle=_n, n_cycles=NCYC)
+    _on = (float(_oc["alpha_deg"][int(np.argmax(_oc["vortex_active"] > 0))])
+           if np.any(_oc["vortex_active"] > 0) else float("nan"))
+    _rows.append([_n, round(float(_oc["CL"].max()), 5), round(float(_oc["CM"].min()), 5),
+                  round(float(_oc["CD"].max()), 5), round(_on, 3),
+                  _n == _ref_n])
+_ref = [r for r in _rows if r[5]][0]
+_fin = _rows[-1]
+_tsdf = pd.DataFrame(_rows, columns=["steps_per_cycle", "CL_max", "CM_min", "CD_max",
+                                     "stall_onset_alpha_deg", "reported_resolution"])
+for _c, _i in (("CL_max", 1), ("CM_min", 2), ("CD_max", 3)):
+    _tsdf["pct_from_finest_" + _c] = [round(100.0*abs(r[_i]-_fin[_i])/abs(_fin[_i]), 4)
+                                      for r in _rows]
+_tsdf.to_csv(SOL/"convergence"/"timestep_refinement.csv", index=False)
+print(f"[run] time-step refinement: reported {_ref_n}/cycle differs from {_fin[0]}/cycle by "
+      f"{100*abs(_ref[1]-_fin[1])/abs(_fin[1]):.3f}% in CL_max, "
+      f"{100*abs(_ref[2]-_fin[2])/abs(_fin[2]):.3f}% in CM_min")
 
 pd.DataFrame(summary_rows, columns=["case","CL_max","alpha_CLmax_deg","CM_min",
              "CD_max","aero_damping_Xi","aero_damping_Xi_norm","flutter_risk"]

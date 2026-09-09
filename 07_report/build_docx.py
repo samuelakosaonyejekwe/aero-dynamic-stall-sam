@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 from docx import Document
 from docx.shared import Inches, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml.ns import qn
 from docx.enum.table import WD_TABLE_ALIGNMENT
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -98,9 +99,25 @@ def _fmt_cell(v):
             return NA_DASH
     except Exception:
         pass
+    # Numbers are printed at 6 significant digits. Straight str() published the
+    # full float repr -- the time column read 0.000128219898, twelve significant
+    # digits of a sampled time, which is noise, and it is what pushed the wide
+    # tables past the width at which a value can be kept on one line. The CSVs
+    # that ship are untouched and carry the full precision.
+    if isinstance(v, (int,)) and not isinstance(v, bool):
+        return str(v)
+    if isinstance(v, float) or hasattr(v, "dtype"):
+        try:
+            f = float(v)
+            return f"{f:.6g}" if f == f else NA_DASH
+        except (TypeError, ValueError):
+            pass
     t = str(v)
     return NA_DASH if t.strip().lower() in ("nan", "none", "") else t
 
+
+_sec = doc.sections[0]
+TEXT_WIDTH_IN = (_sec.page_width - _sec.left_margin - _sec.right_margin) / 914400.0
 
 def add_table_from_df(df, max_rows=60, max_cols=12, note=None):
     d = df.copy()
@@ -109,16 +126,41 @@ def add_table_from_df(df, max_rows=60, max_cols=12, note=None):
     truncated = len(d) > max_rows
     if truncated: d = d.head(max_rows)
     has_na = any(_fmt_cell(v) == NA_DASH for row in d.itertuples(index=False) for v in row)
+    # Column widths and font both have to follow the content. Left on autofit at a
+    # fixed 8.5 pt, a 9-column table gave every column an equal share and broke
+    # numbers across lines mid-value -- "1.92365" rendered as "1.9236" above "5",
+    # which reads as two numbers. Header text may wrap (it is words, and it is
+    # checked separately); a value may not.
+    _body = [[_fmt_cell(row[c]) for c in d.columns] for _, row in d.iterrows()]
+    _wid = [max([len(str(c).replace("_", " ").split()[-1])]           # longest header word
+                + [len(r[j]) for r in _body] or [1]) for j, c in enumerate(d.columns)]
+    _fs = 8.5 if len(d.columns) <= 6 else (7.5 if len(d.columns) <= 8 else 6.8)
+    _tot = float(sum(_wid))
     t = doc.add_table(rows=1, cols=len(d.columns))
     t.style = "Light Grid Accent 1"; t.alignment = WD_TABLE_ALIGNMENT.CENTER
+    # autofit = False emits a fixed tblLayout, but under a fixed layout the
+    # renderer sizes columns from the tblGrid, which add_table fills with equal
+    # widths -- so per-cell widths alone changed nothing and the numbers kept
+    # wrapping mid-value. The grid has to be written too.
+    t.autofit = False
+    _tw = [int(round(914400.0*max(0.42, TEXT_WIDTH_IN*w/_tot)/635.0)) for w in _wid]
+    for _gc, _w in zip(t._tbl.find(qn("w:tblGrid")).findall(qn("w:gridCol")), _tw):
+        _gc.set(qn("w:w"), str(_w))
+    _tblW = t._tbl.tblPr.find(qn("w:tblW"))
+    _tblW.set(qn("w:type"), "dxa"); _tblW.set(qn("w:w"), str(sum(_tw)))
+    def _setw(cells):
+        for j, cell in enumerate(cells):
+            cell.width = Inches(max(0.42, TEXT_WIDTH_IN*_wid[j]/_tot))
     for j, c in enumerate(d.columns):
         cell = t.rows[0].cells[j]; cell.text = str(c)
-        for r in cell.paragraphs[0].runs: r.bold = True; r.font.size = Pt(9)
-    for _, row in d.iterrows():
+        for r in cell.paragraphs[0].runs: r.bold = True; r.font.size = Pt(_fs + 0.5)
+    _setw(t.rows[0].cells)
+    for _r in _body:
         cells = t.add_row().cells
-        for j, c in enumerate(d.columns):
-            cells[j].text = _fmt_cell(row[c])
-            for r in cells[j].paragraphs[0].runs: r.font.size = Pt(8.5)
+        for j in range(len(d.columns)):
+            cells[j].text = _r[j]
+            for r in cells[j].paragraphs[0].runs: r.font.size = Pt(_fs)
+        _setw(cells)
     msg = []
     if truncated: msg.append(f"showing first {max_rows} of {len(df)} rows")
     if df.shape[1] > max_cols: msg.append(f"first {max_cols} of {df.shape[1]} columns")
@@ -614,10 +656,45 @@ for cs in ["A_validation", "B_application"]:
     add_image(ROOT/"06_postprocessing"/"plots"/f"cp_distribution_{cs}.png", 5.6,
               f"Surface C_p at cycle phases, {cs.replace('_',' ')}.")
 H("11.6 Convergence", 2)
+P("Two separate things must be shown, and only the first of them was: that the "
+  "march reaches its limit cycle, and that the time step resolves that cycle. "
+  "The cycle residuals below fall to zero once successive cycles repeat, which "
+  "is periodicity, not step adequacy — a march with far too coarse a step "
+  "reaches a periodic state just as cleanly, and reaches the wrong one. The "
+  "refinement study that follows is the second piece of evidence.")
 add_image(ROOT/"06_postprocessing"/"plots"/"convergence_residuals.png", 5.4,
-          "Cycle-to-cycle peak-C_L convergence.")
+          "Cycle-to-cycle peak-C_L convergence: the limit cycle is reached.")
 P("Convergence (Case A):", bold=True)
 add_csv(ROOT/"05_solution"/"convergence"/"residuals_A_validation.csv")
+
+P("Time-step refinement", bold=True)
+_ts = pd.read_csv(ROOT/"05_solution"/"convergence"/"timestep_refinement.csv")
+_rep = _ts[_ts["reported_resolution"]].iloc[0]; _fin = _ts.iloc[-1]
+P(f"The same case was re-marched at {int(_ts.steps_per_cycle.min())} to "
+  f"{int(_ts.steps_per_cycle.max())} steps per cycle. At the "
+  f"{int(_rep.steps_per_cycle)} steps used throughout this study the peak lift "
+  f"differs from the finest run by {_rep.pct_from_finest_CL_max:.3f} %, the "
+  f"pitching-moment break by {_rep.pct_from_finest_CM_min:.3f} % and the peak "
+  f"drag by {_rep.pct_from_finest_CD_max:.3f} %; coarsening to "
+  f"{int(_ts.steps_per_cycle.min())} steps costs {_ts.iloc[0].pct_from_finest_CM_min:.2f} % "
+  f"on the moment. The step is therefore adequate for every quantity this study "
+  f"reports, with margin.")
+P("The deviations do not fall monotonically to zero, and should not be expected "
+  "to. The vortex-shedding trigger C_N' \u2265 C_N1 is tested once per step, so the "
+  "shedding instant — and with it the whole vortex clock — is quantised at the "
+  "step. That quantisation is visible directly in the onset column: "
+  f"{_ts.iloc[0].stall_onset_alpha_deg:.3f}\u00b0 at the coarsest step against "
+  f"{_fin.stall_onset_alpha_deg:.3f}\u00b0 at the finest, settling to within "
+  f"{abs(_ts.stall_onset_alpha_deg.iloc[2:].max()-_ts.stall_onset_alpha_deg.iloc[2:].min()):.3f}\u00b0 "
+  "over the four finest runs. Once the remaining differences are that small they "
+  "record which step the trigger fired on rather than the accuracy of the march, "
+  "which is why the deviation curve flattens into a floor instead of continuing "
+  "down. Only Case A is swept: the march depends on the reduced frequency and "
+  "Mach number alone, so sweeping Case B would re-measure the same discretisation "
+  "property at a neighbouring operating point.")
+add_image(ROOT/"06_postprocessing"/"plots"/"timestep_refinement.png", 6.0,
+          "Time-step refinement, and the onset quantisation that floors it.")
+add_csv(ROOT/"05_solution"/"convergence"/"timestep_refinement.csv")
 P("Time-history sample (Case A, head):", bold=True)
 add_csv(ROOT/"05_solution"/"time_history_A_validation.csv", max_rows=12)
 

@@ -14,7 +14,8 @@ files run_case.py writes:
   timehist_loads_<case>.png         unsteady loads against time
   states_<case>.png                 indicial state variables
   static_polar_calibration.png      model against the published reference polar
-  convergence_residuals.png         cycle-to-cycle convergence
+  convergence_residuals.png         cycle-to-cycle convergence (periodicity)
+  timestep_refinement.png           time-step refinement (step adequacy)
   cp_distribution_<case>.png        surface Cp at the written phases
   contour_Cp_<case>_<phase>_a<deg>.png     pressure field
   contour_speed_stream_<case>_<phase>_a<deg>.png   speed magnitude + streamlines
@@ -191,7 +192,7 @@ ax.axhline(FLOOR, color=INK_SOFT, lw=0.8, ls=":")
 ax.set_ylim(FLOOR/4, None); ax.set_xlim(0.7, ncyc + 0.3)
 ax.set_xticks(range(1, ncyc + 1))
 ax.set_xlabel("cycle number"); ax.set_ylabel("peak-$C_L$ residual  |ΔC$_{L,max}$|")
-ax.set_title("Cycle-to-cycle convergence", pad=10)
+ax.set_title("Cycle-to-cycle convergence: the limit cycle is reached", pad=10)
 # place the note in the empty mid-right band: at the bottom it sat on top of
 # the converged floor line and its markers
 ax.text(0.98, 0.34, "open symbols: ΔC$_{L,max}$ = 0 to double precision\n"
@@ -200,6 +201,63 @@ ax.text(0.98, 0.34, "open symbols: ΔC$_{L,max}$ = 0 to double precision\n"
         bbox=dict(boxstyle="round,pad=0.35", fc="white", ec=INK_SOFT, alpha=0.9))
 ax.legend(loc="upper right")
 save(fig, "convergence_residuals.png")
+
+# --------------------------------------------------- 4b. TIME-STEP REFINEMENT
+# The figure above shows the march reaches a limit cycle. It does NOT show the
+# step resolves that cycle, and until this study was added nothing did.
+tdf = pd.read_csv(SOL/"convergence"/"timestep_refinement.csv")
+fig, (axL, axR) = plt.subplots(1, 2, figsize=(9.6, 4.3))
+_cols = [("pct_from_finest_CL_max", "$C_{L,max}$"),
+         ("pct_from_finest_CM_min", "$C_{M,min}$"),
+         ("pct_from_finest_CD_max", "$C_{D,max}$")]
+_n = tdf["steps_per_cycle"].values
+_rep = tdf[tdf["reported_resolution"]].iloc[0]
+for i, (col, lab) in enumerate(_cols):
+    y = tdf[col].values.copy()
+    y[y <= 0] = np.nan                      # the reference row is exactly zero
+    axL.loglog(_n, y, ls=_LS[i % 2], marker=_MK[i % 2], color=PALETTE[i],
+               lw=2, ms=6, label=lab)
+# Deviation is measured against the FINEST run, which carries the same onset
+# quantisation as every other row. So the curve cannot fall below that jitter and
+# turns up again past ~1440 -- that upturn is the floor of the measurement, not
+# the scheme diverging. Draw the floor so the figure cannot be read the wrong way.
+_fine = tdf[tdf["steps_per_cycle"] > _rep["steps_per_cycle"]]
+_floor = float(max(_fine[c].max() for c, _ in _cols))
+_lo = float(min(np.nanmin(tdf[c].replace(0.0, np.nan)) for c, _ in _cols))/2.5
+axL.set_ylim(_lo, None)
+axL.axhspan(_lo, _floor, color=INK_SOFT, alpha=0.10, lw=0)
+axL.axhline(_floor, color=INK_SOFT, lw=0.8, ls="--")
+# the note goes under the axes, not in them: inside, it covered the 720-step
+# marker, which is the one point the figure exists to show
+fig.text(0.5, 0.015, "Shaded band is the onset-quantisation floor: the reference run is quantised too, so a "
+         "difference below it says which step the trigger fired on, not how accurate the march is.",
+         ha="center", va="bottom", fontsize=8.2, color=INK_SOFT)
+axL.annotate("reference", xy=(_n[-1], _lo), xytext=(0, 4), textcoords="offset points",
+             ha="center", va="bottom", fontsize=8.0, color=INK_SOFT, rotation=90)
+for _ax in (axL, axR):
+    _ax.axvline(_rep["steps_per_cycle"], color=INK_SOFT, lw=1.0, ls=":")
+    _ax.set_xscale("log"); _ax.set_xticks(_n); _ax.set_xticklabels([str(int(v)) for v in _n])
+    _ax.set_xticks([], minor=True)
+    _ax.set_xlabel("steps per cycle")
+axL.annotate("used here", xy=(_rep["steps_per_cycle"], 1.0), xycoords=("data", "axes fraction"),
+             xytext=(-4, -6), textcoords="offset points", ha="right", va="top",
+             fontsize=8.5, color=INK_SOFT)
+axL.set_ylabel("deviation from finest run  [%]")
+axL.set_title("Time-step refinement", pad=10)
+axL.legend(loc="upper right", fontsize=9)
+
+axR.plot(_n, tdf["stall_onset_alpha_deg"].values, ls=_LS[0], marker=_MK[0],
+         color=PALETTE[0], lw=2, ms=6)
+axR.set_ylabel(r"stall onset  $\alpha$  [deg]")
+axR.set_title("Onset is detected at a discrete step", pad=10)
+axR.text(0.97, 0.95, "the trigger $C_N' \\geq C_{N1}$ is tested once per step,\n"
+         "so onset is quantised — this, not a scheme error,\n"
+         "sets the residual scatter at the finest steps",
+         transform=axR.transAxes, ha="right", va="top", fontsize=8.5,
+         color=INK_SOFT,
+         bbox=dict(boxstyle="round,pad=0.35", fc="white", ec=INK_SOFT, alpha=0.9))
+fig.get_layout_engine().set(rect=(0, 0.055, 1, 0.945))
+save(fig, "timestep_refinement.png")
 
 # ============================================================ 5. CP DISTRIBUTION
 for cs, meta in CASES.items():

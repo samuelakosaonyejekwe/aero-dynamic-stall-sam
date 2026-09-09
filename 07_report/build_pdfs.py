@@ -75,7 +75,8 @@ ALBUM = [
                             + sorted((ROOT/"06_postprocessing"/"plots").glob("states_*.png"))),
  ("Surface pressure & convergence",
    sorted((ROOT/"06_postprocessing"/"plots").glob("cp_distribution_*.png"))
-   + [ROOT/"06_postprocessing"/"plots"/"convergence_residuals.png"]),
+   + [ROOT/"06_postprocessing"/"plots"/"convergence_residuals.png",
+      ROOT/"06_postprocessing"/"plots"/"timestep_refinement.png"]),
  ("Pressure contours", sorted((ROOT/"06_postprocessing"/"plots").glob("contour_Cp_*.png"))),
  ("Velocity: streamlines & vectors",
    sorted((ROOT/"06_postprocessing"/"plots").glob("contour_speed_stream_*.png"))
@@ -245,7 +246,8 @@ CSV_GROUPS = [
     ROOT/"05_solution"/"response_surface.csv"]),
  ("Outputs — convergence",
    [ROOT/"05_solution"/"convergence"/"residuals_A_validation.csv",
-    ROOT/"05_solution"/"convergence"/"residuals_B_application.csv"]),
+    ROOT/"05_solution"/"convergence"/"residuals_B_application.csv",
+    ROOT/"05_solution"/"convergence"/"timestep_refinement.csv"]),
  ("Validation & calibration",
    [ROOT/"06_postprocessing"/"validation"/"validation_static.csv",
     ROOT/"06_postprocessing"/"validation"/"calibration_constants.csv",

@@ -248,6 +248,23 @@ def _is_caption(par):
 # ---------------------------------------------------------------- tables
 PAD = 6.0            # left+right cell padding, pt
 
+# The width calculation and the renderer have to agree about where a cell can be
+# broken, and they did not. _fit() breaks at "_" as well as "/", but both width
+# helpers tokenised on r"[\s/]+" only -- their own docstrings said identifiers
+# break at "_" while their regex did not. So every long header counted as one
+# unbreakable token, the floors summed past the frame, and the "floors do not
+# fit" branch scaled EVERY column down together, numeric ones included. That is
+# what broke values mid-number: 1.92365 rendered as "1.9236" above "5", which
+# reads as two numbers rather than one. Single source of truth:
+# zero-width: it splits AFTER a separator and consumes nothing, so a path
+# rejoined for rendering still has its slashes
+_BREAKABLE = re.compile(r"(?<=[_/\s])")
+
+def _tokens(cell):
+    """The pieces a cell is broken into, matching _fit() exactly."""
+    return [t for t in _BREAKABLE.split(cell) if t]
+
+
 def _col_floors(text_rows, ncol, hdr_pt, body_pt):
     """Minimum width each column needs so no cell breaks mid-word: the widest
     unbreakable token in it. Paths break at "/" and identifiers at "_", so those
@@ -258,9 +275,8 @@ def _col_floors(text_rows, ncol, hdr_pt, body_pt):
         for i, row in enumerate(text_rows):
             cell = row[j] if j < len(row) else ""
             fn, pt = ("Body-Bold", hdr_pt) if i == 0 else ("Body", body_pt)
-            for tok in re.split(r"[\s/]+", cell):
-                if tok:
-                    tokmax = max(tokmax, pdfmetrics.stringWidth(tok, fn, pt))
+            for tok in _tokens(cell):
+                tokmax = max(tokmax, pdfmetrics.stringWidth(tok, fn, pt))
         floors.append(min(tokmax + PAD, 0.42*FRAME_W))
     return floors
 
@@ -282,9 +298,8 @@ def _col_widths(text_rows, ncol, hdr_pt, body_pt):
             # 06_postprocessing/validation/experimental to the data inventory
             # squeezed the file column until the three longest filenames broke
             # mid-extension, which is data-lossless but reads as a typo.
-            for tok in re.split(r"[\s/]+", cell):
-                if tok:
-                    tokmax = max(tokmax, pdfmetrics.stringWidth(tok, fn, pt))
+            for tok in _tokens(cell):
+                tokmax = max(tokmax, pdfmetrics.stringWidth(tok, fn, pt))
         nat.append(wmax + PAD)
         floor.append(min(tokmax + PAD, 0.42*FRAME_W))
     if sum(nat) <= FRAME_W:                       # fits: share out the slack
@@ -332,7 +347,7 @@ def _table_flowable(tbl):
         esc = html.escape(txt)
         if not txt or pdfmetrics.stringWidth(txt, fn, pt) <= widths[j] - PAD:
             return esc
-        parts = re.split(r"(?<=[_/])", txt)          # keep the separator on the left
+        parts = _BREAKABLE.split(txt)                # same split as the widths
         if len(parts) < 2:
             return esc
         out, cur = [], ""

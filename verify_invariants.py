@@ -698,6 +698,40 @@ try:
                 if _split_ok(_lines, _i) is False:
                     _broken.add(_i)
     _broken=sorted(_broken)
+    # A NUMBER may not break at all: a column name split at an underscore still
+    # reads as one name, but "1.92365" printed as "1.9236" above "5" reads as two
+    # numbers. This is the counterpart to the check below, and the report's wide
+    # tables did exactly this until the column widths were made to follow the
+    # content. Line text cannot tell a wrap from the next row's first cell -- the
+    # first attempt reported six numbers on page 12 that were simply the column
+    # beside them -- so this uses geometry. A continuation sits in the SAME cell:
+    # identical left edge, one line-height below. The gap is measured top-to-top,
+    # not between boxes, because a glyph box is taller than the leading and the
+    # boxes of successive lines overlap. Verified to fire on a deliberately
+    # over-narrow table both when the number splits in two and in four.
+    _FRAG = re.compile(r'-?[\d.]+')
+    _numsplit = []
+    for _pn in range(_rp.page_count):
+        _byx = {}
+        for _t in _rp[_pn].get_text("words"):
+            _byx.setdefault(round(_t[0], 1), []).append(_t)
+        for _col in _byx.values():
+            _col.sort(key=lambda t: t[1])
+            _run = []
+            for _w in _col + [None]:
+                if (_run and _w is not None and _FRAG.fullmatch(_w[4])
+                        and 0 < _w[1] - _run[-1][1] < 1.02*(_run[-1][3] - _run[-1][1])
+                        and abs(_w[0] - _run[-1][0]) < 0.6):
+                    _run.append(_w); continue
+                if len(_run) > 1:
+                    try:
+                        float("".join(x[4] for x in _run))
+                        _numsplit.append(f"p{_pn+1}: " + "|".join(x[4] for x in _run))
+                    except ValueError:
+                        pass
+                _run = [_w] if (_w is not None and _FRAG.fullmatch(_w[4])) else []
+    ck("no number is broken across lines in the report", not _numsplit,
+       "; ".join(_numsplit[:6]))
     ck("no CSV column name is broken across lines in the report", not _broken,
        f"{len(_broken)} broken, e.g. {_broken[:4]}")
     _rp.close()
@@ -973,6 +1007,47 @@ for f in sorted(glob.glob('0*/**/*.py',recursive=True)+glob.glob('*.py')):
     used={n.id for n in ast.walk(tree) if isinstance(n,ast.Name)}
     _dead+=[f"{f}:{k}" for k in imp if k not in used]
 ck("no unused imports", not _dead, f"{len(_dead)} found: {_dead[:4]}")
+
+# --- TIME-STEP REFINEMENT. The study published only cycle-to-cycle residuals and
+#     captioned them "convergence"; those go to zero when the limit cycle is
+#     reached and say nothing about the step. steps_per_cycle was a bare number
+#     in the config. These checks bind the config to the refinement study that
+#     now justifies it, and bind the study to the metrics that ship.
+_ts = pd.read_csv('05_solution/convergence/timestep_refinement.csv')
+_cfgn = json.load(open('03_model_setup/solver_config.json'))["numerics"]["steps_per_cycle"]
+_rep = _ts[_ts.reported_resolution]
+ck("the refinement study contains the resolution the config declares", len(_rep) == 1,
+   f"steps_per_cycle={_cfgn} appears {len(_rep)}x in the sweep")
+ck("the refinement study brackets the declared resolution above and below",
+   bool((_ts.steps_per_cycle < _cfgn).any() and (_ts.steps_per_cycle > _cfgn).any()))
+if len(_rep) == 1:
+    _r = _rep.iloc[0]
+    ck(f"declared step is converged: CL_max within 0.1% of the finest",
+       _r.pct_from_finest_CL_max < 0.1, f"{_r.pct_from_finest_CL_max}%")
+    ck(f"declared step is converged: CM_min within 0.5% of the finest",
+       _r.pct_from_finest_CM_min < 0.5, f"{_r.pct_from_finest_CM_min}%")
+    ck(f"declared step is converged: CD_max within 0.5% of the finest",
+       _r.pct_from_finest_CD_max < 0.5, f"{_r.pct_from_finest_CD_max}%")
+    # the shipped metric must be the one the sweep says it is, or the sweep is
+    # measuring some other configuration than the one that was published
+    # the shipped metric is rounded to 3 dp, so agree to within that rounding
+    ck("the sweep's declared row reproduces the shipped CL_max_dynamic",
+       abs(_r.CL_max - float(mA['CL_max_dynamic'])) < 1e-3,
+       f"sweep {_r.CL_max} vs shipped {float(mA['CL_max_dynamic'])}")
+    # the study is only useful if coarsening actually degrades: a sweep whose
+    # every row agreed would prove the metric insensitive to the sweep, not
+    # converged
+    ck("the sweep is not vacuous (the coarsest row is visibly worse)",
+       float(_ts.iloc[0].pct_from_finest_CL_max) > 10.0*float(_r.pct_from_finest_CL_max))
+# the residual scatter is dominated by the shedding trigger being detected at a
+# discrete step, so the onset is quantised and convergence is not monotone at the
+# 5th decimal. Assert the quantisation instead of a monotonicity that is false.
+_on = _ts.stall_onset_alpha_deg
+ck("stall onset settles under refinement (spread < 0.3 deg over the last four rows)",
+   float(_on.iloc[2:].max() - _on.iloc[2:].min()) < 0.3,
+   f"{float(_on.iloc[2:].max()-_on.iloc[2:].min()):.4f} deg")
+ck("stall onset does move at the coarsest step (the quantisation is real)",
+   float(_on.iloc[0] - _on.iloc[-1]) > 0.1)
 
 # --- stale prose
 # This file is EXCLUDED from its own scan. It necessarily quotes the phrases it

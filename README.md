@@ -201,7 +201,7 @@ consume. Execution order is given under *Reproducing the pipeline* below.
 | `01_geometry/` | Airfoil geometry generation, coordinate CSVs, profile/thickness plots |
 | `02_mesh/` | Body-fitted O-grid generation, mesh-quality metrics, mesh plots |
 | `04_solver/` | `unistall_solver.py` (UIBS core + field reconstruction + thermal) and `run_case.py` |
-| `05_solution/` | Time histories, Cp distributions, reconstructed fields, integral metrics, convergence residuals |
+| `05_solution/` | Time histories, Cp distributions, reconstructed fields, integral metrics, cycle-convergence residuals and the time-step refinement study |
 | `06_postprocessing/` | All plots (`plots/`) plus validation & calibration against experiment (`validation/`) |
 | `07_report/` | The three scripts that assemble the report; their intermediate products (`case.docx`, plots album, data dossier) are rebuilt on every run and not committed |
 | `08_engineering_drawings/` | Dimensioned 3-view, isometric, blade and section A-A drawings |

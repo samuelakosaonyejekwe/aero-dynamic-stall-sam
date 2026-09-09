@@ -61,7 +61,12 @@ M = 8.0                             # outer margin -> border frame
 
 from project_meta import (STUDY_DATE_ISO as DATE,      # single source of truth
                           AUTHOR_FULL as DRAWN_BY, AUTHOR_BAND)
-PROJECTION = "THIRD ANGLE"
+# The projection convention, in the two forms the sheets render it. It was a
+# named constant that nothing read, plus the same words written out three more
+# times -- on the symbol, in the title block and in note 6. Four copies of one
+# fact, and the named one was the dead copy.
+PROJECTION = "THIRD ANGLE"            # symbol caption and the general notes
+PROJECTION_TITLEBLOCK = "3rd ANGLE"   # the title block's shorter form
 
 # ----------------------------------------------------------------------------
 # CS-MUH reference aircraft — ONE definition, read by every sheet.
@@ -177,7 +182,7 @@ def third_angle_symbol(ax, x0, y0, h=8.0):
     # centre lines
     ax.plot([cx1 - r1 * 1.3, cx2 + half_w * 1.3], [cy, cy],
             color=INK_SOFT, lw=0.5, dashes=(6, 2, 1, 2))
-    ax.text(x0 + h * 1.0, y0 - 2.2, "THIRD ANGLE", color=INK,
+    ax.text(x0 + h * 1.0, y0 - 2.2, PROJECTION, color=INK,
             fontsize=6.0, ha="center", va="top")
 
 
@@ -216,7 +221,7 @@ def title_block(ax, title, dwg_no, scale, material):
     # right column cells
     cell(xc, r[2], "DWG No.", dwg_no)
     cell(xc, r[1], "SCALE", scale)
-    cell(xc, r[0], "UNITS / PROJ.", "mm  /  3rd ANGLE", vfs=6.0)
+    cell(xc, r[0], "UNITS / PROJ.", f"mm  /  {PROJECTION_TITLEBLOCK}", vfs=6.0)
 
     return x1, y2   # for placing projection symbol just above
 
@@ -390,7 +395,7 @@ def sheet1():
                  f"3.  MAIN ROTOR {SPEC['n_blades']} BLADES, Ø{int(Rdia)}.",
                  f"4.  TAIL ROTOR {SPEC['n_blades']} BLADES, Ø{int(trdia)}, PORT.",
                  f"5.  OVERALL LENGTH {int(round(L_ovl))} INCL ROTOR.",
-                 "6.  PROJECTION: THIRD ANGLE."])
+                 f"6.  PROJECTION: {PROJECTION}."])
 
     finalise(ax, "GENERAL ARRANGEMENT - CS-MUH REFERENCE",
              "UN-CSMUH-001", "1:270", "GA / OML")
@@ -559,40 +564,6 @@ def iso(x, y, z, S, ox, oy):
     X = (x - y) * COS30
     Y = (x + y) * SIN30 + z
     return ox + X * S, oy + Y * S
-
-
-def iso_box(ax, c, dx, dy, dz, S, ox, oy, color, alpha=0.16, lw=1.0):
-    """Axis-aligned box centred at c=(x,y,z) with full sizes dx,dy,dz."""
-    x0, y0, z0 = c[0] - dx / 2, c[1] - dy / 2, c[2] - dz / 2
-    x1, y1, z1 = c[0] + dx / 2, c[1] + dy / 2, c[2] + dz / 2
-    V = {k: iso(*p, S, ox, oy) for k, p in {
-        "A": (x0, y0, z0), "B": (x1, y0, z0), "C": (x1, y1, z0), "D": (x0, y1, z0),
-        "E": (x0, y0, z1), "F": (x1, y0, z1), "G": (x1, y1, z1), "H": (x0, y1, z1),
-    }.items()}
-    faces = [("E", "F", "G", "H"),   # top
-             ("B", "C", "G", "F"),   # right (+x)
-             ("A", "B", "F", "E")]   # front (-y)
-    for f in faces:
-        ax.add_patch(Polygon([V[k] for k in f], closed=True, fill=True,
-                             fc=color, ec=INK, lw=lw, alpha=alpha))
-        ax.add_patch(Polygon([V[k] for k in f], closed=True, fill=False,
-                             ec=INK, lw=lw))
-    return V
-
-
-def iso_disc(ax, c, R, S, ox, oy, plane="xy", ec=INK, lw=1.1, fc=None, alpha=0.12):
-    t = np.linspace(0, 2 * np.pi, 80)
-    if plane == "xy":      # horizontal disc (rotor) z const
-        pts = [iso(c[0] + R * np.cos(a), c[1] + R * np.sin(a), c[2], S, ox, oy)
-               for a in t]
-    else:                  # plane == "xz": vertical disc facing y (tail rotor)
-        pts = [iso(c[0] + R * np.cos(a), c[1], c[2] + R * np.sin(a), S, ox, oy)
-               for a in t]
-    if fc is not None:
-        ax.add_patch(Polygon(pts, closed=True, fill=True, fc=fc, ec=ec,
-                             lw=lw, alpha=alpha))
-    ax.add_patch(Polygon(pts, closed=True, fill=False, ec=ec, lw=lw))
-    return pts
 
 
 # ----------------------------------------------------------------------------
