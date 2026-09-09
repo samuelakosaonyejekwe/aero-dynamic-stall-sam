@@ -73,6 +73,16 @@ CLAIMS = [
      "metrics_B CM_min / stall onset"),
     ("README.md", f"{mA['Cp_closure_error_pct']} % (Case A)) and {mB['Cp_closure_error_pct']} % (Case B)".replace("))", ")"),
      "metrics_A/B Cp_closure_error_pct"),
+    # the cycle-wide closure is an ABSOLUTE residual: the worst instantaneous
+    # percentage is not quotable, because the loop passes through C_L = 0.09
+    ("README.md", f"{mA['Cp_closure_worst_dCL_cycle']} (Case A) and "
+                  f"{mB['Cp_closure_worst_dCL_cycle']} (Case B)",
+     "metrics_A/B Cp_closure_worst_dCL_cycle"),
+    ("README.md", f"{mA['Cp_closure_worst_dCL_pct_of_CLmax']} % and "
+                  f"{mB['Cp_closure_worst_dCL_pct_of_CLmax']} % of",
+     "metrics_A/B Cp_closure_worst_dCL_pct_of_CLmax"),
+    ("README.md", f"{mA['Cp_DSV_core_min']} (Case A) and {mB['Cp_DSV_core_min']} (Case B)",
+     "metrics_A/B Cp_DSV_core_min"),
     # ---- damping ----------------------------------------------------------
     ("README.md", f"{mA['aero_damping_Xi_normalised']} (Case A) and {mB['aero_damping_Xi_normalised']} (Case B)",
      "metrics_A/B aero_damping_Xi_normalised"),
@@ -86,6 +96,14 @@ CLAIMS = [
     ("README.md", f"mean moment-break error of\n{vs['mean |CMmin| error [abs]']}",
      "validation_realdata_summary mean |CMmin| error"),
     ("README.md", f"C_L loop is {vs['mean RMS_CL']}", "validation_realdata_summary mean RMS_CL"),
+    # two of the four held-out frames peak past the static polar's calibration
+    # limit, and are about twice as inaccurate; the split is quoted, so guard it
+    ("README.md", f"{vs['mean RMS_CL, inside the calibration range']} over the two held-out frames",
+     "validation_realdata_summary mean RMS_CL inside calibration"),
+    ("README.md", f"and {vs['mean RMS_CL, peaking past it']} over the two that do not",
+     "validation_realdata_summary mean RMS_CL past calibration"),
+    ("README.md", f"past the {f(vs['static polar calibrated to [deg]']):.0f}° the static polar",
+     "validation_realdata_summary static polar calibration limit"),
     ("README.md", f"slope {sl.pct_error} %, C_L,max {cm.pct_error} %",
      "validation_static pct_error"),
     # the AMES-01 cross-check is quoted loosely ("about 10 %"); assert the
@@ -107,9 +125,11 @@ CLAIMS = [
 _cache = {}
 def _text(rel):
     """Document text, or None if the document is not part of this checkout.
-    00_overview/ is excluded from the public repository, so a clean checkout has
-    the README and nothing else -- the check must skip what is not there rather
-    than crash on it."""
+    Both documents ship today (00_overview/case_definition.md is tracked; it was
+    excluded from the repository in an earlier revision and this note still said
+    so). The skip is kept anyway, so that running the checker against a partial
+    export reports what it could not check instead of crashing on it -- and
+    main() names anything skipped rather than counting it as passed."""
     if rel not in _cache:
         p = ROOT / rel
         _cache[rel] = p.read_text(encoding="utf-8") if p.exists() else None

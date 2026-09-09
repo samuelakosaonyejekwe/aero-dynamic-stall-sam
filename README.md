@@ -73,10 +73,21 @@ frequency.
 
 The loads come from the UIBS core. The 2-D fields and surface Cp come from a
 separate potential-flow reconstruction driven by the UIBS circulation.
-Integrating the reconstructed surface Cp returns the C_L it was given to within
-**1 %** — -0.8 % (Case A) and -0.6 % (Case B) — a number the pipeline measures on every run and
-publishes as `Cp_closure_error_pct` in `05_solution/metrics_*.csv`, rather than
-a claim in a comment. It also converges: refining 160 to 1280 panels drives it
+At peak lift, integrating the reconstructed surface Cp returns the C_L it was
+given to within **1 %** —
+-0.8 % (Case A) and -0.6 % (Case B) — a number the pipeline
+measures on every run and publishes as `Cp_closure_error_pct` in
+`05_solution/metrics_*.csv`, rather than a claim in a comment. That is a single
+instant and is *not* a bound on the cycle, which an earlier revision implied it
+was. What is measured over the whole cycle is the worst **absolute** residual,
+in C_L counts:
+0.0165 (Case A) and 0.0211 (Case B) —
+0.86 % and 1.21 % of
+each case's own C_L,max, published as `Cp_closure_worst_dCL_cycle` and
+`Cp_closure_worst_dCL_pct_of_CLmax`. It is given in C_L counts rather than as a
+worst instantaneous percentage because the cycle passes through C_L = 0.09,
+where a residual of 0.0014 reads as +1.6 % purely from the small denominator.
+The closure also converges: refining 160 to 1280 panels drives it
 monotonically to -0.04 %, which is what Blasius requires. It previously read
 -12.4 % and did not converge, and the explanation recorded
 for that deficit was itself wrong; the three real causes (a missing vortex-sheet
@@ -89,10 +100,14 @@ jump; it cannot be driven to zero, because the reconstruction is handed the
 indicial C_L, which during dynamic stall departs deliberately from the inviscid
 attached circulation that the Kutta condition selects. That circulation is
 published beside it as `CL_kutta_inviscid`, and imposing it drives the jump to
-~0.001; the measured ratio jump/|C_L - C_L_kutta| is 2.4-2.5 across 2-19°. `Cp_DSV_core_min` is the suction at the centre of the reconstructed
-dynamic-stall vortex; it reads about -0.4 where a measured deep-stall core is
-usually nearer -3 to -6, and it is reported rather than tuned because nothing
-this study ships (integrated cl/cd/cm only) could calibrate a core size.
+~0.001; the measured ratio jump/|C_L - C_L_kutta| is 1.91-2.02 across 2-19°,
+falling monotonically with incidence. `Cp_DSV_core_min` is the suction at the
+centre of the reconstructed dynamic-stall vortex, evaluated at that centre
+rather than sampled off the field grid; it reads
+-0.362 (Case A) and -0.263 (Case B) where a measured
+deep-stall core is usually nearer -3 to -6, and it is reported rather than tuned
+because nothing this study ships (integrated cl/cd/cm only) could calibrate a
+core size.
 
 ### Headline results
 
@@ -121,8 +136,8 @@ this study ships (integrated cl/cd/cm only) could calibrate a core size.
   C_M loops and from the model at the same conditions gives a mean discrepancy
   of 0.072 (max 0.144) — see
   `06_postprocessing/validation/validation_nasa_real.csv`. It is *not* the
-  time-step error, which is about 45× smaller (refining 720 → 5760 steps per
-  cycle moves Ξ̂ by 0.0004).
+  time-step error, which is about 180× smaller than the band (refining
+  720 → 5760 steps per cycle moves Ξ̂ by 0.0004, against a band of 0.08).
 
 ### Held-out validation
 
@@ -133,10 +148,28 @@ returns a **mean peak-lift error of 1.7 %** and a **mean moment-break error of
 0.023** (mean RMS over the whole C_L loop is 0.195, i.e. the
 integral peaks are matched considerably better than the full loop shape —
 the residual is dominated by the downstroke/reattachment branch).
+
+**Two of those four frames extrapolate, and it costs accuracy.** Frames 9217 and
+9214 are 15° ± 10°, so they peak at 25° — five degrees
+past the 20° the static polar the separation law is fitted to is tabulated to.
+Every other part of this
+study flags that boundary (the response surface is bounded by it, the model
+polar carries a `within_calibration` column, the field-sampling incidences stop
+just inside it, both calibration figures draw the tail dashed); the dynamic
+validation did not, and the split is material: mean RMS C_L is
+0.133 over the two held-out frames that stay inside the
+calibration range and 0.258 over the two that do not —
+roughly double. Both means, the per-frame `within_static_calibration` column
+and each frame's `peak_alpha_deg` are published in `validation_nasa_real.csv`
+and `validation_realdata_summary.csv`, and the extrapolated band is shaded on
+the validation figure.
+
 Applying the same frozen constants to a *different* aerofoil section
 (frame 25104) degrades peak-lift agreement to about 10 %, confirming that the
 calibration encodes section-specific physics rather than a generic loop shape.
-Per-frame figures are in `06_postprocessing/validation/validation_nasa_real.csv`.
+The per-frame numbers are in
+`06_postprocessing/validation/validation_nasa_real.csv`; the per-frame overlays
+are in `06_postprocessing/validation/fig_validation_nasa_real.png`.
 
 ---
 
@@ -278,3 +311,14 @@ report — is licensed under the
 You may share and adapt the material for any purpose, provided you give
 appropriate credit to **Akosa Samuel Onyejekwe**, link to the license, and
 indicate any changes.
+
+**One exception.** The six
+`06_postprocessing/validation/experimental/nasa_frames/frame_*.mat` files are
+redistributed *third-party* experimental data and are **not** covered by that
+grant — they are not the author's to license. The original measurements are
+McCroskey, McAlister, Carr & Pucci (1982), NASA TM-84245 (a work of the U.S.
+Government); the files came from
+[BL-DSM-JFS-2021](https://github.com/luizpancini/BL-DSM-JFS-2021), which states
+no licence of its own. The `exp_frame_*_{CL,CM}.csv` extracts the validation
+stage writes from them carry the same caveat. Details in
+[`NOTICE`](NOTICE) and in that directory's `PROVENANCE.txt`.

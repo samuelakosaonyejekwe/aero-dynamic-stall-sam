@@ -18,7 +18,11 @@ into  06_postprocessing/validation/experimental/  and this script will:
   * match each experimental point to the model loop on the correct stroke,
   * compute point-by-point error metrics: RMS C_L / C_M, max |ΔC_L|,
     peak-lift error, moment-break error and lift-loop-area error (all of them,
-    written to validation_digitized_<file>.csv), and
+    written to validation_digitized_<file>.csv). The loop-area comparison
+    integrates the model at the EXPERIMENT's own incidences and strokes, so it
+    measures the model rather than the digitiser's point count; the model's area
+    on the solver's own 720-point grid is published beside it as
+    CL_loop_area_model_dense, and
   * produce an experiment-vs-model overlay figure.
 
 If no experimental data are present, it writes a TEMPLATE + instructions and
@@ -138,13 +142,25 @@ for f in real:
     #      report section 12.3 all promised this metric and none of them
     #      computed it. Both loops are closed before integrating; the
     #      experimental points are taken in the order they were digitised,
-    #      which is the order a loop is traced. ----
-    _am = np.radians(np.append(a, a[0]))
-    area_mod = float(abs(us._trapz(np.append(o["CL"], o["CL"][0]), _am)))
+    #      which is the order a loop is traced.
+    #
+    #      The COMPARISON integrates the model at the experiment's own incidences
+    #      and strokes -- the mCL the error metrics above already use -- not on
+    #      the solver's 720-point grid. Comparing a 720-point trapezoid against a
+    #      handful of digitised points measures the quadrature as much as the
+    #      model: probed with an 11-point synthetic loop, the published error was
+    #      +127.8 % where the like-for-like figure is +109.8 %, so 17.9 points of
+    #      it were resolution, not model. The dense-grid area is kept as its own
+    #      column so that difference stays visible instead of being folded into
+    #      an error the harness calls the model's.
     _ae = np.radians(np.append(exp["alpha_deg"].values, exp["alpha_deg"].values[0]))
     _ce = np.append(exp["CL"].values, exp["CL"].values[0])
     area_exp = float(abs(us._trapz(_ce, _ae)))
+    area_mod = float(abs(us._trapz(np.append(mCL, mCL[0]), _ae)))
+    _am = np.radians(np.append(a, a[0]))
+    area_mod_dense = float(abs(us._trapz(np.append(o["CL"], o["CL"][0]), _am)))
     rec["CL_loop_area_model"] = round(area_mod, 4)
+    rec["CL_loop_area_model_dense"] = round(area_mod_dense, 4)
     rec["CL_loop_area_exp"] = round(area_exp, 4)
     rec["CL_loop_area_err_pct"] = (round(100.0*(area_mod-area_exp)/area_exp, 1)
                                    if area_exp > 0 else float("nan"))

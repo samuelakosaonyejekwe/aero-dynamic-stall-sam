@@ -30,8 +30,18 @@ this project, so each one is a regression test rather than a hypothetical:
                               thrust), but the CYCLE MEAN must stay positive.
   * response surface        - no published point may sit outside the range the
                               separation law was calibrated on.
-  * field bounds            - Cp <= 1 everywhere.
+  * field bounds            - Cp <= 1 everywhere, on the grid the config
+                              declares the fields are written on.
+  * closure bound           - the cycle-wide closure metric must bound the
+                              peak-lift one; the peak-lift figure was once
+                              quoted as though it bounded the whole cycle.
+  * report equations        - the report must state the Cp and impulsive-lag
+                              expressions the solver actually evaluates.
   * experimental provenance - the frame conditions must match the .mat files.
+  * config vs code          - solver_config.json must still describe the
+                              solver: f_min, n_panels, the default grid, the
+                              domain and the masked ring were duplicated
+                              literals in both, and are now imported.
   * dead code               - no unused imports.
   * stale prose             - no comment may describe removed behaviour.
 
@@ -114,7 +124,11 @@ for case,m in (('A_validation',mA),('B_application',mB)):
     ck(f"{case} CM_min", abs(CM_.min()-float(m['CM_min(c/4)']))<1e-3)
     ck(f"{case} CD_cycle_mean", abs(CD_.mean()-float(m['CD_cycle_mean']))<1e-3)
     ar=np.radians(np.append(a_,a_[0])); CMc=np.append(CM_,CM_[0])
-    ck(f"{case} damping Xi", abs(-np.trapz(CMc,ar)-float(m['aero_damping_Xi']))<2e-4)
+    # us._trapz, not np.trapz: np.trapz was REMOVED in NumPy 2.0 and
+    # requirements.txt admits numpy<3, so this line was the one place in the
+    # pipeline that would have raised AttributeError on a permitted NumPy. The
+    # solver already binds whichever name exists.
+    ck(f"{case} damping Xi", abs(-us._trapz(CMc,ar)-float(m['aero_damping_Xi']))<2e-4)
     ck(f"{case} CD cycle mean positive (no net propulsion)", CD_.mean()>0)
 
 # --- the PUBLISHED cp_distribution must integrate back to the solver's own C_L at
@@ -163,8 +177,74 @@ ck("response surface fully calibrated", bool(rs['within_calibration'].all()))
 ck("peak alpha <= polar range", rs['peak_alpha_deg'].max()<=float(pd.read_csv('03_model_setup/static_polar_reference.csv')['alpha_deg'].max())+1e-9)
 
 # --- fields
+_fcfg=json.load(open('03_model_setup/solver_config.json'))['field_reconstruction']
+_nxy=_fcfg['grid_nx_solution']*_fcfg['grid_ny_solution']
 for f in sorted(glob.glob('05_solution/field_*.csv')):
     d=pd.read_csv(f); ck(f"{f.split('/')[-1]} Cp<=1", bool((d['Cp'].dropna()<=1+1e-9).all()))
+    # the config DECLARES grid_*_solution as "the sizes written to
+    # 05_solution/field_*.csv"; the writer used to carry its own literals, and
+    # the DSV-core metric was measured on the coarser DEFAULT grid instead, so
+    # it described no field this study ships.
+    ck(f"{f.split('/')[-1]} is on the declared solution grid", len(d)==_nxy,
+       f"{len(d)} rows vs {_nxy}")
+
+# --- the published vortex-core depth must be grid-independent. It was read off
+#     the field at the nearest grid node, which drifted -0.425 / -0.381 / -0.358
+#     / -0.368 over 110x85 .. 880x680 for one unchanged instant. dsv_core_cp
+#     evaluates it at the centre, so it must now equal the published number and
+#     must not move when a grid is refined around it.
+_thA=pd.read_csv('05_solution/time_history_A_validation.csv')
+_rA=_thA.iloc[int(_thA.CN_vortex.idxmax())]
+_tvl=json.load(open('03_model_setup/solver_config.json'))['calibrated_constants']['Tvl']
+_,_,_core=us.dsv_core_cp(G,c,U,M,_rA.alpha_deg,_rA.CL,_rA.CN_vortex,
+                         _rA.tau_v_semichords/_tvl)
+ck("published Cp_DSV_core_min is the value at the vortex centre",
+   abs(_core-float(mA['Cp_DSV_core_min']))<5e-4, f"{_core:.4f} vs {mA['Cp_DSV_core_min']}")
+
+# --- solver_config.json must still be DESCRIBING the solver. 03_model_setup
+#     imports these five from unistall_solver rather than restating them; if that
+#     import is ever unwired back into literals, this fails. They agreed before
+#     the import existed, but nothing made them agree.
+for _k,_v in (('separation_model.f_min', us.F_MIN),
+              ('field_reconstruction.n_panels', us.N_PANELS_DEFAULT),
+              ('field_reconstruction.grid_nx_default', us.GRID_NX_DEFAULT),
+              ('field_reconstruction.grid_ny_default', us.GRID_NY_DEFAULT),
+              ('field_reconstruction.near_wall_cells_masked', us.NEAR_WALL_CELLS_MASKED)):
+    _a,_b=_k.split('.'); _got=json.load(open('03_model_setup/solver_config.json'))[_a][_b]
+    ck(f"config {_k} matches the solver", _got==_v, f"{_got} vs {_v}")
+_dom=json.load(open('03_model_setup/solver_config.json'))['field_reconstruction']['domain_chords']
+ck("config domain_chords matches the solver", tuple(_dom)==tuple(us.DOMAIN_CHORDS),
+   f"{_dom} vs {list(us.DOMAIN_CHORDS)}")
+
+# --- the cycle-wide closure metric must actually bound the instant it contains.
+#     The peak-lift figure was once quoted as though it were a cycle-wide bound;
+#     these two rows exist so that reading can never be made again silently.
+for _case,_m in (('A_validation',mA),('B_application',mB)):
+    _clm=float(_m['CL_max_dynamic'])
+    _pk=abs(float(_m['Cp_closure_error_pct'])/100.0*_clm)
+    ck(f"{_case} worst-cycle closure bounds the peak-lift closure",
+       float(_m['Cp_closure_worst_dCL_cycle'])>=_pk-5e-4,
+       f"worst {_m['Cp_closure_worst_dCL_cycle']} vs peak-lift dCL {_pk:.4f}")
+    ck(f"{_case} worst-cycle closure percentage is consistent",
+       abs(100.0*float(_m['Cp_closure_worst_dCL_cycle'])/_clm
+           -float(_m['Cp_closure_worst_dCL_pct_of_CLmax']))<0.02)
+
+# --- the dynamic validation must say which frames extrapolate. Two of the four
+#     held-out frames peak 5 deg past the incidence the separation law is fitted
+#     to, and nothing said so, in a study that flags the same boundary in the
+#     response surface, the model polar, the field sampling and two figures.
+_nrv=pd.read_csv('06_postprocessing/validation/validation_nasa_real.csv')
+_acal2=float(pd.read_csv('03_model_setup/static_polar_reference.csv')['alpha_deg'].max())
+ck("validation frames carry a calibration-range flag",
+   'within_static_calibration' in _nrv.columns and 'peak_alpha_deg' in _nrv.columns)
+if 'within_static_calibration' in _nrv.columns:
+    ck("peak_alpha_deg equals alpha0 + amplitude",
+       bool((( _nrv.alpha0_deg+_nrv.amp_deg-_nrv.peak_alpha_deg).abs()<0.051).all()))
+    ck("within_static_calibration agrees with the polar range",
+       bool((_nrv.within_static_calibration ==
+             (_nrv.peak_alpha_deg <= _acal2+1e-9)).all()))
+    ck("the flag is not vacuous (some frame does extrapolate)",
+       bool((~_nrv.within_static_calibration).any()))
 
 # --- provenance
 import scipy.io
@@ -214,6 +294,21 @@ _undeclared=[f for f in _gen if not _declared(os.path.basename(f))]
 ck("every generated artifact is declared in a stage manifest",
    not _undeclared, f"{len(_undeclared)} undeclared, e.g. {_undeclared[:3]}")
 
+# --- every repository path the prose points a reader at must exist. The licence
+#     carve-out added in this audit names four of them (the .mat directory, its
+#     PROVENANCE.txt, the exp_frame_* extracts and LICENSE); nothing checked that
+#     a named path was real, and a licence notice that points at a file which is
+#     not there is worse than none.
+_refsrc=open('NOTICE',encoding='utf-8').read()+"\n"+open('README.md',encoding='utf-8').read()
+_refs=set(re.findall(r'(?<![\w/])(0[0-8]_[A-Za-z0-9_./*{},\-]*[A-Za-z0-9_*}])', _refsrc))
+_badref=[]
+for _r in sorted(_refs):
+    _cands=[_r]
+    _m=re.search(r'\{([^}]*)\}', _r)               # {CL,CM} alternation
+    if _m: _cands=[_r[:_m.start()]+_alt+_r[_m.end():] for _alt in _m.group(1).split(',')]
+    if not any(glob.glob(_c) or os.path.exists(_c) for _c in _cands): _badref.append(_r)
+ck("every repository path named in NOTICE/README exists", not _badref, f"missing {_badref}")
+
 # --- every shipped top-level entry must be described in the README's structure
 #     table. Making 00_overview/ and 07_report/ ship in an earlier pass left both
 #     undocumented there, so the table described a repository that no longer
@@ -257,6 +352,13 @@ try:
         if _cf.endswith('.csv') and re.match(r'0[1-8]_',_cf):
             try: _ids.update(str(_c) for _c in pd.read_csv(_cf, nrows=0).columns)
             except Exception: pass
+            # metrics_*.csv is a key/value table: its IDENTIFIERS are the row
+            # keys, not the column headings ("metric", "value"), so scanning
+            # headers alone never looked at the names the prose sends readers to
+            # -- Cp_closure_worst_dCL_pct_of_CLmax among them.
+            if os.path.basename(_cf).startswith('metrics_'):
+                try: _ids.update(str(_v) for _v in pd.read_csv(_cf)['metric'])
+                except Exception: pass
     _ids={i for i in _ids if len(i)>6 and re.fullmatch(r'[A-Za-z0-9_]+', i)}
     # PER PAGE. Checking the whole document at once was useless: a name broken on
     # one page but printed intact on another looked fine, and every one of these
@@ -340,6 +442,19 @@ if _bd:
     _lit=re.search(r'\(A_\{1\},A_\{2\},b_\{1\},b_\{2\}\)=\(([-0-9.]+)', _bd)
     ck("report does not hardcode the indicial constants", _lit is None,
        f"found literal {_lit.group(1) if _lit else ''}")
+    # --- the report's Cp equation must NOT carry a Prandtl-Glauert factor. The
+    #     solver deliberately does not apply one (the circulation it is handed
+    #     already carries compressibility through beta), and section 4.9 of the
+    #     same report calls applying it one of three errors -- while section 4.7
+    #     printed C_p = 1/sqrt(1-M^2)[...] for two revisions.
+    ck("report's Cp equation carries no Prandtl-Glauert factor",
+       re.search(r'C_\{p\}\s*=\s*\\frac\{1\}\{\\sqrt\{1-M', _bd) is None)
+    # --- and the impulsive time constant must be the one the solver computes.
+    #     It read T_I = K_alpha c/a, which is 1/M times what solve_dynamic_stall
+    #     has ever used (T_I = K_alpha c/U).
+    ck("report states the impulsive time constant the solver uses",
+       ('T_{I}=\\frac{K_{\\alpha}c}{U}' in _bd
+        and 'T_{I}=\\frac{K_{\\alpha}c}{a}' not in _bd))
 try:
     import fitz as _fz3
     _rp3=_fz3.open('aero_dynamic_stall_report.pdf'); _rp3.close()

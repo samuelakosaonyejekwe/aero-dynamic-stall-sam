@@ -22,14 +22,26 @@ Two auxiliary modules make the solver "universal" for engineering output:
     and a bound vortex sheet, BOTH on the body surface, with the total
     circulation matched to the UIBS C_L (Kutta-Joukowski).
     LIMITATIONS, measured rather than asserted (surface_load_closure() and
-    the metrics_*.csv rows "Cp_closure_error_pct" and "Cp_TE_jump_max_over_phases"
+    the metrics_*.csv rows "Cp_closure_error_pct",
+    "Cp_closure_worst_dCL_cycle" and "Cp_TE_jump_max_over_phases"
     recompute them on every run):
       - CLOSURE. Integrating the surface Cp now recovers the C_L it was given to
-        within 0.6 % over the whole cycle (-0.28 % at alpha 2 deg, -0.37 % at
-        10 deg, -0.58 % at 17.5 deg), and unlike before it CONVERGES: refining
-        160 -> 1280 panels drives it monotonically to -0.04 %, which is what
-        Blasius requires and is the check that the formulation is right rather
-        than merely better. It previously
+        -0.28 % at alpha 2 deg, -0.37 % at 10 deg and -0.58 % at 17.5 deg with
+        the dynamic-stall vortex switched off, and to -0.8 % (Case A) / -0.6 %
+        (Case B) at peak lift with it present -- the published
+        Cp_closure_error_pct. Those are single instants and are NOT a bound on
+        the cycle; an earlier revision claimed "within 0.6 % over the whole
+        cycle", which was never measured and was already contradicted by its own
+        published -0.8 %. What IS measured over the cycle, on every run, is the
+        worst ABSOLUTE residual: Cp_closure_worst_dCL_cycle = 0.0165 (Case A)
+        and 0.0211 (Case B), i.e. 0.86 % and 1.21 % of each case's own C_L,max
+        (Cp_closure_worst_dCL_pct_of_CLmax). It is reported in C_L counts rather
+        than as the worst instantaneous percentage because the cycle passes
+        through C_L = 0.09, where a residual of 0.0014 reads as +1.6 % purely
+        from the small denominator. Unlike before the closure also CONVERGES:
+        refining 160 -> 1280 panels drives it monotonically to -0.04 %, which is
+        what Blasius requires and is the check that the formulation is right
+        rather than merely better. It previously
         read -10.7 to -14.4 %, and the explanation recorded here for that
         deficit -- the Cp clip at -8, with the further claim that it did not
         converge under refinement -- was WRONG on both counts. Tested directly:
@@ -62,12 +74,13 @@ Two auxiliary modules make the solver "universal" for engineering output:
         a core of radius DSV_CORE_RADIUS_CHORDS*c. Its sign, position and the
         flow reversal beneath it are physical, but the core is diffuse: the
         measured suction at the core centre is published as Cp_DSV_core_min in
-        metrics_*.csv and reads about -0.4, where a deep-stall vortex core is
-        usually reported nearer -3 to -6. Making it deeper means shrinking the
+        metrics_*.csv -- -0.362 (Case A) and -0.263 (Case B), evaluated AT the
+        vortex centre by dsv_core_cp rather than sampled off a grid -- where a
+        deep-stall vortex core is usually reported nearer -3 to -6. Making it deeper means shrinking the
         core radius and raising the circulation factor together (0.06c and 2.5
-        give about -2.3), and NEITHER constant can be derived or calibrated
-        here: the experimental frames this study ships carry only integrated
-        cl/cd/cm against incidence, with no surface-pressure or field data
+        give -3.757), and NEITHER constant can be derived nor calibrated here:
+        the experimental frames this study ships carry only integrated cl/cd/cm
+        against incidence, with no surface-pressure or field data
         anywhere in the repository to fit a core size to. Both constants are
         therefore named at the top of this module rather than buried as
         literals, and the resulting core depth is published as a number so the
@@ -75,10 +88,18 @@ Two auxiliary modules make the solver "universal" for engineering output:
         It does not affect the reported loads, which come from the UIBS core.
       - Nothing in the reconstruction knows about separation: it is a potential
         field, so at post-stall incidence the leading-edge suction peak it draws
-        (about Cp = -15 at 17.5 deg) is far deeper than a real separated flow
+        (about Cp = -15.4 at 17.5 deg) is far deeper than a real separated flow
         would sustain. Nothing is clipped. The FIELD nonetheless bottoms out near
         -5.2, because the near-wall ring carrying that peak is masked, so the
-        contour plots understate the surface suction by about three times.
+        contour plots understate the surface suction by about three times. That
+        -5.2 is a property of the PUBLISHED GRID and not a converged value, and
+        it cannot become one: the masked ring is one cell wide, so refining the
+        grid moves it closer to a singularity the potential solution genuinely
+        has. Measured at the Case-A dsv instant, the field minimum goes -3.3
+        (110x85), -5.2 (220x170), -6.5 (440x340), -8.4 (880x680). Any quantity
+        that must not depend on the grid is therefore evaluated off it -- the
+        surface Cp at the panel control points (surface_cp) and the vortex-core
+        depth at the vortex centre (dsv_core_cp).
     The reconstruction is qualitative; the reported loads come from the UIBS
     core and do not depend on it.
   * Compressible thermal module          -> static & recovery (skin) temperature.
@@ -92,6 +113,22 @@ from scipy.interpolate import PchipInterpolator
 
 # np.trapz was removed in NumPy 2.0 in favour of np.trapezoid; bind whichever exists
 _trapz = getattr(np, "trapezoid", None) or np.trapz
+
+# --------------------------------------------------------------------------- #
+#  MODEL/DISCRETISATION CONSTANTS -- the single source of truth.
+#
+#  03_model_setup/generate_setup.py IMPORTS these when it writes
+#  solver_config.json, instead of restating them. Every one of them used to be a
+#  literal in this file AND a literal in that config: f_min, n_panels,
+#  domain_chords, the default grid and near_wall_cells_masked. The two copies
+#  happened to agree, but nothing made them agree -- the config would have gone
+#  on describing a reconstruction the solver had stopped performing.
+# --------------------------------------------------------------------------- #
+F_MIN = 0.02                       # floor on the separation point f
+N_PANELS_DEFAULT = 160             # panels around the closed section
+DOMAIN_CHORDS = (-1.0, 2.0, -1.2, 1.2)      # field domain, in chords
+GRID_NX_DEFAULT, GRID_NY_DEFAULT = 260, 200  # field grid when none is given
+NEAR_WALL_CELLS_MASKED = 1         # rings of cells blanked around the body
 
 # --------------------------------------------------------------------------- #
 #  STATIC SEPARATION CALIBRATION  (Kirchhoff inverse from a static polar)
@@ -110,13 +147,13 @@ def calibrate_separation(alpha_deg, Cl, Cd, CNalpha):
         else:
             ratio = CN[i]/(CNalpha*a[i])
             sf = 2.0*np.sqrt(max(ratio, 0.0)) - 1.0
-            f[i] = float(np.clip(sf, np.sqrt(0.02), 1.0)**2)
+            f[i] = float(np.clip(sf, np.sqrt(F_MIN), 1.0)**2)
     # monotone, smooth interpolant on |alpha|; clamp ends
     order = np.argsort(alpha_deg)
     ad = np.asarray(alpha_deg, float)[order]; fd = f[order]
     interp = PchipInterpolator(ad, fd, extrapolate=False)
     amin, amax = ad.min(), ad.max()
-    F_MIN, S_EXT = 0.02, 3.0        # floor, and decay length past the data (deg)
+    S_EXT = 3.0                     # decay length past the data (deg); floor is F_MIN
     f_end = float(interp(amax))     # separation point AT the last measured alpha
     def f_static(alpha_query_deg):
         q = np.abs(np.asarray(alpha_query_deg, float))
@@ -149,11 +186,27 @@ def solve_dynamic_stall(alpha_mean_deg, alpha_amp_deg, k, M, c, U,
 
     beta2 = max(1.0 - M*M, 1e-3)
     Kalpha = 0.75/(1.0 - M + np.pi*np.sqrt(beta2)*M*M*(p["A1"]*p["b1"]+p["A2"]*p["b2"]))
-    # impulsive time constant T_I = Kalpha*c/a with a = U/M, the speed of sound
-    # implied by the case. This was written as M*340.0: a hardcoded sea-level
-    # value that contradicted both the comment beside it and the T_I = Kalpha*c/a
-    # of the report, and made the march weakly dependent on U for any case whose
-    # speed of sound is not exactly 340 m/s.
+    # IMPULSIVE TIME CONSTANT. T_I = Kalpha*c/U, i.e. Kalpha*c/(M*a) with
+    # a = U/M the speed of sound implied by the case. Expressed in the semichord
+    # time the rest of the march runs in, dt/T_I = ds/(2*Kalpha), so the
+    # impulsive lag is a fixed 2*Kalpha semichords and the march stays chord-
+    # and speed-independent (test_frame_independence in the validation stage
+    # asserts that).
+    #
+    # This is NOT the classical Leishman-Beddoes T_I = c/a: it is larger by 1/M
+    # (3.3x at M = 0.30), and the amplitude 4*Kalpha*c/(U*M) below carries the
+    # same extra 1/M against the classical 4*Kalpha*c/U. The choice is stated
+    # rather than silent because it is a real departure, and it is the
+    # convention the calibrated constants in solver_config.json were fitted
+    # with: swapping both terms to the classical scaling and re-running the five
+    # real NACA 0012 frames with these same constants moves the held-out mean
+    # peak-lift error from 1.7 % to 3.0 %. Re-deriving it would require
+    # re-calibrating against data this study does not ship, so the implemented
+    # form is kept and documented (report section 4.3 states this T_I, not c/a).
+    #
+    # The denominator was once the literal M*340.0 -- a hardcoded sea-level
+    # speed of sound that made the march weakly dependent on U for any case
+    # whose speed of sound is not 340 m/s. U = M*a removes that.
     TI = Kalpha*c/U                           # a = U/M  =>  Kalpha*c/(M*a) = Kalpha*c/U
 
     omega = 2.0*k*U/c
@@ -207,7 +260,7 @@ def solve_dynamic_stall(alpha_mean_deg, alpha_amp_deg, k, M, c, U,
         fprime = float(f_static(np.degrees(af)))
         # (2b) boundary-layer lag -> dynamic separation point
         Df[n] = Df[n-1]*Etf + (fprime - fprime_prev)*Etfh
-        fpp[n] = np.clip(fprime - Df[n], 0.02, 1.0)
+        fpp[n] = np.clip(fprime - Df[n], F_MIN, 1.0)
         fprime_prev = fprime
         # (1c) separated circulatory normal force (Kirchhoff) + impulsive
         Kf = ((1.0+np.sqrt(fpp[n]))/2.0)**2
@@ -339,7 +392,7 @@ def damping_verdict(Xi_hat, tol=DAMPING_TOL):
 # --------------------------------------------------------------------------- #
 #  FIELD RECONSTRUCTION  (source panels + bound vortex sheet + Lamb-Oseen DSV)
 # --------------------------------------------------------------------------- #
-def _airfoil_surface(naca_csv, c, n_panel=160):
+def _airfoil_surface(naca_csv, c, n_panel=N_PANELS_DEFAULT):
     """Panel end-points around a CLOSED section, clustered at BOTH the leading
     and the trailing edge.
 
@@ -507,10 +560,23 @@ def _dsv_velocity(X, Y, xv, yv, Gv, rc):
     return du, dv, r2
 
 
+# Fallback air properties, used only when a caller does not pass the values
+# 03_model_setup/material_thermo_properties.csv publishes (run_case.py always
+# does). They are DERIVED here for the same reason they are derived there:
+# the literals that used to sit in this signature, cp = 1004.5 and
+# recovery = 0.892, were the very pair that stage removed for contradicting
+# their own definitions (gamma*R/(gamma-1) = 1004.68, Pr^(1/3) = 0.8963).
+_GAMMA_DEF, _RGAS_DEF, _PR_DEF = 1.4, 287.05, 0.72
+_CP_DEF  = _GAMMA_DEF*_RGAS_DEF/(_GAMMA_DEF - 1.0)
+_REC_DEF = _PR_DEF**(1.0/3.0)
+
+
 def reconstruct_field(naca_csv, c, U, M, alpha_deg, CL, CNv,
-                      tau_over_Tvl, domain=(-1.0, 2.0, -1.2, 1.2),
-                      nx_grid=260, ny_grid=200, gamma=1.4,
-                      T_inf=288.15, cp=1004.5, recovery=0.892, R_gas=287.05):
+                      tau_over_Tvl, domain=DOMAIN_CHORDS,
+                      nx_grid=GRID_NX_DEFAULT, ny_grid=GRID_NY_DEFAULT,
+                      gamma=_GAMMA_DEF,
+                      T_inf=288.15, cp=_CP_DEF, recovery=_REC_DEF,
+                      R_gas=_RGAS_DEF):
     """Reconstruct 2D flow field at one instant. Returns grids of velocity,
     pressure coefficient, static & recovery temperature, vorticity, plus the
     DSV location. Lifting circulation matched to the UIBS CL and carried on the
@@ -606,12 +672,14 @@ def reconstruct_field(naca_csv, c, U, M, alpha_deg, CL, CNv,
     from matplotlib.path import Path as MplPath
     poly = MplPath(np.column_stack([xp, yp]))
     inside = poly.contains_points(np.column_stack([X.ravel(), Y.ravel()])).reshape(X.shape)
-    masked = inside.copy()                       # 8-connected dilation by one cell
-    for sx in (-1, 0, 1):
-        for sy in (-1, 0, 1):
-            if sx == 0 and sy == 0:
-                continue
-            masked |= np.roll(np.roll(inside, sy, axis=0), sx, axis=1)
+    masked = inside.copy()                       # 8-connected dilation
+    for _ring in range(NEAR_WALL_CELLS_MASKED):  # the count the config publishes
+        _seed = masked.copy()
+        for sx in (-1, 0, 1):
+            for sy in (-1, 0, 1):
+                if sx == 0 and sy == 0:
+                    continue
+                masked |= np.roll(np.roll(_seed, sy, axis=0), sx, axis=1)
     for arr in (u, v, speed, Cp, T_static, T_recovery, Mlocal, vort):
         arr[masked] = np.nan
 
@@ -666,13 +734,51 @@ def surface_cp(naca_csv, c, U, M, alpha_deg, CL, CNv, tau_over_Tvl):
     Cp = (1.0 - (speed/U)**2
           + _core_pressure_deficit(np.sqrt(r2), abs(Gv), rc, U))
     # NOT clipped. The potential-flow leading-edge suction peak reaches Cp =
-    # -16 at 17.5 deg, and the -8 clip the FIELD uses for display truncated it,
-    # which by itself cost -5.9% of the closure once the errors above were
-    # fixed. A real boundary layer separates long before that peak is reached;
-    # that is a limitation of reconstructing from potential flow, and it is
-    # stated rather than hidden by a clip.
+    # -15.4 at 17.5 deg. Neither this nor the field is clipped any more, and
+    # reinstating the old -8 display clip HERE would be a real error rather than
+    # a cosmetic one: measured, it takes the closure at 17.5 deg from -0.58 % to
+    # -5.86 %. (At 10 deg the peak never reaches -8, so the same clip costs
+    # nothing there -- which is why it looked harmless.) A real boundary layer
+    # separates long before that peak is reached; that is a limitation of
+    # reconstructing from potential flow, and it is stated rather than hidden.
     upper = yc >= 0
     return xc/c, Cp, upper
+
+
+def dsv_core_cp(naca_csv, c, U, M, alpha_deg, CL, CNv, tau_over_Tvl):
+    """Cp at the CENTRE of the reconstructed dynamic-stall vortex, evaluated
+    exactly at that point.
+
+    This is what metrics_*.csv publishes as Cp_DSV_core_min. It used to be read
+    off the reconstructed field as the value at whichever grid node happened to
+    lie nearest the vortex centre, which made a grid-independent quantity look
+    as though it were not: the same instant of Case A gave -0.425 on a 110x85
+    grid, -0.381 at 220x170, -0.358 at 440x340 and -0.368 at 880x680 -- drift
+    and non-monotonicity that were entirely the sampling point moving, not the
+    reconstruction changing. Evaluated here there is one number.
+
+    The panel regularisation used is the panel-spacing one only; the field's
+    eps2 also carries a grid term, which has no meaning away from a grid, and
+    the core sits at least 0.10c off the surface where neither matters.
+
+    Returns (xv, yv, Cp_at_the_centre).
+    """
+    alpha = np.radians(alpha_deg)
+    Gamma = 0.5*CL*U*c
+    xp, yp = _airfoil_surface(naca_csv, c)
+    xc, yc, L, sigma, gam = _solve_panels(xp, yp, U, alpha, Gamma)
+    xv = (0.25 + 0.55*np.clip(tau_over_Tvl, 0, 1.3))*c
+    yv = 0.10*c + 0.06*c*np.clip(tau_over_Tvl, 0, 1.3)
+    Gv = DSV_GAMMA_FACTOR*max(CNv, 0.0)*U*c
+    rc = DSV_CORE_RADIUS_CHORDS*c
+    X = np.array([xv]); Y = np.array([yv])
+    du_p, dv_p = _panel_velocity(X, Y, xc, yc, L, sigma, gam, (0.6*L.mean())**2)
+    du_v, dv_v, r2 = _dsv_velocity(X, Y, xv, yv, Gv, rc)
+    u = U*np.cos(alpha) + du_p + du_v
+    v = U*np.sin(alpha) + dv_p + dv_v
+    speed = np.hypot(u, v)
+    cp = 1.0 - (speed/U)**2 + _core_pressure_deficit(np.sqrt(r2), abs(Gv), rc, U)
+    return float(xv), float(yv), float(cp[0])
 
 
 def kutta_reference_CL(naca_csv, c, U, M, alpha_deg):
@@ -712,7 +818,8 @@ def surface_load_closure(naca_csv, c, U, M, alpha_deg, CL, CNv, tau_over_Tvl):
     kutta_reference_CL() computes. The reconstruction is deliberately handed the
     indicial C_L instead, so the jump is a measure of how far the modelled flow
     is from attached. It is linear in the imposed C_L, with a measured
-    jump/|CL - CL_kutta| of 2.4-2.5 over alpha = 2-19 deg.
+    jump/|CL - CL_kutta| of 1.91-2.02 over alpha = 2-19 deg (falling
+    monotonically with incidence), at the 160 panels the study uses.
 
     The integral is taken over the same panels the solution was built on, with
     Cp at the control points. It previously summed a mean of END-POINT Cp values

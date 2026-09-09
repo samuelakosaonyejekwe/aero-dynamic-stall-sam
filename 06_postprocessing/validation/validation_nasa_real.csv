@@ -1,7 +1,7 @@
-frame,airfoil,role,M,k,alpha0_deg,amp_deg,RMS_CL,RMS_CM,CLmax_model,CLmax_exp,CMmin_model,CMmin_exp,Xihat_model,Xihat_exp,airfoil_source
-frame_9302,NACA 0012,"calibration (10°±10°, k0.10 = Case A)",0.302,0.096,9.8,9.9,0.2612,0.054,1.882,1.844,-0.224,-0.239,-0.0152,0.1284,load_frame.m mapping (Pancini repo); data NASA TM-84245
-frame_9217,NACA 0012,"held-out: deep stall 15°±10°, k0.10",0.29,0.098,15.0,10.0,0.262,0.1006,2.053,2.072,-0.315,-0.318,0.1467,0.1869,load_frame.m mapping (Pancini repo); data NASA TM-84245
-frame_9214,NACA 0012,"held-out: deep stall 15°±10°, k0.05",0.292,0.049,15.0,10.0,0.2531,0.0674,1.7,1.702,-0.235,-0.25,0.0417,0.1416,load_frame.m mapping (Pancini repo); data NASA TM-84245
-frame_7113,NACA 0012,"held-out: light stall 10°±5°, k0.10",0.301,0.099,10.0,4.9,0.1315,0.0256,1.512,1.533,-0.055,-0.085,-0.047,-0.0235,load_frame.m mapping (Pancini repo); data NASA TM-84245
-frame_10118,NACA 0012,"held-out: 15°±5°, k0.10",0.291,0.102,15.0,5.0,0.1335,0.0568,1.684,1.763,-0.206,-0.163,0.0039,0.0544,load_frame.m mapping (Pancini repo); data NASA TM-84245
-frame_25104,AMES-01,"cross-check (NOT NACA0012): 10°±10°, k0.10",0.302,0.098,9.9,9.9,0.1771,0.0584,1.894,2.102,-0.229,-0.292,-0.0136,0.1086,load_frame.m mapping (Pancini repo); data NASA TM-84245
+frame,airfoil,role,M,k,alpha0_deg,amp_deg,peak_alpha_deg,within_static_calibration,RMS_CL,RMS_CM,CLmax_model,CLmax_exp,CMmin_model,CMmin_exp,Xihat_model,Xihat_exp,airfoil_source
+frame_9302,NACA 0012,"calibration (10°±10°, k0.10 = Case A)",0.302,0.096,9.8,9.9,19.7,True,0.2612,0.054,1.882,1.844,-0.224,-0.239,-0.0152,0.1284,load_frame.m mapping (Pancini repo); data NASA TM-84245
+frame_9217,NACA 0012,"held-out: deep stall 15°±10°, k0.10",0.29,0.098,15.0,10.0,25.0,False,0.262,0.1006,2.053,2.072,-0.315,-0.318,0.1467,0.1869,load_frame.m mapping (Pancini repo); data NASA TM-84245
+frame_9214,NACA 0012,"held-out: deep stall 15°±10°, k0.05",0.292,0.049,15.0,10.0,25.0,False,0.2531,0.0674,1.7,1.702,-0.235,-0.25,0.0417,0.1416,load_frame.m mapping (Pancini repo); data NASA TM-84245
+frame_7113,NACA 0012,"held-out: light stall 10°±5°, k0.10",0.301,0.099,10.0,4.9,14.9,True,0.1315,0.0256,1.512,1.533,-0.055,-0.085,-0.047,-0.0235,load_frame.m mapping (Pancini repo); data NASA TM-84245
+frame_10118,NACA 0012,"held-out: 15°±5°, k0.10",0.291,0.102,15.0,5.0,20.0,True,0.1335,0.0568,1.684,1.763,-0.206,-0.163,0.0039,0.0544,load_frame.m mapping (Pancini repo); data NASA TM-84245
+frame_25104,AMES-01,"cross-check (NOT NACA0012): 10°±10°, k0.10",0.302,0.098,9.9,9.9,19.8,True,0.1771,0.0584,1.894,2.102,-0.229,-0.292,-0.0136,0.1086,load_frame.m mapping (Pancini repo); data NASA TM-84245

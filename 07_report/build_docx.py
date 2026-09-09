@@ -277,7 +277,21 @@ _ic = json.load(open(ROOT/"03_model_setup"/"solver_config.json"))["indicial_circ
 EQ(r"(A_{1},A_{2},b_{1},b_{2})=(%.2f,\;%.2f,\;%.2f,\;%.2f)"
    % (_ic["A1"], _ic["A2"], _ic["b1"], _ic["b2"]))
 H("4.3 Non-circulatory (impulsive / added-mass) loads", 2)
-EQ(r"K_{\alpha}=\frac{0.75}{1-M+\pi\beta M^{2}(A_{1}b_{1}+A_{2}b_{2})},\qquad T_{I}=\frac{K_{\alpha}c}{a}")
+EQ(r"K_{\alpha}=\frac{0.75}{1-M+\pi\beta M^{2}(A_{1}b_{1}+A_{2}b_{2})},\qquad "
+   r"T_{I}=\frac{K_{\alpha}c}{U}=\frac{K_{\alpha}c}{M\,a}")
+P("The impulsive time constant as implemented, written out because it is a "
+  "stated departure rather than a silent one. In semichord time Δt/T_I = "
+  "Δs/(2K_α), so the impulsive lag is a fixed 2K_α semichords and the march "
+  "stays chord- and speed-independent. This is NOT the classical "
+  "Leishman–Beddoes T_I = c/a: it is larger by 1/M (3.3× at M = 0.30), and the "
+  "amplitude 4K_αc/(UM) below carries the same extra 1/M against the classical "
+  "4K_αc/U. It is the convention the calibrated constants of §10 were fitted "
+  "with; swapping both terms to the classical scaling and re-running the five "
+  "real NACA 0012 frames of §12.2 with those same constants moves the held-out "
+  "mean peak-lift error from 1.7 % to 3.0 %, so the implemented form is kept "
+  "and documented rather than silently reinterpreted. This equation previously "
+  "read T_I = K_αc/a, which the solver has never computed.",
+  italic=True, size=10)
 EQ(r"D_{I}^{\,n}=D_{I}^{\,n-1}e^{-\Delta t/T_{I}}+\left(\dot\alpha_{3/4}^{\,n}-\dot\alpha_{3/4}^{\,n-1}\right)e^{-\Delta t/2T_{I}}")
 EQ(r"C_{N}^{I}=\frac{4K_{\alpha}c}{UM}\left(\dot\alpha_{3/4}-D_{I}\right),\qquad C_{N}^{P}=C_{N}^{C}+C_{N}^{I}")
 H("4.4 Trailing-edge separation (pressure & boundary-layer lags, Kirchhoff)", 2)
@@ -309,8 +323,9 @@ EQ(r"\Xi=-\oint C_{M}\,d\alpha,\qquad \hat\Xi=\frac{\Xi}"
 P("A verdict is only reported outside a neutral band. That band is set by the model’s "
   "own demonstrated accuracy in this quantity — the mean discrepancy between the "
   "modelled and measured Ξ̂ over the real NACA 0012 loops of §12.2 — "
-  "not by the time-step error, which is some 45 times smaller "
-  "(refining 720 → 5760 steps/cycle moves Ξ̂ by 0.0004). The measured "
+  "not by the time-step error, which is some 180 times smaller than the band "
+  "(refining 720 → 5760 steps/cycle moves Ξ̂ by 0.0004, against a band of "
+  "0.08). The measured "
   "spread and the band in force are both tabulated in §12.2.", italic=True, size=10)
 H("4.7 Field reconstruction (pressure / velocity / vorticity)", 2)
 EQ(r"\sum_{j}\sigma_{j}\left(\frac{\partial\phi_{j}}{\partial n}\right)_{i}=-\,\mathbf{U}_{\infty}\!\cdot\mathbf{n}_{i}")
@@ -319,13 +334,18 @@ P("Bound circulation from Kutta–Joukowski, carried as a uniform vortex sheet o
   "satisfies the Kutta condition to within the residual quoted in §4.9:")
 EQ(r"\Gamma=\frac{1}{2}C_{L}U c,\qquad \gamma=\frac{\Gamma}{\oint \mathrm{d}s}")
 EQ(r"V_{\theta}=\frac{\Gamma_{v}}{2\pi r}\left(1-e^{-r^{2}/r_{c}^{2}}\right),\qquad \Gamma_{v}\propto C_{N}^{v}")
-P("Surface/field pressure coefficient with Prandtl–Glauert compressibility. The "
+P("Surface and field pressure coefficient. There is deliberately NO "
+  "Prandtl–Glauert factor on this expression, and the equation used to carry "
+  "one: compressibility has already entered through β in the indicial march "
+  "that produced the C_L, and Γ = ½ C_L U c hands that C_L to the "
+  "reconstruction, so a second 1/√(1−M²) here multiplies the reconstructed load "
+  "again — 4.8 % at M = 0.3, one of the three errors dissected in §4.9. The "
   "Bernoulli term holds only where the flow is irrotational, so inside the "
   "dynamic-stall vortex core it is corrected to radial equilibrium "
   "(dp/dr = ρvθ²/r); the correction decays to zero outside the core, "
   "where radial equilibrium and Bernoulli agree:")
-EQ(r"C_{p}=\frac{1}{\sqrt{1-M^{2}}}\left[\,1-\left(\frac{V}{U}\right)^{2}"
-  r"+\Delta C_{p}^{\,\mathrm{core}}(r)\,\right]")
+EQ(r"C_{p}=1-\left(\frac{V}{U}\right)^{2}"
+  r"+\Delta C_{p}^{\,\mathrm{core}}(r)")
 EQ(r"\Delta C_{p}^{\,\mathrm{core}}(r)=-\frac{2}{U^{2}}\int_{r}^{\infty}"
   r"\frac{V_{\theta}^{2}}{r'}\,\mathrm{d}r' + \left(\frac{V_{\theta}}{U}\right)^{2}")
 H("4.8 Compressible thermal module", 2)
@@ -344,14 +364,26 @@ _mB_c = pd.read_csv(ROOT/"05_solution"/"metrics_B_application.csv").set_index("m
 bullet("Closure. Integrating the reconstructed surface C_p must return the C_L the "
        "reconstruction was given (Γ = ½ C_L U c). At peak incidence it returns it to "
        f"{_mA_c['Cp_closure_error_pct']} % (Case A) and {_mB_c['Cp_closure_error_pct']} % "
-       "(Case B), published as Cp_closure_error_pct in metrics_*.csv.")
+       "(Case B), published as Cp_closure_error_pct in metrics_*.csv. That is a "
+       "single instant and is not a bound on the cycle, which an earlier revision "
+       "implied it was. What is measured over the whole cycle is the worst ABSOLUTE "
+       "residual, in C_L counts: "
+       f"{_mA_c['Cp_closure_worst_dCL_cycle']} (Case A) and "
+       f"{_mB_c['Cp_closure_worst_dCL_cycle']} (Case B), i.e. "
+       f"{_mA_c['Cp_closure_worst_dCL_pct_of_CLmax']} % and "
+       f"{_mB_c['Cp_closure_worst_dCL_pct_of_CLmax']} % of each case's own C_L,max "
+       "(Cp_closure_worst_dCL_cycle and Cp_closure_worst_dCL_pct_of_CLmax). It is "
+       "reported in C_L counts rather than as a worst instantaneous percentage "
+       "because the cycle passes through C_L = 0.09, where a residual of 0.0014 "
+       "reads as +1.6 % purely from the small denominator.")
 bullet("Kutta condition. The trailing-edge C_p jump is NOT a residual that can be "
        "driven to zero, and is no longer presented as one. It is linear in the "
        "imposed C_L and passes through zero exactly at the inviscid attached "
        "circulation, published beside it as CL_kutta_inviscid "
        f"({_mA_c['CL_kutta_inviscid']} for Case A); imposing that value drives the "
-       "jump to about 0.001, and the measured ratio jump/|C_L − C_L,Kutta| is 2.4–2.5 "
-       "across α = 2–19°. The reconstruction is instead handed the indicial C_L, "
+       "jump to about 0.001, and the measured ratio jump/|C_L − C_L,Kutta| is "
+       "1.91–2.02 across α = 2–19°, falling monotonically with incidence. The "
+       "reconstruction is instead handed the indicial C_L, "
        "which during dynamic stall departs from the attached value deliberately, so a "
        "body carrying a non-Kutta circulation must show a jump. Over the cycle phases "
        f"written out it reaches {_mA_c['Cp_TE_jump_max_over_phases']} (Case A) and "
@@ -454,11 +486,12 @@ P(f"The UNISTALL™ figure is this study's own measured CPU time for the Case-A 
   "several seconds more. The other columns are order-of-magnitude figures from "
   "the literature, not measurements made here.", italic=True, size=10)
 P("That figure is a property of this implementation, not of the method. Profiling "
-  "the march shows 63 % of it is spent inside the static separation function, "
+  "the march puts about 60 % of it inside the static separation function, "
   "which is a vectorised SciPy/NumPy interpolation called once per step on a "
   "single scalar — per-call overhead, not arithmetic. A compiled or "
   "batch-evaluated implementation of the same equations would run far faster; "
-  "the claim made here is only the wall time this code actually took.",
+  "the claim made here is only the CPU time this code actually took, which is "
+  "the same measure as the table above and not a wall-clock figure.",
   italic=True, size=10)
 
 # ================================================================ 7 GEOMETRY
@@ -565,12 +598,37 @@ P("Airfoil identity is CONFIRMED (not inferred) from that repository's "
 # The CSV has 16 columns; the previous max_cols=13 silently dropped exactly the
 # two the damping paragraph below points the reader at.
 _nr = pd.read_csv(ROOT/"06_postprocessing"/"validation"/"validation_nasa_real.csv")
+# TWO tables, conditions then errors, not one wide one. Adding peak_alpha_deg and
+# within_static_calibration to the single 13-column table took it to 15 and
+# squeezed the columns until the "airfoil" header broke mid-word -- which
+# verify_invariants caught. Splitting on the natural seam (what was run vs how
+# well it matched) gives 9 and 7 columns, both of which fit at full size.
 add_table_from_df(_nr[["frame", "airfoil", "role", "M", "k", "alpha0_deg", "amp_deg",
-                       "RMS_CL", "RMS_CM", "CLmax_model", "CLmax_exp",
+                       "peak_alpha_deg", "within_static_calibration"]],
+                  max_rows=8, max_cols=9,
+                  note="conditions; airfoil identity source is the same for every row "
+                       "(load_frame.m mapping, Pancini repo; data NASA TM-84245). "
+                       "peak_alpha_deg = alpha0 + amplitude; within_static_calibration "
+                       "is False where that peak exceeds the incidence the static "
+                       "separation law is fitted to")
+P("Errors against the same measured loops:", bold=True)
+add_table_from_df(_nr[["frame", "RMS_CL", "RMS_CM", "CLmax_model", "CLmax_exp",
                        "CMmin_model", "CMmin_exp"]],
-                  max_rows=8, max_cols=13,
-                  note="loads; airfoil identity source is the same for every row "
-                       "(load_frame.m mapping, Pancini repo; data NASA TM-84245)")
+                  max_rows=8, max_cols=7)
+P("Two of the four held-out frames extrapolate, and it costs accuracy. Frames 9217 "
+  "and 9214 are 15° ± 10°, so they peak at 25° — five degrees past the "
+  f"{float(_vs['static polar calibrated to [deg]']):.0f}° the static polar the separation law "
+  "is fitted to is tabulated to. Every other part of this study flags that boundary: "
+  "the response surface of §13 is bounded by it, the model polar carries a "
+  "within_calibration column, the field-sampling incidences stop just inside it, and "
+  "the calibration figures draw the extrapolated tail dashed. This validation did not, "
+  "and the split is material — mean RMS C_L is "
+  f"{_vs['mean RMS_CL, inside the calibration range']} over the two held-out frames "
+  f"inside the calibration range against "
+  f"{_vs['mean RMS_CL, peaking past it']} over the two beyond it, roughly double. The "
+  "per-frame within_static_calibration column above, the split means in the summary "
+  "table below, and the shaded band on Fig. 12.2 all record it rather than leaving a "
+  "reader to notice that two of the loops run past the fit.", italic=True, size=10)
 P("Normalised aerodynamic damping, model against the same measured loops "
   "(per-frame; the spread over these rows is what sets the neutral band):", bold=True)
 add_table_from_df(_nr[["frame", "airfoil", "Xihat_model", "Xihat_exp"]],
@@ -707,6 +765,14 @@ P("Honesty note: the static comparison (§12.1) is a calibration check (the stat
   "harness (§12.3) is provided for the specific digitised loops required for formal "
   "certification. Digitised-data source: L. Pancini, BL-DSM-JFS-2021 repository "
   "(original data NASA TM-84245).", italic=True)
+P("Licensing of that data. The six frame_*.mat files this study redistributes in "
+  "06_postprocessing/validation/experimental/nasa_frames/, and the exp_frame_*.csv "
+  "extracts taken from them, are third-party data and are NOT covered by the CC BY "
+  "4.0 grant that covers the rest of this repository — they are not the author's to "
+  "license. The original measurements are NASA TM-84245, a work of the U.S. "
+  "Government; the files were obtained from the BL-DSM-JFS-2021 repository, which "
+  "states no licence of its own. See NOTICE and that directory's PROVENANCE.txt.",
+  italic=True, size=10)
 for s in [
  "[S1] Sheldahl, R.E. & Klimas, P.C. (1981). Aerodynamic Characteristics of Seven "
  "Symmetrical Airfoil Sections..., SAND80-2114, Sandia National Laboratories.",

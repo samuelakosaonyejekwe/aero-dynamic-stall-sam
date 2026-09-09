@@ -12,3 +12,22 @@ if changes were made.
 Suggested attribution:
   "Dynamic-Stall Prediction — UNISTALL (UIBS core), Akosa Samuel Onyejekwe,
    2026, licensed under CC BY 4.0."
+
+THIRD-PARTY DATA — NOT COVERED BY THE ABOVE GRANT
+
+The six files in
+  06_postprocessing/validation/experimental/nasa_frames/frame_*.mat
+are redistributed third-party experimental data. They were not produced by this
+study; they are not the author's to license, and the CC BY 4.0 grant above does
+not extend to them. The original measurements are McCroskey, McAlister, Carr &
+Pucci (1982), NASA TM-84245, a work of the U.S. Government; the files were
+obtained from L. Pancini, "BL-DSM-JFS-2021"
+(https://github.com/luizpancini/BL-DSM-JFS-2021), which states no licence of its
+own. The CSV extracts written beside them
+(06_postprocessing/validation/exp_frame_*_CL.csv and *_CM.csv) are derived from
+that same data and carry the same caveat. See
+06_postprocessing/validation/experimental/nasa_frames/PROVENANCE.txt.
+
+Everything else in this repository — the solver, the pipeline, the generated
+datasets, the figures, the engineering drawings and the technical report — is
+the author's own work and is covered by the CC BY 4.0 grant above.

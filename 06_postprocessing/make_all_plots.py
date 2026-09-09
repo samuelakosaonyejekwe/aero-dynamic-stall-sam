@@ -151,8 +151,12 @@ axs[1].plot(mp["alpha_deg"][_cal], mp["f_sep"][_cal], color=PALETTE[2], lw=2.2)
 axs[1].plot(mp["alpha_deg"][_ext], mp["f_sep"][_ext], color=PALETTE[2], lw=2.2,
             ls=(0, (4, 2)))
 axs[1].axvline(_ACAL, color=INK_SOFT, lw=0.9, ls=":")
-axs[1].text(_ACAL, 0.97, f" calibrated to {_ACAL:.0f}°;\n dashed is extrapolation",
-            transform=axs[1].get_xaxis_transform(), va="top", ha="left",
+# ha="right", inside the axes. Anchored left of the line it ran off the right
+# edge of the frame -- the calibration limit is at 20 deg and the axis stops at
+# 22, so a left-anchored two-word line had nowhere to go. The band above the
+# curve to the LEFT of the limit is empty (f is below 0.2 there), so it fits.
+axs[1].text(_ACAL - 0.4, 0.97, f"calibrated to {_ACAL:.0f}°;\ndashed is extrapolation",
+            transform=axs[1].get_xaxis_transform(), va="top", ha="right",
             fontsize=8.5, color=INK_SOFT)
 axs[1].set_xlabel("α [deg]"); axs[1].set_ylabel("separation point  f")
 axs[1].set_title("Calibrated static separation  f(α)", pad=10)
@@ -163,6 +167,12 @@ save(fig, "static_polar_calibration.png")
 # axis -- which left 4 of 6 points off the chart and made it look broken. Floor
 # the zeros and mark them as converged-to-machine-precision instead.
 FLOOR = 1e-8
+# Once both cases reach the floor their curves and markers coincide EXACTLY, so
+# whichever is drawn second hid the other: cycles 5 and 6 showed one case where
+# there are two. Distinct dash patterns and marker shapes let the lower curve
+# show through the upper one, without moving either off its true value.
+_LS = ["-", (0, (6, 3))]
+_MK = ["o", "s"]
 fig, ax = plt.subplots(figsize=(7.5, 4.6))
 ncyc = 0
 for i, cs in enumerate(CASES):
@@ -172,9 +182,11 @@ for i, cs in enumerate(CASES):
     m = ~np.isnan(r)
     conv = m & (r <= 0)
     rp = np.where(conv, FLOOR, r)
-    ax.semilogy(x[m], rp[m], "-", color=PALETTE[i], lw=2, label=cs.replace("_", " "))
-    ax.plot(x[m & ~conv], rp[m & ~conv], "o", color=PALETTE[i], ms=6)
-    ax.plot(x[conv], rp[conv], "o", ms=6, mfc="white", mec=PALETTE[i], mew=1.5)
+    ax.semilogy(x[m], rp[m], ls=_LS[i % 2], color=PALETTE[i], lw=2,
+                label=cs.replace("_", " "))
+    ax.plot(x[m & ~conv], rp[m & ~conv], _MK[i % 2], color=PALETTE[i], ms=6)
+    ax.plot(x[conv], rp[conv], _MK[i % 2], ms=7 - 1.5*i, mfc="white",
+            mec=PALETTE[i], mew=1.5)
 ax.axhline(FLOOR, color=INK_SOFT, lw=0.8, ls=":")
 ax.set_ylim(FLOOR/4, None); ax.set_xlim(0.7, ncyc + 0.3)
 ax.set_xticks(range(1, ncyc + 1))
@@ -268,8 +280,14 @@ for ff in field_files:
     pre = f"{cs}_{tag}_{adeg}"
     U = CASES[cs]["U"]
     # pressure
+    # Cp scale is FIXED across all eight fields, not fitted to each one, so the
+    # panels can be compared with each other; the colorbar extends at both ends
+    # and nothing is clipped in the data. -5.0 is just inside the deepest value
+    # any published field reaches (-5.17, the Case-A dsv field), and +1.0 is the
+    # stagnation bound Cp cannot exceed -- verify_invariants asserts that bound.
+    CP_SCALE = (-5.0, 1.0)
     contour_plot(xu, yu, F["Cp"], f"Pressure coefficient $C_p$ — {tag} ({adeg.replace('a','α=')}°)",
-                 "$C_p$", CMAP_CP, c, f"contour_Cp_{pre}.png", lines=True, vlim=(-5.0, 1.0))
+                 "$C_p$", CMAP_CP, c, f"contour_Cp_{pre}.png", lines=True, vlim=CP_SCALE)
     # velocity magnitude + streamlines
     contour_plot(xu, yu, F["speed_ms"], f"Velocity magnitude + streamlines — {tag}",
                  "|V| [m/s]", CMAP_PRESSURE, c, f"contour_speed_stream_{pre}.png",

@@ -11,7 +11,9 @@ all solution data to 05_solution/.  Outputs:
   model_static_polar.csv       quasi-steady model polar, with
                                within_calibration marking the rows inside the
                                static reference's tabulated range
-  metrics_<case>.csv           engineering scalar metrics (deterministic)
+  metrics_<case>.csv           engineering scalar metrics (deterministic),
+                               including the surface-Cp closure both at peak
+                               lift and at its worst over the reported cycle
   summary_all_cases.csv        one row per case: the headline scalars
   runtime_environment.csv      the machine, and the CPU time the march took on it
   convergence/residuals_<case>.csv   cycle-to-cycle convergence
@@ -35,6 +37,13 @@ cfg = json.load(open(SETUP/"solver_config.json"))
 CNALPHA = cfg["lift_curve_slope_CNalpha_per_rad"]
 NPC  = cfg["numerics"]["steps_per_cycle"]
 NCYC = cfg["numerics"]["n_cycles"]
+# field-reconstruction grid: READ from the config, which declares these as "the
+# sizes written to 05_solution/field_*.csv". They used to be inline literals in
+# the field-writing loop, so the config could say one thing and the artifacts be
+# another -- and the DSV-core metric, which forgot them entirely, was measured on
+# a different grid from the fields it describes.
+NX_SOL = cfg["field_reconstruction"]["grid_nx_solution"]
+NY_SOL = cfg["field_reconstruction"]["grid_ny_solution"]
 consts = dict(**cfg["indicial_circulatory"], **cfg["time_constants_semichords"])
 # ---- calibrated constants (single source of truth; calibrated to REAL NACA0012
 #      frame 9302 from NASA TM-84245 — see 06_postprocessing/validation) ----
@@ -186,6 +195,32 @@ for name, C in CASES.items():
     _clcp, cp_closure_pct, _ = us.surface_load_closure(
         GEO, C["c"], C["U"], C["M"], out["alpha_deg"][_j], out["CL"][_j],
         out["CNv"][_j], out["tau_v"][_j]/consts["Tvl"])
+    # ---- and the WORST of it over the whole cycle, not just at peak lift. The
+    #      peak-lift value alone was being read as a cycle-wide bound (the solver
+    #      docstring claimed "within 0.6 % over the whole cycle" while the
+    #      published peak-lift figure was already -0.8 %).
+    #
+    #      Reported as an ABSOLUTE residual in C_L, and as that residual against
+    #      the case's own C_L,max -- NOT as the worst instantaneous percentage.
+    #      The instantaneous percentage is not a usable bound: the cycle passes
+    #      through C_L = 0.09, where a residual of 0.0014 reads as +1.6 % purely
+    #      because the denominator is small. The absolute residual is well posed
+    #      everywhere on the loop.
+    #
+    #      Sampled on a coarse sweep of the reported cycle -- the reconstruction
+    #      costs ~10 ms a point, so every one of the 720 steps is not
+    #      affordable. CLOSURE_SAMPLES is named rather than inline so the
+    #      resolution behind the number is visible.
+    CLOSURE_SAMPLES = 73
+    cp_closure_worst_dCL = 0.0
+    _cl_at_worst = float("nan")
+    for _i in np.linspace(0, len(out["CL"])-1, CLOSURE_SAMPLES).astype(int):
+        _clr, _, _ = us.surface_load_closure(
+            GEO, C["c"], C["U"], C["M"], out["alpha_deg"][_i], out["CL"][_i],
+            out["CNv"][_i], out["tau_v"][_i]/consts["Tvl"])
+        if abs(_clr - out["CL"][_i]) > cp_closure_worst_dCL:
+            cp_closure_worst_dCL = abs(_clr - out["CL"][_i])
+            _cl_at_worst = float(out["CL"][_i])
     # ---- Kutta residual. Reported as the WORST of the phases written to
     #      cp_distribution_*.csv, not just the one at peak lift.
     #
@@ -214,13 +249,20 @@ for name, C in CASES.items():
     #      an adjective: it is the Cp at the vortex centre at the instant of
     #      peak vortex loading. Neither DSV constant can be calibrated from the
     #      data this study ships (integrated cl/cd/cm only), so the shallowness
-    #      is reported, not tuned away. ----
+    #      is reported, not tuned away.
+    #
+    #      Evaluated AT the vortex centre by us.dsv_core_cp, not read off the
+    #      reconstructed field at whichever grid node lay nearest it. The grid
+    #      version made a grid-independent quantity look grid-dependent: the same
+    #      Case-A instant gave -0.425 at 110x85, -0.381 at 220x170, -0.358 at
+    #      440x340 and -0.368 at 880x680, drifting and then reversing purely
+    #      because the sampling point moved. It also used reconstruct_field's
+    #      260x200 DEFAULT grid rather than the 220x170 the published fields are
+    #      written on, so it described no field this study ships. ----
     _v = int(np.argmax(out["CNv"]))
-    _F = us.reconstruct_field(GEO, C["c"], C["U"], C["M"], out["alpha_deg"][_v],
-                              out["CL"][_v], out["CNv"][_v],
-                              out["tau_v"][_v]/consts["Tvl"], T_inf=C["T_inf"])
-    _d = np.hypot(_F["X"]-_F["xv"], _F["Y"]-_F["yv"])
-    cp_dsv_core = float(_F["Cp"][np.unravel_index(np.nanargmin(_d), _d.shape)])
+    _, _, cp_dsv_core = us.dsv_core_cp(
+        GEO, C["c"], C["U"], C["M"], out["alpha_deg"][_v], out["CL"][_v],
+        out["CNv"][_v], out["tau_v"][_v]/consts["Tvl"])
     met = pd.DataFrame({
         "metric": ["CL_max_dynamic", "alpha_at_CLmax_deg", "CL_max_static",
                    "dynamic_overshoot_ratio", "CM_min(c/4)", "alpha_at_CMmin_deg",
@@ -229,6 +271,8 @@ for name, C in CASES.items():
                    "aero_damping_Xi_normalised", "damping_neutral_band",
                    "stall_flutter_risk",
                    "CL_hysteresis_loop_area", "Cp_closure_error_pct",
+                   "Cp_closure_worst_dCL_cycle",
+                   "Cp_closure_worst_dCL_pct_of_CLmax",
                    "Cp_TE_jump_max_over_phases", "CL_kutta_inviscid",
                    "Cp_DSV_core_min",
                    "reduced_frequency_k", "mach_M", "mean_alpha_deg", "amp_alpha_deg"],
@@ -237,7 +281,9 @@ for name, C in CASES.items():
                   round(CDmax,3), round(CDmin,3), round(CDmean,4),
                   round(float(onset),2), round(xi,5),
                   round(xi_hat,4), us.DAMPING_TOL, verdict,
-                  round(loopCL,4), round(cp_closure_pct,1), round(cp_te_jump,3),
+                  round(loopCL,4), round(cp_closure_pct,1),
+                  round(cp_closure_worst_dCL,4),
+                  round(100.0*cp_closure_worst_dCL/CLmax,2), round(cp_te_jump,3),
                   round(cl_kutta,3), round(cp_dsv_core,3),
                   C["k"], C["M"], C["a_mean"], C["a_amp"]],
     })
@@ -285,7 +331,7 @@ for name, C in CASES.items():
         fld = us.reconstruct_field(GEO, C["c"], C["U"], C["M"], out["alpha_deg"][j],
                                    out["CL"][j], out["CNv"][j],
                                    out["tau_v"][j]/consts["Tvl"], T_inf=C["T_inf"],
-                                   nx_grid=220, ny_grid=170, **THERMO)
+                                   nx_grid=NX_SOL, ny_grid=NY_SOL, **THERMO)
         dff = pd.DataFrame({
             "x_m": fld["X"].ravel().round(5), "y_m": fld["Y"].ravel().round(5),
             "u_ms": fld["u"].ravel().round(3), "v_ms": fld["v"].ravel().round(3),
@@ -299,8 +345,10 @@ for name, C in CASES.items():
         fphases.append((tag, adeg, fld["xv"], fld["yv"]))
     print(f"[run] {name}: CLmax={CLmax:.2f}@{a[iCL]:.1f}deg CMmin={CMmin:.3f} "
           f"onset={onset:.2f}deg Cp-closure={cp_closure_pct:+.1f}% "
+          f"(worst dCL over cycle {cp_closure_worst_dCL:.4f} at CL={_cl_at_worst:.2f}, "
+          f"{100*cp_closure_worst_dCL/CLmax:.2f}% of CLmax) "
           f"Cp-TEjump(max)={cp_te_jump:.3f} cpu={solve_s:.2f}s "
-          f"CNvmax={out["CNv"].max():.3f}@a{out["alpha_deg"][int(np.argmax(out["CNv"]))]:.1f} "
+          f"CNvmax={out['CNv'].max():.3f}@a{out['alpha_deg'][int(np.argmax(out['CNv']))]:.1f} "
           f"CDmax={CDmax:.3f} Xi={xi:.5f} (norm {xi_hat:+.4f} -> {verdict}) "
           f"fields={[f[0] for f in fphases]}")
 

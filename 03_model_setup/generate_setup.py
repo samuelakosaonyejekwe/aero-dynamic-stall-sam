@@ -11,8 +11,15 @@ Writes ALL solver input data for the UNISTALL(TM) dynamic-stall case study:
 """
 import json
 import sys as _sys; from pathlib import Path as _P
-_sys.path.insert(0, str(_P(__file__).resolve().parents[1]))
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
+_sys.path.insert(0, str(_ROOT/"04_solver"))
 from project_meta import METHOD          # single source of truth for the method name
+# The reconstruction/discretisation constants are IMPORTED from the solver that
+# uses them, not restated here. f_min, n_panels, domain_chords, the default grid
+# and near_wall_cells_masked were all a second literal copy of a solver literal:
+# they agreed, but nothing made them agree.
+import unistall_solver as _us
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -126,15 +133,15 @@ config = {
                 "vortex_panel_field_reconstruction", "compressible_thermal_module"],
     "constant_precedence": "literature defaults below are OVERRIDDEN, key by key, "
                            "by calibrated_constants; where a key appears in both "
-                           "(CN1, Tf, Tvl) the calibrated value is the one solved",
+                           "(CN1, Tf, Tv, Tvl) the calibrated value is the one solved",
     "indicial_circulatory": {"A1": 0.30, "A2": 0.70, "b1": 0.14, "b2": 0.53},
     "time_constants_semichords": {"Tp": 1.7, "Tf": 3.0, "Tv": 6.0, "Tvl": 5.0,
-                                  "comment": "literature defaults [S6]; Tf and Tvl "
+                                  "comment": "literature defaults [S6]; Tf, Tv and Tvl "
                                              "are superseded by calibrated_constants"},
     "separation_model": {
         "method": "inverse-Kirchhoff fit of f(alpha) to static_polar_reference.csv",
         "form": "f = (2*sqrt(CN_static/(CNalpha*alpha)) - 1)^2, PCHIP-interpolated in |alpha|",
-        "f_min": 0.02,
+        "f_min": _us.F_MIN,
         "comment": "no alpha1/S1/S2 exponential fit is used: the separation law is "
                    "recovered in closed form from the measured polar"},
     "dynamic_stall_onset": {"CN1": 1.45,
@@ -155,14 +162,15 @@ config = {
                   "uniform bound vortex sheet ON THE BODY SURFACE carrying "
                   "Gamma = 0.5*C_L*U*c (Kutta-Joukowski, matched to the UIBS C_L), "
                   "plus a Lamb-Oseen dynamic-stall vortex",
-        "n_panels": 160,
+        "n_panels": _us.N_PANELS_DEFAULT,
         "panel_distribution": "closed section, cosine-clustered on each surface "
                               "separately -> clustering at BOTH the leading and the "
                               "trailing edge",
-        "grid_nx_default": 260, "grid_ny_default": 200,
+        "grid_nx_default": _us.GRID_NX_DEFAULT,
+        "grid_ny_default": _us.GRID_NY_DEFAULT,
         "grid_nx_solution": 220, "grid_ny_solution": 170,
-        "domain_chords": [-1.0, 2.0, -1.2, 1.2],
-        "near_wall_cells_masked": 1,
+        "domain_chords": list(_us.DOMAIN_CHORDS),
+        "near_wall_cells_masked": _us.NEAR_WALL_CELLS_MASKED,
         "surface_cp_evaluation": "panel control points, exact self-terms",
         "comment": "grid_*_solution are the sizes written to 05_solution/field_*.csv. "
                    "cp_distribution_*.csv is NOT read off any grid, and is no longer "
@@ -179,8 +187,12 @@ config = {
                    "because the near-wall ring carrying the leading-edge peak is "
                    "masked, so it understates the surface peak (about -15) by roughly "
                    "three times. Accuracy of the reconstruction is measured, not "
-                   "asserted: the Cp_closure_error_pct row of metrics_*.csv reports how "
-                   "well the integrated surface Cp reproduces the C_L it was given"},
+                   "asserted: metrics_*.csv reports how well the integrated surface "
+                   "Cp reproduces the C_L it was given, both at peak lift "
+                   "(Cp_closure_error_pct) and, as an absolute residual in C_L counts, "
+                   "at its worst anywhere on the reported cycle "
+                   "(Cp_closure_worst_dCL_cycle). The second row exists because the "
+                   "first was being read as a cycle-wide bound, which it is not"},
     "calibration_state": "calibrated_per_case (static polar) + validated (dynamic)"
 }
 with open(HERE/"solver_config.json", "w") as fp:

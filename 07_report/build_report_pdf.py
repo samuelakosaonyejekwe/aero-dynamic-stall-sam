@@ -73,7 +73,9 @@ ROW_BG   = colors.HexColor("#f3f6fa")
 # pdfmetrics.stringWidth on a representative line of this report's body text,
 # the regular cut sets 11.2% wider (1020.4 pt vs 917.9 pt at 10 pt), which is
 # 91 rather than 101 characters on a 6.5 in line. Substituting it would
-# repaginate the whole 73-page body, so it is not a drop-in replacement.
+# repaginate the whole body -- the build prints the body page count on every
+# run, and it moves whenever a table or a paragraph changes, so it is not
+# quoted here -- and it is therefore not a drop-in replacement.
 #
 # The install location differs per distribution, so search rather than assume
 # one. This used to hardcode the Debian path, which was harmless while this

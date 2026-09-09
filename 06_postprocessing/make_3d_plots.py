@@ -122,13 +122,17 @@ pd.DataFrame({"alpha_mean_deg": M.ravel().round(3), "reduced_freq_k": K.ravel().
 # the x tick labels the way an axes-coordinate annotation did
 fig = plt.figure(figsize=(8.5, 6.6))
 ax = fig.add_axes([0.0, 0.13, 1.0, 0.82], projection="3d")
-surf = ax.plot_surface(M, K, CLmax, cmap=CMAP_PRESSURE, edgecolor=INK_SOFT,
-                       linewidth=0.3, antialiased=True, alpha=0.95)
+ax.plot_surface(M, K, CLmax, cmap=CMAP_PRESSURE, edgecolor=INK_SOFT,
+                linewidth=0.3, antialiased=True, alpha=0.95)
 ax.set_xlabel("mean α [deg]"); ax.set_ylabel("reduced freq k")
 ax.set_zlabel("dynamic $C_{L,max}$")
 ax.set_title("Dynamic-stall lift response surface  $C_{L,max}(α_{mean}, k)$\n"
              "(NACA 0012, M=%.2f, α amplitude %.0f°)" % (M_A, AA_A), pad=18)
-cb = fig.colorbar(surf, ax=ax, pad=0.10, shrink=0.6); cb.set_label("$C_{L,max}$")
+# No colorbar. plot_surface colours BY HEIGHT, so a colorbar here is a second
+# scale for the variable the z-axis already carries -- the same duplication the
+# field-surface figures below reject, and the rule was being applied to two of
+# the four 3-D figures and not the other two. The colour is kept: it is what
+# makes the surface readable as a surface. The z-axis is the scale.
 # state the bound the grid is drawn inside, so the limit travels with the figure
 _note = ("Every point lies on calibrated data: the mean incidence stops at %.0f° so the peak\n"
          "(mean + %.0f° amplitude) never exceeds the %.0f° the static polar is tabulated to.\n"
@@ -155,11 +159,17 @@ for ii in idxs:
 Zsurf = np.array(Zsurf)
 XC, PH = np.meshgrid(xcp, np.array(phases), indexing="xy")
 fig = plt.figure(figsize=(8.5, 6.2)); ax = fig.add_subplot(111, projection="3d")
-s = ax.plot_surface(XC, PH, Zsurf, cmap=CMAP_CP, edgecolor=INK_SOFT, linewidth=0.2, alpha=0.95)
+ax.plot_surface(XC, PH, Zsurf, cmap=CMAP_CP, edgecolor=INK_SOFT,
+                linewidth=0.2, alpha=0.95)
 ax.set_xlabel("x/c"); ax.set_ylabel("cycle phase ωt [deg]"); ax.set_zlabel("upper $C_p$")
 ax.invert_zaxis()
 ax.set_title("Upper-surface $C_p$ evolution through the cycle (Case A)", pad=18)
-cb = fig.colorbar(s, ax=ax, pad=0.10, shrink=0.6); cb.set_label("$C_p$")
+# No colorbar, and here it was worse than redundant. The surface is coloured by
+# height, so the bar restated the z-axis -- but the z-axis is INVERTED (the
+# aerodynamic convention: suction upward) and the colorbar was not, so the same
+# figure carried two scales for one variable running in OPPOSITE directions. A
+# reader matching a colour to a value read it one way on the axis and the other
+# way on the bar.
 ax.view_init(elev=26, azim=-52); tidy3d(ax)
 fig.savefig(OUT/"fig3d_cp_phase_surface.png", bbox_inches="tight", pad_inches=0.35); plt.close(fig)
 
@@ -178,8 +188,10 @@ for key, cmap, lab, fn in [("Cp", CMAP_CP, "$C_p$", "Cp"),
                            ("speed_ms", CMAP_PRESSURE, "|V| [m/s]", "speed")]:
     Z = np.array(F[key], dtype=float)
     # Leave the masked airfoil interior as NaN so it renders as a hole. Filling
-    # it with the global minimum (the Cp clip floor) punched a canyon several
-    # units deep that set the z-scale and flattened the actual field.
+    # it with the global minimum punched a canyon several units deep that set
+    # the z-scale and flattened the actual field. (That minimum used to be a
+    # -8 clip floor on Cp; the clip is gone, but filling the hole with the true
+    # minimum would be just as wrong.)
     # The cells immediately outside the body carry the regularised surface sheet
     # and reach ~3x the free-stream speed at peak incidence -- real for an
     # unseparated potential field, but they would set the whole z-scale. They are
@@ -197,15 +209,16 @@ for key, cmap, lab, fn in [("Cp", CMAP_CP, "$C_p$", "Cp"),
     # rstride=2, so a quad whose skipped middle point is masked is still drawn:
     # it bridges straight across the aerofoil and renders as a thin vertical fin
     # sticking out of the hole. At stride 1 the hole follows the mask exactly.
-    s = ax.plot_surface(X, Y, Zc, cmap=cmap, vmin=lo, vmax=hi,
-                        linewidth=0, antialiased=True, alpha=0.96,
-                        rstride=1, cstride=1)
+    ax.plot_surface(X, Y, Zc, cmap=cmap, vmin=lo, vmax=hi,
+                    linewidth=0, antialiased=True, alpha=0.96,
+                    rstride=1, cstride=1)
     ax.set_zlim(lo, hi)
     ax.set_xlabel("x [m]"); ax.set_ylabel("y [m]"); ax.set_zlabel(lab)
     ax.set_title(f"3D field surface — {lab}  (Case A, peak incidence)", pad=18)
     # No colorbar here: height and colour encode the SAME variable, so a colorbar
     # put a second identical scale, with the same label, immediately beside the
-    # z-axis. The z-axis is the scale.
+    # z-axis. The z-axis is the scale. The same rule now applies to all four 3-D
+    # surfaces; two of them still carried one.
     ax.view_init(elev=40, azim=-58); tidy3d(ax)
     fig.text(0.5, 0.015,
              "z clipped to the 0.5–99.5 percentile band [%.3g, %.3g] — %d of %d "

@@ -237,6 +237,11 @@ with PdfPages(out2) as pdf:
     _sampled_txt = "".join("    \u2022 %s  \u2014 %d rows\n" % nr for nr in _sampled) \
                    or "    \u2022 (none: every table below prints in full)\n"
     _n_field = len(sorted((ROOT/"05_solution").glob("field_*.csv")))
+    # row count DERIVED from the grid the config declares, not typed in. It was
+    # the literal "37 400", which is nx*ny for the current grid but would have
+    # gone on saying so after either was changed.
+    _fc = json.load(open(ROOT/"03_model_setup"/"solver_config.json"))["field_reconstruction"]
+    _field_rows = f"{_fc['grid_nx_solution']*_fc['grid_ny_solution']:,}".replace(",", "\u202f")
     _n_exp = len(sorted((ROOT/"06_postprocessing"/"validation").glob("exp_frame_*.csv")))
     ax.text(0, 0.98,
             "IN FULL, one page per table (wide tables continue over further pages):\n"
@@ -246,7 +251,7 @@ with PdfPages(out2) as pdf:
             + "\nNOT REPRODUCED HERE \u2014 too large to typeset, shipped as CSV in the "
               "repository:\n"
               f"    \u2022 05_solution/field_*.csv  \u2014 {_n_field} reconstructed 2-D fields, "
-              "37 400 rows each\n"
+              f"{_field_rows} rows each\n"
               "    \u2022 05_solution/cp_distribution_B_application.csv  \u2014 the case-B "
               "counterpart of the sampled case-A table\n"
               f"    \u2022 06_postprocessing/validation/exp_frame_*.csv  \u2014 {_n_exp} "

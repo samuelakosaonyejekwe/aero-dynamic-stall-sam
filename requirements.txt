@@ -2,12 +2,15 @@
 #
 # The lower bounds below are the versions that first provide every API the
 # pipeline calls (numpy: np.trapezoid is optional, the solver binds np.trapz as a
-# fallback; matplotlib 3.6: Figure.get_layout_engine, used by the validation
-# figure). They are minimum-API bounds, NOT a tested matrix: the pipeline is
-# exercised end to end only on the versions recorded under "Verified on" below.
+# fallback; pandas 2.1: DataFrame.map, used by the data dossier to blank NaN
+# cells -- it was 2.0 here, which does not have that method at all, only the
+# applymap it replaced; matplotlib 3.6: Figure.get_layout_engine, used by the
+# validation figure). They are minimum-API bounds, NOT a tested matrix: the
+# pipeline is exercised end to end only on the versions recorded under
+# "Verified on" below.
 numpy>=1.24,<3
 scipy>=1.10
-pandas>=2.0
+pandas>=2.1
 matplotlib>=3.6
 
 # Report build (07_report/) only — NOT needed to run the solver pipeline.

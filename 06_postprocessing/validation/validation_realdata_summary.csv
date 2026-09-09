@@ -4,6 +4,11 @@ mean RMS_CL,0.195
 mean RMS_CM,0.063
 mean |CLmax| error [%],1.7
 mean |CMmin| error [abs],0.023
+held-out frames inside the static calibration range,2
+held-out frames peaking past it,2
+static polar calibrated to [deg],20.0
+"mean RMS_CL, inside the calibration range",0.133
+"mean RMS_CL, peaking past it",0.258
 mean |Xi_hat| model-exp discrepancy,0.072
 max |Xi_hat| model-exp discrepancy,0.144
 solver damping neutral band (us.DAMPING_TOL),0.08

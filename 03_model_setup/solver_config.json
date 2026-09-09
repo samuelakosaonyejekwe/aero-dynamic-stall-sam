@@ -10,7 +10,7 @@
     "vortex_panel_field_reconstruction",
     "compressible_thermal_module"
   ],
-  "constant_precedence": "literature defaults below are OVERRIDDEN, key by key, by calibrated_constants; where a key appears in both (CN1, Tf, Tvl) the calibrated value is the one solved",
+  "constant_precedence": "literature defaults below are OVERRIDDEN, key by key, by calibrated_constants; where a key appears in both (CN1, Tf, Tv, Tvl) the calibrated value is the one solved",
   "indicial_circulatory": {
     "A1": 0.3,
     "A2": 0.7,
@@ -22,7 +22,7 @@
     "Tf": 3.0,
     "Tv": 6.0,
     "Tvl": 5.0,
-    "comment": "literature defaults [S6]; Tf and Tvl are superseded by calibrated_constants"
+    "comment": "literature defaults [S6]; Tf, Tv and Tvl are superseded by calibrated_constants"
   },
   "separation_model": {
     "method": "inverse-Kirchhoff fit of f(alpha) to static_polar_reference.csv",
@@ -72,7 +72,7 @@
     ],
     "near_wall_cells_masked": 1,
     "surface_cp_evaluation": "panel control points, exact self-terms",
-    "comment": "grid_*_solution are the sizes written to 05_solution/field_*.csv. cp_distribution_*.csv is NOT read off any grid, and is no longer probed at an offset either: the surface Cp is evaluated at the panel CONTROL POINTS, where flow tangency is imposed, with the source (sigma/2 normal) and vortex (-gam/2 tangential) self-terms added in closed form. The previous 0.015c probe offset was chosen because it minimised the closure error, but it was masking the missing vortex self-term rather than avoiding it -- the error grew to -48.7 % as the probe approached the wall. near_wall_cells_masked is the ring of field cells left blank because the regularised surface sheet is not resolved there. Neither the field nor the surface Cp is clipped: the field's deepest value is about -5.2 because the near-wall ring carrying the leading-edge peak is masked, so it understates the surface peak (about -15) by roughly three times. Accuracy of the reconstruction is measured, not asserted: the Cp_closure_error_pct row of metrics_*.csv reports how well the integrated surface Cp reproduces the C_L it was given"
+    "comment": "grid_*_solution are the sizes written to 05_solution/field_*.csv. cp_distribution_*.csv is NOT read off any grid, and is no longer probed at an offset either: the surface Cp is evaluated at the panel CONTROL POINTS, where flow tangency is imposed, with the source (sigma/2 normal) and vortex (-gam/2 tangential) self-terms added in closed form. The previous 0.015c probe offset was chosen because it minimised the closure error, but it was masking the missing vortex self-term rather than avoiding it -- the error grew to -48.7 % as the probe approached the wall. near_wall_cells_masked is the ring of field cells left blank because the regularised surface sheet is not resolved there. Neither the field nor the surface Cp is clipped: the field's deepest value is about -5.2 because the near-wall ring carrying the leading-edge peak is masked, so it understates the surface peak (about -15) by roughly three times. Accuracy of the reconstruction is measured, not asserted: metrics_*.csv reports how well the integrated surface Cp reproduces the C_L it was given, both at peak lift (Cp_closure_error_pct) and, as an absolute residual in C_L counts, at its worst anywhere on the reported cycle (Cp_closure_worst_dCL_cycle). The second row exists because the first was being read as a cycle-wide bound, which it is not"
   },
   "calibration_state": "calibrated_per_case (static polar) + validated (dynamic)"
 }

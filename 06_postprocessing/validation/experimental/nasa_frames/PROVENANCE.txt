@@ -1,0 +1,35 @@
+Third-party experimental data — NOT covered by this repository's licence
+========================================================================
+
+The six frame_*.mat files in this directory are REDISTRIBUTED third-party data.
+They were not produced by this study and the author of this study does not own
+them and does not purport to license them. The CC BY 4.0 grant in ../../../../LICENSE
+covers this study's own code, figures, drawings, derived datasets and report.
+
+What they are
+-------------
+Digitised oscillating-aerofoil load loops (C_L, C_M, C_D against incidence, plus
+the same against time) for a NACA 0012, an AMES-01 and other sections. Each file
+carries its own `authors` field, which reads "McAlister et al. (1982)".
+
+Original measurements
+  McCroskey, W.J., McAlister, K.W., Carr, L.W. & Pucci, S.L. (1982),
+  "An Experimental Study of Dynamic Stall on Advanced Airfoil Sections",
+  NASA TM-84245. A work of the U.S. Government.
+
+Obtained via
+  L. Pancini, "BL-DSM-JFS-2021", https://github.com/luizpancini/BL-DSM-JFS-2021 ,
+  directory NASA Data/ . Checked on 9 September 2026: that repository states no
+  licence, so no licence terms are asserted here on its behalf either. Anyone
+  redistributing these files further should go back to those two sources.
+
+How this study uses them
+------------------------
+06_postprocessing/validation/validate_nasa_real.py reads M, k, alpha_0,
+delta_alpha, and the (alpha, C_L) and (alpha, C_M) point sets, and writes the
+extracted points beside it as exp_<frame>_CL.csv / exp_<frame>_CM.csv. Those
+extracts are derived from this same third-party data and carry the same caveat.
+
+The airfoil identity of each frame is taken from the source repository's
+src/functions/load_frame.m mapping: frames 7019-14220 = NACA 0012,
+24022-31310 = AMES-01, >= 67000 = NLR-7301.

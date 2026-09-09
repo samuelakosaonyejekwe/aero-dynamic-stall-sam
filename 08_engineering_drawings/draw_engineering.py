@@ -235,11 +235,21 @@ def dim_h(ax, x1, x2, ydim, yref, text, fs=FS_DIM):
             ha="center", va="bottom", bbox=TEXT_BG, zorder=8)
 
 
-def dim_v(ax, y1, y2, xdim, xref, text, fs=FS_DIM, side="left"):
-    """Vertical linear dimension. Text rotated 90, placed on `side` of the line."""
+def dim_v(ax, y1, y2, xdim, xref, text, fs=FS_DIM, side="left", tpos="mid"):
+    """Vertical linear dimension. Text rotated 90 beside the line (tpos="mid"),
+    or set horizontally just beyond the upper arrowhead (tpos="above").
+
+    tpos="above" exists for dimensions whose two ends lie ON the part, where a
+    mid-line value has nowhere clear to sit: the section-A-A thickness value was
+    landing in the middle of the hatched aerofoil, against this module's own
+    rule that dimension values live in clear space."""
     _ext_h(ax, y1, xref, xdim)
     _ext_h(ax, y2, xref, xdim)
     ax.annotate("", xy=(xdim, y2), xytext=(xdim, y1), arrowprops=ARROW_KW)
+    if tpos == "above":
+        ax.text(xdim, max(y1, y2) + 2.0, text, color=INK, fontsize=fs,
+                ha="center", va="bottom", bbox=TEXT_BG, zorder=8)
+        return
     dx = -0.9 if side == "left" else 0.9
     ax.text(xdim + dx, (y1 + y2) / 2, text, color=INK, fontsize=fs,
             ha="center", va="center", rotation=90, bbox=TEXT_BG, zorder=8)
@@ -580,9 +590,21 @@ def _tone(t, lo=(0.17, 0.29, 0.46), hi=(0.74, 0.82, 0.90)):
     return tuple(lo[k] + (hi[k] - lo[k])*t for k in range(3))
 
 
-def _paint(ax, faces, S, ox, oy, edge="face", lw=0.35, zorder=2, alpha=1.0):
-    """Draw 3-D quads/tris back-to-front, culling faces that point away."""
-    drawn = []
+def _paint(ax, faces, S, ox, oy, edge="face", lw=0.35, zorder=2, alpha=1.0,
+           silhouette=True):
+    """Draw 3-D quads/tris back-to-front, culling faces that point away.
+
+    TWO passes. The shaded pass alone left the nose of the sheet-2 fuselage
+    rendering torn: where the surface turns hard, the quads that straddle the
+    silhouette are back-facing by a hair and get culled, and nothing fills the
+    slivers they leave, so the white page showed through the outline. Painting
+    every face first -- back-faces included, flat, in one mid tone -- lays down
+    exactly the body's own silhouette (the union of all its faces IS the
+    silhouette), and the shaded front faces then cover it everywhere except
+    those slivers, which now read as shadow instead of holes. Pass
+    silhouette=False for open shells, where there is no interior to fill.
+    """
+    prepared = []
     for P in faces:
         A = np.asarray(P, float)
         n = np.cross(A[1] - A[0], A[2] - A[0])
@@ -590,12 +612,18 @@ def _paint(ax, faces, S, ox, oy, edge="face", lw=0.35, zorder=2, alpha=1.0):
         if ln < 1e-9:
             continue
         n /= ln
-        if n @ _CAM <= 0.02:                       # back-face
-            continue
         depth = float((A[:, 0] - A[:, 1] + A[:, 2]).mean())
-        drawn.append((depth, A, 0.06 + 0.88*max(0.0, float(n @ _LIGHT))))
-    drawn.sort(key=lambda r: r[0])                 # far first
-    for _, A, sh in drawn:
+        prepared.append((depth, A, n @ _CAM, 0.06 + 0.88*max(0.0, float(n @ _LIGHT))))
+    prepared.sort(key=lambda r: r[0])              # far first
+    if silhouette:
+        base = _tone(0.30)
+        for _, A, _facing, _sh in prepared:
+            pts = [iso(x, y, z, S, ox, oy) for x, y, z in A]
+            ax.add_patch(Polygon(pts, closed=True, fill=True, fc=base, ec=base,
+                                 lw=lw, zorder=zorder, alpha=alpha))
+    for _, A, facing, sh in prepared:
+        if facing <= 0.02:                         # back-face
+            continue
         pts = [iso(x, y, z, S, ox, oy) for x, y, z in A]
         fc = _tone(sh)
         # edge="face" hides the facet seams so the surface reads as one solid
@@ -613,7 +641,7 @@ def _ring(zc, hw, hh, n=26, e=2.7):
     return y, z
 
 
-def _loft_faces(stations, n=26, cap_first=True, cap_last=True):
+def _loft_faces(stations, n=56, cap_first=True, cap_last=True):
     """Quads between consecutive cross-sections of (x, z_centre, half_w, half_h)."""
     rings = [(x, ) + _ring(zc, hw, hh, n) for x, zc, hw, hh in stations]
     faces = []
@@ -649,7 +677,8 @@ def _iso_wheel(ax, centre, r, S, ox, oy, n=22):
     """Wheel in the x-z plane (rolling about y) plus its strut."""
     t = np.linspace(0, 2*np.pi, n, endpoint=False)
     face = [(centre[0] + r*np.cos(a), centre[1], centre[2] + r*np.sin(a)) for a in t]
-    _paint(ax, [face], S, ox, oy, edge=INK, lw=0.7, zorder=4)
+    _paint(ax, [face], S, ox, oy, edge=INK, lw=0.7, zorder=4,
+           silhouette=False)
 
 
 def sheet2():
@@ -670,7 +699,14 @@ def sheet2():
 
     # ---- fuselage: one lofted body, nose -> boom -> tail --------------------
     # (x, z of section centre, half-width, half-height)  [mm]
-    FUS = [( 4600, 1780,  110,  170), ( 4150, 1810,  470,  520),
+    # The nose used to jump straight from (4600, 110, 170) to (4150, 470, 520):
+    # the quads between those two rings are nearly radial, so back-face culling
+    # dropped roughly every other one and the silhouette rendered torn rather
+    # than rounded. Three intermediate rings on a near-elliptical nose profile,
+    # and a finer ring (n=56), close it up.
+    FUS = [( 4600, 1780,  110,  170), ( 4520, 1788,  215,  260),
+           ( 4400, 1796,  310,  355), ( 4280, 1803,  400,  445),
+           ( 4150, 1810,  470,  520),
            ( 3300, 1900,  880,  830), ( 2000, 1950, 1140,  960),
            (  600, 1960, 1180, 1000), (-1200, 1930, 1080,  930),
            (-2600, 2030,  760,  660), (-4200, 2120,  520,  470),
@@ -732,12 +768,20 @@ def sheet2():
                 color=INK, lw=1.5, zorder=7, solid_capstyle="round")
 
     # ---- envelope dimensions ------------------------------------------------
-    # Short witness ticks at each end, not full-length extension lines: the old
-    # version ran them from ground level down past the sheet, leaving two lines
-    # dangling in space with nothing attached to them.
-    def tick(x, y, z, dz=520.0):
-        ax.plot(*zip(iso(x, y, z, S, ox, oy), iso(x, y, z + dz, S, ox, oy)),
-                color=INK_SOFT, lw=0.5, zorder=9)
+    # Witness lines run FROM the feature being dimensioned TO the dimension
+    # line, which is what makes a dimension read as belonging to the part. The
+    # first version ran them from ground level down past the sheet; the second
+    # replaced them with short free-floating ticks at the ends of the dimension
+    # line, which left the FUSELAGE dimension as an arrow lying in empty space
+    # with nothing joining it to the nose or the tail.
+    def witness(x, z_feature, y_to, z_to, over=420.0):
+        """Thin line from the feature at (x, 0, z_feature) to just past the
+        dimension line at (x, y_to, z_to)."""
+        f = np.array([x, 0.0, z_feature]); t = np.array([x, y_to, z_to])
+        d = t - f; n = np.linalg.norm(d)
+        e = t + d/n*over if n > 0 else t
+        ax.plot(*zip(iso(*f, S, ox, oy), iso(*e, S, ox, oy)),
+                color=INK_SOFT, lw=0.45, dashes=(4, 2.5), zorder=9)
 
     def iso_dim(pA, pB, text, rot, voff=0.0, hoff=0.0):
         ax.annotate("", xy=pB, xytext=pA, arrowprops=ARROW_KW)
@@ -745,9 +789,9 @@ def sheet2():
                 color=INK, fontsize=FS_DIM, ha="center", va="center",
                 rotation=rot, bbox=TEXT_BG, zorder=10)
 
-    yL, zL = -3050.0, -250.0                    # starboard side, just off the ground
-    for xx in (nose_x, tail_x):
-        tick(xx, yL, zL)
+    yL, zL = -2200.0, 250.0                     # starboard side, just off the ground
+    witness(nose_x, 1780.0, yL, zL)             # nose station, at its own section
+    witness(tail_x, 2470.0, yL, zL)             # tail station, likewise
     iso_dim(iso(nose_x, yL, zL, S, ox, oy), iso(tail_x, yL, zL, S, ox, oy),
             f"FUSELAGE {int(round(L_fus))}", rot=30, voff=-2.2)
 
@@ -972,9 +1016,14 @@ def sheet4():
     dim_h(ax, ox, xtmax, oy - 22, oy, "0.30c = %.1f" % (0.30*chord))
     # 0.25c station
     dim_h(ax, ox, xpa, oy - 14, oy, "0.25c = %.1f" % (0.25*chord))
-    # max thickness (vertical, right of tmax line)
-    dim_v(ax, oy - yt_max * S, oy + yt_max * S, xtmax + 14, xtmax,
-          f"t = {tmax:.1f}  (12%c)", side="right")
+    # Max thickness, dimensioned AT the 0.30c station where it is measured, with
+    # the value set above the section. It used to sit at xtmax + 14, i.e. offset
+    # into the body: the dimension line was then longer than the aerofoil is
+    # thick there, and the value itself landed in the middle of the hatched
+    # section, which is what "dims live in clear margins" in this module's header
+    # forbids.
+    dim_v(ax, oy - yt_max * S, oy + yt_max * S, xtmax, xtmax,
+          f"t = {tmax:.1f}  (12%c)", tpos="above")
 
     notes_block(ax, M + 4, 70,
                 ["1.  AIRFOIL NACA 0012 (SYMMETRIC).",
