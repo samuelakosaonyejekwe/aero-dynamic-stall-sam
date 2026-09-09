@@ -135,7 +135,8 @@ config = {
                            "by calibrated_constants; where a key appears in both "
                            "(CN1, Tf, Tv, Tvl) the calibrated value is the one solved",
     "indicial_circulatory": {"A1": 0.30, "A2": 0.70, "b1": 0.14, "b2": 0.53},
-    "time_constants_semichords": {"Tp": 1.7, "Tf": 3.0, "Tv": 6.0, "Tvl": 5.0,
+    "time_constants_semichords": {"Tp": 1.7, "Tf": 3.0, "Tv": 6.0,
+                                  "Tvl": _us.TVL_DEFAULT,
                                   "comment": "literature defaults [S6]; Tf, Tv and Tvl "
                                              "are superseded by calibrated_constants"},
     "separation_model": {

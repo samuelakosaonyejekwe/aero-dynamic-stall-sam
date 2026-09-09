@@ -227,8 +227,20 @@ def load_field(path):
 
 field_files = sorted(glob.glob(str(SOL/"field_*.csv")))
 
+# Common Cp scale for the contour panels, DERIVED from the published fields
+# rather than typed in. It was the literal (-5.0, 1.0) with a comment naming the
+# deepest value any field reached; deriving the vortex made the fields deeper
+# (-7.92) and a hardcoded floor would have silently clipped the very feature the
+# figures are for. +1.0 is the stagnation bound Cp cannot exceed, which
+# verify_invariants asserts; the floor is rounded down to the next half so the
+# colorbar ticks stay round.
+_cpmin = min(float(pd.read_csv(f, usecols=["Cp"])["Cp"].min()) for f in field_files)
+CP_SCALE = (float(np.floor(_cpmin*2.0)/2.0), 1.0)
+print(f"[plots] common Cp scale {CP_SCALE} (deepest published field value {_cpmin:.2f})")
+
 def contour_plot(xu, yu, Z, title, cbar_label, cmap, c, fname,
-                 lines=False, levels=24, vector=None, stream=None, vlim=None):
+                 lines=False, levels=24, vector=None, stream=None, vlim=None,
+                 note=None):
     X, Y = np.meshgrid(xu, yu)
     fig, ax = plt.subplots(figsize=(7.8, 5.2))
     # The reconstruction masks the body AND the one ring of cells touching it
@@ -278,6 +290,14 @@ def contour_plot(xu, yu, Z, title, cbar_label, cmap, c, fname,
     ax.set_xlim(xu.min(), xu.max()); ax.set_ylim(yu.min(), yu.max())
     ax.set_xlabel("x [m]"); ax.set_ylabel("y [m]")
     ax.set_title(title, pad=10)
+    if note:
+        # constrained_layout does not reserve space for figure-level text, so
+        # shrink the layout rect first -- otherwise the note lands on top of the
+        # x-axis label, which is exactly what it did on first writing. Same fix
+        # as the figure legend in validate_nasa_real.py.
+        fig.get_layout_engine().set(rect=(0, 0.045, 1, 0.955))
+        fig.text(0.5, 0.008, note, ha="center", va="bottom", fontsize=8,
+                 color=INK_SOFT)
     save(fig, fname)
 
 # ============================================================ 6. CONTOURS
@@ -290,13 +310,9 @@ for ff in field_files:
     xu, yu, F = load_field(ff)
     pre = f"{cs}_{tag}_{adeg}"
     U = CASES[cs]["U"]
-    # pressure
-    # Cp scale is FIXED across all eight fields, not fitted to each one, so the
-    # panels can be compared with each other; the colorbar extends at both ends
-    # and nothing is clipped in the data. -5.0 is just inside the deepest value
-    # any published field reaches (-5.16, the Case-A dsv field), and +1.0 is the
-    # stagnation bound Cp cannot exceed -- verify_invariants asserts that bound.
-    CP_SCALE = (-5.0, 1.0)
+    # pressure -- one scale for all eight fields (set above), so the panels can
+    # be compared with each other; the colorbar extends at both ends and nothing
+    # is clipped in the data.
     contour_plot(xu, yu, F["Cp"], f"Pressure coefficient $C_p$ — {tag} ({adeg.replace('a','α=')}°)",
                  "$C_p$", CMAP_CP, c, f"contour_Cp_{pre}.png", lines=True, vlim=CP_SCALE)
     # velocity magnitude + streamlines
@@ -307,11 +323,21 @@ for ff in field_files:
     contour_plot(xu, yu, F["speed_ms"], f"Velocity vector field — {tag}",
                  "|V| [m/s]", CMAP_PRESSURE, c, f"contour_vectors_{pre}.png",
                  vector=(F["u_ms"], F["v_ms"]), vlim=(0, 1.7*U))
-    # vorticity (DSV)
-    vmax = np.nanpercentile(np.abs(F["vorticity_1s"]), 98)
-    contour_plot(xu, yu, np.clip(F["vorticity_1s"], -vmax, vmax),
+    # vorticity (DSV). The scale is a robust percentile, and it has to be: the
+    # dynamic-stall vortex's core is far more intense than the bound sheet
+    # around the body, so an unclipped scale renders everything except the
+    # vortex as one flat colour. The clip is now STATED on the figure, the same
+    # standard the 3-D surfaces are held to -- otherwise the vortex reads as a
+    # small feature at the colorbar's value when it is orders of magnitude past
+    # the end of it.
+    _w = F["vorticity_1s"]
+    vmax = np.nanpercentile(np.abs(_w), 98)
+    contour_plot(xu, yu, np.clip(_w, -vmax, vmax),
                  f"Vorticity (dynamic-stall vortex) — {tag}",
-                 "ω_z [1/s]", CMAP_VORT, c, f"contour_vorticity_{pre}.png")
+                 "ω_z [1/s]", CMAP_VORT, c, f"contour_vorticity_{pre}.png",
+                 note="scale clipped to the 98th percentile of |ω_z|, ±%.0f 1/s; "
+                      "the vortex core reaches %.0f 1/s and is saturated."
+                      % (vmax, np.nanmin(_w)))
     # Local Mach and the two temperature fields have long thin tails at the
     # vortex core. Auto-scaling to the full range put ~99 % of the domain into
     # one or two colour bands, so those three plots came out essentially blank;

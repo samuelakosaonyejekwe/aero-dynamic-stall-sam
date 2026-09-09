@@ -152,7 +152,8 @@ xcp = np.linspace(0.02, 0.98, 60)      # common upper-surface x/c grid
 Zsurf = []; phases = []
 for ii in idxs:
     xoc, cp, upper = us.surface_cp(GEO, C_A, U_A, M_A, o["alpha_deg"][ii],
-                                   o["CL"][ii], o["CNv"][ii], o["tau_v"][ii]/consts["Tvl"])
+                                   o["CL"][ii], o["CNv"][ii],
+                                   o["tau_v"][ii]/consts["Tvl"], consts["Tvl"])
     # upper-surface Cp resampled on the common x/c grid
     cu = np.interp(xcp, np.sort(xoc[upper]), cp[upper][np.argsort(xoc[upper])])
     Zsurf.append(cu); phases.append(o["phase_deg"][ii])

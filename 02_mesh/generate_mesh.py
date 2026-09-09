@@ -27,16 +27,24 @@ cosine wall distribution is coarsest at mid-chord and the first cell is 3.94e-06
 m tall for y+ = 1, so the ratio between them peaks exactly there. It has nothing
 to do with the trailing edge.
 
-FAR-FIELD AZIMUTHAL SPACING, the thing fig_mesh_full.png actually shows and the
-metrics did not report. Each wall point is given a far-field target at the same
-normalised ARCLENGTH around the outer circle, so the outer boundary inherits the
-wall's cosine clustering: the marching lines bunch towards the trailing- and
-leading-edge directions and thin out top and bottom. The ratio between the
-widest and narrowest angular gap on the outer circle is published as
-farfield_angular_spacing_ratio. It is a property of that mapping, not a fault --
-the grid has no inverted cells and the quality metrics above bound it -- but
-anyone taking this grid to CFD should see the number rather than infer it from
-a picture.
+FAR-FIELD AZIMUTHAL SPACING, fixed rather than merely reported. Each wall point
+used to be given a far-field target at the same normalised ARCLENGTH around the
+outer circle, so the outer boundary inherited the wall's cosine clustering: the
+marching lines bunched towards the trailing- and leading-edge directions and
+thinned out top and bottom, the widest angular gap being 81 times the narrowest.
+The far field has no boundary layer to resolve and wants uniform spacing, so the
+targets are now placed at equal angles -- one slice per wall point. The
+correspondence is unchanged (index 0 is the trailing edge at theta = 0, the mid
+index the leading edge at pi); only the distribution between them is evened out,
+and the wall keeps its cosine clustering. farfield_angular_spacing_ratio, which
+this stage publishes, goes 81.5 -> 1.00.
+
+Measured effect of that and of the sqrt blend below, old -> new:
+    far-field angular spacing ratio   81.5  -> 1.00
+    cells with skewness > 0.5         1.204 % -> 0.156 %
+    mean skewness                     0.053 -> 0.052
+    mean aspect ratio                 57.4  -> 55.5
+    max aspect ratio, max skewness, min orthogonality, inverted cells: unchanged
 
 Two defects that an unsigned quality metric cannot see were found and fixed here:
   * INVERTED CELLS. The previous grid contained 22 folded (negative-Jacobian)
@@ -189,15 +197,39 @@ yn = np.concatenate([[0], np.cumsum(dn)])[:N_RAD]   # normal coordinate (chords)
 # wedge; blending towards a closed loop of targets closes the wrap at every j.
 I, J = N_WALL, N_RAD
 CX, CY = 0.5, 0.0
-sw = np.concatenate([[0], np.cumsum(np.hypot(np.diff(xw), np.diff(yw)))]); sw /= sw[-1]
-th = 2.0*np.pi*sw                                  # TE -> 0, LE -> pi, TE -> 2pi
+# Far-field target angles: UNIFORM around the circle, one equal slice per wall
+# point. They used to be placed at the same normalised ARCLENGTH as the wall
+# point, so the outer boundary inherited the wall's cosine clustering: the
+# marching lines bunched towards the leading- and trailing-edge directions and
+# thinned out top and bottom, the widest angular gap being 81 times the
+# narrowest. That is what fig_mesh_full.png showed, and it is not what an
+# O-grid handed off for CFD should look like -- the far field has no boundary
+# layer to resolve and wants uniform spacing.
+#
+# The correspondence is unchanged, so the layout is not: index 0 is the
+# trailing edge and maps to theta = 0, the mid index is the leading edge and
+# maps to pi, exactly as before. Only the DISTRIBUTION between them changes,
+# from arclength-proportional to index-proportional. The wall keeps its cosine
+# clustering; it is only the outer targets that are evened out.
+th = 2.0*np.pi*np.arange(N_WALL)/(N_WALL - 1.0)    # TE -> 0, LE -> pi, TE -> 2pi
 xf = CX + FARFIELD*np.cos(th); yf = CY + FARFIELD*np.sin(th)
 ufx, ufy = xf - xw, yf - yw
 uf = np.hypot(ufx, ufy); ufx /= uf; ufy /= uf
 
 Xg = np.zeros((I, J)); Yg = np.zeros((I, J))
 for j in range(J):
-    w = yn[j]/FARFIELD
+    # Blend the marching direction from the wall normal to the far-field target
+    # in SQRT of the normalised distance, not in the distance itself. The
+    # wall-normal spacing is geometric, so almost every cell lives in the inner
+    # few per cent of the domain; blending linearly in distance leaves the
+    # direction essentially wall-normal across all of them and turns the corner
+    # abruptly in the outer layers, where the worst cells then sit. Measured,
+    # against the linear blend: cells above the 0.5 skewness gate fall from
+    # 0.527 % to 0.156 %, max skewness 0.642 -> 0.641 and min orthogonality
+    # 32.3 deg unchanged, still no inverted cell. It costs a slightly higher
+    # MEAN skewness, 0.042 -> 0.052; the tail is what a CFD hand-off cares
+    # about, and both numbers are published below.
+    w = np.sqrt(yn[j]/FARFIELD)
     nxf = (1-w)*nx + w*ufx
     nyf = (1-w)*ny + w*ufy
     nf = np.hypot(nxf, nyf)

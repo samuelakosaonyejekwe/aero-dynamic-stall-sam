@@ -14,13 +14,19 @@ aero_damping_Xi_normalised,-0.0007
 damping_neutral_band,0.08
 stall_flutter_risk,neutral (within model resolution)
 CL_hysteresis_loop_area,0.0922
-Cp_closure_error_pct,-0.6
-Cp_closure_worst_dCL_cycle,0.0211
-Cp_closure_worst_dCL_pct_of_CLmax,1.21
-Cp_TE_jump_max_over_phases,1.605
+Cp_closure_error_pct,-0.5
+Cp_closure_worst_dCL_cycle,0.0226
+Cp_closure_worst_dCL_pct_of_CLmax,1.3
+Cp_TE_jump_max_over_phases,1.656
 CL_kutta_inviscid,1.915
-Cp_DSV_core_min,-0.263
-DSV_peak_swirl_over_U,0.145
+Cp_DSV_core_min,-4.26
+DSV_circulation_over_Uc,0.073
+DSV_core_radius_chords,0.0067
+DSV_peak_swirl_over_U,1.098
+DSV_core_radius_cells,0.47
+DSV_induced_at_wall_over_U,0.073
+DSV_edge_speed_over_U,1.098
+DSV_induced_lift_dCL,-0.0045
 reduced_frequency_k,0.074
 mach_M,0.2794
 mean_alpha_deg,12.0

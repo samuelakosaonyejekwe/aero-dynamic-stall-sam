@@ -191,10 +191,22 @@ for name, C in CASES.items():
     # ---- reconstruction closure: does the reconstructed surface Cp integrate
     #      back to the C_L it was handed? Published so the field-reconstruction
     #      accuracy is a measured number rather than a claim in a docstring. ----
+    #      Measured with the VORTEX OFF. With it on the surface integral does
+    #      not return the imposed C_L and should not: a free vortex of 1.79*U*c
+    #      standing 0.16c off the body exerts a real force on it, so that
+    #      residual is the vortex's induced lift, not a closure error. It is
+    #      published beside this row as DSV_induced_lift_dCL. The two used to be
+    #      conflated -- the with-vortex figure was quoted as the closure error
+    #      and read as a discretisation bound -- which was survivable only while
+    #      the vortex carried an eighth of its derived strength.
     _j = int(np.argmax(out["CL"]))
     _clcp, cp_closure_pct, _ = us.surface_load_closure(
         GEO, C["c"], C["U"], C["M"], out["alpha_deg"][_j], out["CL"][_j],
-        out["CNv"][_j], out["tau_v"][_j]/consts["Tvl"])
+        0.0, 0.0, consts["Tvl"])
+    _clv, _, _ = us.surface_load_closure(
+        GEO, C["c"], C["U"], C["M"], out["alpha_deg"][_j], out["CL"][_j],
+        out["CNv"][_j], out["tau_v"][_j]/consts["Tvl"], consts["Tvl"])
+    dsv_lift = _clv - _clcp
     # ---- and the WORST of it over the whole cycle, not just at peak lift. The
     #      peak-lift value alone was being read as a cycle-wide bound (the solver
     #      docstring claimed "within 0.6 % over the whole cycle" while the
@@ -215,9 +227,9 @@ for name, C in CASES.items():
     cp_closure_worst_dCL = 0.0
     _cl_at_worst = float("nan")
     for _i in np.linspace(0, len(out["CL"])-1, CLOSURE_SAMPLES).astype(int):
-        _clr, _, _ = us.surface_load_closure(
+        _clr, _, _ = us.surface_load_closure(          # vortex off: see above
             GEO, C["c"], C["U"], C["M"], out["alpha_deg"][_i], out["CL"][_i],
-            out["CNv"][_i], out["tau_v"][_i]/consts["Tvl"])
+            0.0, 0.0, consts["Tvl"])
         if abs(_clr - out["CL"][_i]) > cp_closure_worst_dCL:
             cp_closure_worst_dCL = abs(_clr - out["CL"][_i])
             _cl_at_worst = float(out["CL"][_i])
@@ -240,7 +252,7 @@ for name, C in CASES.items():
         _k = phase_index(out, _tgt, upstroke=_ups)
         _, _, _tj = us.surface_load_closure(
             GEO, C["c"], C["U"], C["M"], out["alpha_deg"][_k], out["CL"][_k],
-            out["CNv"][_k], out["tau_v"][_k]/consts["Tvl"])
+            out["CNv"][_k], out["tau_v"][_k]/consts["Tvl"], consts["Tvl"])
         cp_te_jump = max(cp_te_jump, _tj)
     cl_kutta = us.kutta_reference_CL(GEO, C["c"], C["U"], C["M"],
                                      float(out["alpha_deg"][_j]))
@@ -262,7 +274,20 @@ for name, C in CASES.items():
     _v = int(np.argmax(out["CNv"]))
     _, _, cp_dsv_core = us.dsv_core_cp(
         GEO, C["c"], C["U"], C["M"], out["alpha_deg"][_v], out["CL"][_v],
-        out["CNv"][_v], out["tau_v"][_v]/consts["Tvl"])
+        out["CNv"][_v], out["tau_v"][_v]/consts["Tvl"], consts["Tvl"])
+    # The derived core is small, and the published FIELD grid does not resolve
+    # it. That is published as a number rather than left for a reader to work
+    # out, exactly as the leading-edge suction peak is: the surface reaches
+    # about -15 while the field bottoms out far shallower, "a property of the
+    # grid". The vortex's own vorticity is added to the field in closed form
+    # (see reconstruct_field), so it is sampled correctly even below a cell --
+    # its circulation recovers to 0.4 % on this grid -- but its core is not
+    # RESOLVED, and DSV_core_radius_cells says by how much.
+    _dom = cfg["field_reconstruction"]["domain_chords"]
+    _dgrid = max((_dom[1]-_dom[0])*C["c"]/(NX_SOL-1), (_dom[3]-_dom[2])*C["c"]/(NY_SOL-1))
+    dsv = us.dsv_vortex_state(
+        GEO, C["c"], C["U"], C["M"], out["alpha_deg"][_v], out["CL"][_v],
+        out["CNv"][_v], out["tau_v"][_v]/consts["Tvl"], consts["Tvl"])
     # ---- and the vortex's peak swirl against the free stream, closed form.
     #      This exists because "the vortex reverses the flow beneath it" was
     #      asserted in the solver docstring, in the field-reconstruction comment
@@ -272,7 +297,6 @@ for name, C in CASES.items():
     #      turning, not stall. A vortex whose peak swirl is a quarter of the
     #      free stream cannot turn the flow over, and this row says so with a
     #      number that depends on no grid.
-    dsv_swirl = us.dsv_peak_swirl_ratio(out["CNv"][_v], C["U"], C["c"])
     met = pd.DataFrame({
         "metric": ["CL_max_dynamic", "alpha_at_CLmax_deg", "CL_max_static",
                    "dynamic_overshoot_ratio", "CM_min(c/4)", "alpha_at_CMmin_deg",
@@ -284,7 +308,10 @@ for name, C in CASES.items():
                    "Cp_closure_worst_dCL_cycle",
                    "Cp_closure_worst_dCL_pct_of_CLmax",
                    "Cp_TE_jump_max_over_phases", "CL_kutta_inviscid",
-                   "Cp_DSV_core_min", "DSV_peak_swirl_over_U",
+                   "Cp_DSV_core_min", "DSV_circulation_over_Uc",
+                   "DSV_core_radius_chords", "DSV_peak_swirl_over_U",
+                   "DSV_core_radius_cells", "DSV_induced_at_wall_over_U",
+                   "DSV_edge_speed_over_U", "DSV_induced_lift_dCL",
                    "reduced_frequency_k", "mach_M", "mean_alpha_deg", "amp_alpha_deg"],
         "value": [round(CLmax,3), round(a[iCL],2), round(CL_static_max,3),
                   round(CLmax/CL_static_max,3), round(CMmin,3), round(a[iCM],2),
@@ -294,7 +321,12 @@ for name, C in CASES.items():
                   round(loopCL,4), round(cp_closure_pct,1),
                   round(cp_closure_worst_dCL,4),
                   round(100.0*cp_closure_worst_dCL/CLmax,2), round(cp_te_jump,3),
-                  round(cl_kutta,3), round(cp_dsv_core,3), round(dsv_swirl,3),
+                  round(cl_kutta,3), round(cp_dsv_core,3),
+                  round(dsv["Gamma_over_Uc"],3), round(dsv["rc_chords"],4),
+                  round(dsv["peak_swirl_over_U"],3),
+                  round(dsv["rc_chords"]*C["c"]/_dgrid, 2),
+                  round(dsv["induced_at_wall_over_U"],3),
+                  round(dsv["edge_speed_over_U"],3), round(dsv_lift,4),
                   C["k"], C["M"], C["a_mean"], C["a_amp"]],
     })
     met.to_csv(SOL/f"metrics_{name}.csv", index=False)
@@ -319,7 +351,7 @@ for name, C in CASES.items():
         j = phase_index(out, tgt, upstroke=ups)
         xoc, cp, upper = us.surface_cp(GEO, C["c"], C["U"], C["M"],
                                        out["alpha_deg"][j], out["CL"][j], out["CNv"][j],
-                                       out["tau_v"][j]/consts["Tvl"])
+                                       out["tau_v"][j]/consts["Tvl"], consts["Tvl"])
         for k_ in range(len(xoc)):
             cp_rows.append([tag, round(out["alpha_deg"][j],2),
                             "upper" if upper[k_] else "lower",
@@ -340,7 +372,8 @@ for name, C in CASES.items():
         j = int(np.argmax(out["CNv"])) if tag == "dsv" else phase_index(out, tgt, upstroke=ups)
         fld = us.reconstruct_field(GEO, C["c"], C["U"], C["M"], out["alpha_deg"][j],
                                    out["CL"][j], out["CNv"][j],
-                                   out["tau_v"][j]/consts["Tvl"], T_inf=C["T_inf"],
+                                   out["tau_v"][j]/consts["Tvl"], consts["Tvl"],
+                                   T_inf=C["T_inf"],
                                    nx_grid=NX_SOL, ny_grid=NY_SOL, **THERMO)
         dff = pd.DataFrame({
             "x_m": fld["X"].ravel().round(5), "y_m": fld["Y"].ravel().round(5),

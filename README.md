@@ -75,18 +75,24 @@ The loads come from the UIBS core. The 2-D fields and surface Cp come from a
 separate potential-flow reconstruction driven by the UIBS circulation.
 At peak lift, integrating the reconstructed surface Cp returns the C_L it was
 given to within **1 %** —
--0.8 % (Case A) and -0.6 % (Case B) — a number the pipeline
+-0.6 % (Case A) and -0.5 % (Case B) — a number the pipeline
 measures on every run and publishes as `Cp_closure_error_pct` in
-`05_solution/metrics_*.csv`, rather than a claim in a comment. That is a single
+`05_solution/metrics_*.csv`, rather than a claim in a comment. It is measured
+with the dynamic-stall vortex **off**, which is the only configuration in which
+the residual is a closure error at all: a free vortex near the body exerts a
+real force on it, so with the vortex present part of the residual is its induced
+lift, published separately as `DSV_induced_lift_dCL`
+(-0.0025 for Case A). That is a single
 instant and is *not* a bound on the cycle, which an earlier revision implied it
 was. What is measured over the whole cycle is the worst **absolute** residual,
 in C_L counts:
-0.0165 (Case A) and 0.0211 (Case B) —
-0.86 % and 1.21 % of
+0.0221 (Case A) and 0.0226 (Case B) —
+1.16 % and 1.3 % of
 each case's own C_L,max, published as `Cp_closure_worst_dCL_cycle` and
 `Cp_closure_worst_dCL_pct_of_CLmax`. It is given in C_L counts rather than as a
-worst instantaneous percentage because the cycle passes through C_L = 0.09,
-where a residual of 0.0014 reads as +1.6 % purely from the small denominator.
+worst instantaneous percentage because the cycle passes through a near-zero C_L,
+where a residual of a thousandth reads as a percent purely from the small
+denominator.
 The closure also converges: refining 160 to 1280 panels drives it
 monotonically to -0.04 %, which is what Blasius requires. It previously read
 -12.4 % and did not converge, and the explanation recorded
@@ -101,13 +107,22 @@ indicial C_L, which during dynamic stall departs deliberately from the inviscid
 attached circulation that the Kutta condition selects. That circulation is
 published beside it as `CL_kutta_inviscid`, and imposing it drives the jump to
 ~0.001; the measured ratio jump/|C_L - C_L_kutta| is 1.91-2.02 across 2-19°,
-falling monotonically with incidence. `Cp_DSV_core_min` is the suction at the
-centre of the reconstructed dynamic-stall vortex, evaluated at that centre
-rather than sampled off the field grid; it reads
--0.362 (Case A) and -0.263 (Case B) where a measured
-deep-stall core is usually nearer -3 to -6, and it is reported rather than tuned
-because nothing this study ships (integrated cl/cd/cm only) could calibrate a
-core size.
+falling monotonically with incidence. The dynamic-stall vortex has **no chosen constants**: its circulation is
+Kutta–Joukowski on its own normal-force contribution, Γ_v = ½ C_N^v U c — the
+same relation the bound sheet uses, so it carries exactly the C_N^v/C_N share of
+the circulation the lift implies (0.121 U c for Case A)
+and the circulation budget closes — and its core is the radius at which that
+circulation swirls at the edge speed of the shear layer that rolls it up
+(0.0112 c, swirling at 1.098 U).
+The core suction that follows, `Cp_DSV_core_min`, is
+-4.222 (Case A) and -4.26 (Case B) — against
+the -3 to -6 a measured deep-stall core shows, landing there without having been
+fitted to it. The two constants this replaces were chosen rather than derived and
+gave -0.36, an order of magnitude too shallow. The derived core is small:
+0.79 of a cell of the published field grid, so the
+*field* does not resolve it (`DSV_core_radius_cells`) even though its depth is
+exact, because the depth is evaluated at the vortex centre and the vortex's
+vorticity is added to the field in closed form rather than differenced.
 
 ### Headline results
 

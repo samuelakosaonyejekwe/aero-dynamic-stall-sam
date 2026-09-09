@@ -112,6 +112,16 @@ CLAIMS = [
      "metrics_A/B Cp_closure_worst_dCL_pct_of_CLmax"),
     ("README.md", f"{mA['Cp_DSV_core_min']} (Case A) and {mB['Cp_DSV_core_min']} (Case B)",
      "metrics_A/B Cp_DSV_core_min"),
+    # the vortex's derived properties, quoted in the same paragraph
+    ("README.md", f"({mA['DSV_circulation_over_Uc']} U c for Case A)",
+     "metrics_A DSV_circulation_over_Uc"),
+    ("README.md", f"({mA['DSV_core_radius_chords']} c, swirling at "
+                  f"{mA['DSV_peak_swirl_over_U']} U)",
+     "metrics_A DSV_core_radius_chords / DSV_peak_swirl_over_U"),
+    ("README.md", f"{mA['DSV_core_radius_cells']} of a cell",
+     "metrics_A DSV_core_radius_cells"),
+    ("README.md", f"({mA['DSV_induced_lift_dCL']} for Case A)",
+     "metrics_A DSV_induced_lift_dCL"),
     # ---- damping ----------------------------------------------------------
     ("README.md", f"{mA['aero_damping_Xi_normalised']} (Case A) and {mB['aero_damping_Xi_normalised']} (Case B)",
      "metrics_A/B aero_damping_Xi_normalised"),

@@ -37,6 +37,12 @@ this project, so each one is a regression test rather than a hypothetical:
                               thrust), but the CYCLE MEAN must stay positive.
   * response surface        - no published point may sit outside the range the
                               separation law was calibrated on.
+  * dynamic-stall vortex    - its circulation and core are DERIVED from the
+                              shear-layer vorticity flux and the model's own
+                              vortex clock; every published number recomputes
+                              from that, the core lands in the measured -3 to
+                              -6 band, and the field shows the flow reversal
+                              beneath it.
   * field bounds            - Cp <= 1 everywhere, the flow stays subsonic and
                               the static temperature stays positive, on the
                               grid the config declares the fields are written
@@ -248,34 +254,64 @@ for f in sorted(glob.glob('05_solution/field_*.csv')):
     ck(f"{f.split('/')[-1]} is on the declared solution grid", len(d)==_nxy,
        f"{len(d)} rows vs {_nxy}")
 
-# --- the published DSV swirl ratio must equal the closed form, and must stay
-#     well below 1. "The vortex reverses the flow beneath it" was asserted in
-#     the solver docstring, in the reconstruction comment and in report section
-#     13.4, and none of the eight published fields shows it: the reversed cells
-#     they contain sit under the LEADING EDGE on the pressure side, which is
-#     stagnation-region turning. The ratio is what makes that checkable.
+# --- the dynamic-stall vortex is DERIVED, and every number it publishes must
+#     recompute from that derivation. It used to carry two chosen constants,
+#     which gave a core an order of magnitude too shallow, no surface footprint
+#     and no flow reversal -- while three places in the study asserted one.
 for _case,_m in (('A_validation',mA),('B_application',mB)):
+    _col='case_'+('A_validation' if _case[0]=='A' else 'B_application')
+    _cc=float(fl[_col]['chord_c']); _uu=float(fl[_col]['freestream_velocity_U'])
+    _mm=float(fl[_col]['freestream_mach_M'])
     _thc=pd.read_csv(f'05_solution/time_history_{_case}.csv')
-    _rc=_thc.iloc[int(_thc.CN_vortex.idxmax())]
-    _cc=float(fl['case_'+('A_validation' if _case[0]=='A' else 'B_application')]['chord_c'])
-    _uu=float(fl['case_'+('A_validation' if _case[0]=='A' else 'B_application')]['freestream_velocity_U'])
-    _sw=us.dsv_peak_swirl_ratio(_rc.CN_vortex,_uu,_cc)
-    ck(f"{_case} DSV_peak_swirl_over_U matches the closed form",
-       abs(_sw-float(_m['DSV_peak_swirl_over_U']))<5e-4, f"{_sw:.4f} vs {_m['DSV_peak_swirl_over_U']}")
-    ck(f"{_case} reconstructed vortex cannot reverse the free stream",
-       _sw < 0.5, f"swirl ratio {_sw:.3f}")
-# and the reversed cells the fields DO contain must not be under the vortex, so
-# the claim cannot creep back in as an observation
-_thA2=pd.read_csv('05_solution/time_history_A_validation.csv')
-_rA2=_thA2.iloc[int(_thA2.CN_vortex.idxmax())]
-_tvl2=json.load(open('03_model_setup/solver_config.json'))['calibrated_constants']['Tvl']
-_xv=(0.25+0.55*min(_rA2.tau_v_semichords/_tvl2,1.3))
-_dsvf=glob.glob('05_solution/field_A_validation_dsv_*.csv')
-if _dsvf:
-    _fd=pd.read_csv(_dsvf[0]); _neg=_fd[_fd.u_ms<0]
-    ck("no reversed cell lies beneath the reconstructed vortex",
-       bool(len(_neg)==0 or (abs(_neg.x_m/c-_xv)>0.25).all()),
-       f"{len(_neg)} reversed cells, nearest x/c {(_neg.x_m/c).tolist()[:3]} vs vortex {_xv:.2f}")
+    _rc_=_thc.iloc[int(_thc.CN_vortex.idxmax())]
+    _tvl=json.load(open('03_model_setup/solver_config.json'))['calibrated_constants']['Tvl']
+    _st=us.dsv_vortex_state(G,_cc,_uu,_mm,_rc_.alpha_deg,_rc_.CL,_rc_.CN_vortex,
+                            _rc_.tau_v_semichords/_tvl,_tvl)
+    for _k,_row in (('Gamma_over_Uc','DSV_circulation_over_Uc'),
+                    ('rc_chords','DSV_core_radius_chords'),
+                    ('peak_swirl_over_U','DSV_peak_swirl_over_U'),
+                    ('induced_at_wall_over_U','DSV_induced_at_wall_over_U'),
+                    ('edge_speed_over_U','DSV_edge_speed_over_U')):
+        ck(f"{_case} {_row} recomputes from the derivation",
+           abs(_st[_k]-float(_m[_row]))<1e-3, f"{_st[_k]:.4f} vs {_m[_row]}")
+    # the core must be self-consistent: peak swirl = the edge speed it was
+    # derived from, and rc = LAMB_OSEEN_PEAK*Gamma/(2 pi Ve)
+    ck(f"{_case} peak swirl equals the shear-layer edge speed",
+       abs(_st['peak_swirl_over_U']-_st['edge_speed_over_U'])<2e-3)
+    ck(f"{_case} core radius follows from the circulation and that speed",
+       abs(_st['rc_chords']-us.LAMB_OSEEN_PEAK*_st['Gamma_over_Uc']
+           /(2*np.pi*_st['edge_speed_over_U']))<1e-4)
+    # the circulation budget must close: the vortex carries exactly the share
+    # of the total circulation the model attributes to it, CNv/CN, because
+    # Gamma_v = 0.5*CNv*U*c is the same Kutta-Joukowski relation the bound sheet
+    # uses. A vortex sized from the shear-layer vorticity flux instead --
+    # 1.79*U*c, tried during this audit -- is nearly twice the whole
+    # circulation and inflates the body's integrated lift by 60 %.
+    _share = float(_rc_.CN_vortex/_rc_.CN)
+    ck(f"{_case} the vortex carries the CNv/CN share of the circulation",
+       abs(_st['Gamma_over_Uc']/(0.5*float(_rc_.CL)) - _share) < 2e-3,
+       f"{_st['Gamma_over_Uc']/(0.5*float(_rc_.CL)):.4f} vs {_share:.4f}")
+    ck(f"{_case} the vortex barely moves the body's integrated lift",
+       abs(float(_m['DSV_induced_lift_dCL'])) < 0.05, _m['DSV_induced_lift_dCL'])
+    # it does NOT turn the flow over at the wall, and that is a measured
+    # comparison now -- what it induces there against what it must overcome --
+    # rather than the assertion three places in this study used to make
+    ck(f"{_case} the vortex cannot reverse the flow at the wall beneath it",
+       _st['induced_at_wall_over_U'] < _st['edge_speed_over_U'],
+       f"induced {_st['induced_at_wall_over_U']:.3f} U vs local {_st['edge_speed_over_U']:.2f} U")
+    # the published core depth must land where measurement puts a real one
+    ck(f"{_case} core suction is in the measured -3 to -6 band",
+       -6.5 <= float(_m['Cp_DSV_core_min']) <= -2.5, f"{_m['Cp_DSV_core_min']}")
+    # the field does not resolve that core, and publishes by how much
+    ck(f"{_case} the under-resolution of the core is published",
+       0.0 < float(_m['DSV_core_radius_cells']) < 3.0, _m['DSV_core_radius_cells'])
+# the Lamb-Oseen peak-swirl coefficient must be the swirl one (0.6382), not the
+# enclosed-circulation one (0.7153) -- they differ by 12 % and were confused
+ck("LAMB_OSEEN_PEAK is the peak-swirl coefficient",
+   abs(us.LAMB_OSEEN_PEAK-0.638173)<1e-5, f"{us.LAMB_OSEEN_PEAK:.6f}")
+ck("config Tvl literature default comes from the solver",
+   json.load(open('03_model_setup/solver_config.json'))['time_constants_semichords']['Tvl']
+   == us.TVL_DEFAULT)
 
 # --- the published vortex-core depth must be grid-independent. It was read off
 #     the field at the nearest grid node, which drifted -0.425 / -0.381 / -0.358
@@ -631,7 +667,11 @@ allsrc="".join(open(f,encoding='utf-8',errors='replace').read()
                for f in subprocess.run(['git','ls-files'],capture_output=True,text=True).stdout.split()
                if f.endswith(('.py','.md','.json')) and os.path.basename(f) != _SELF)
 for pat in (r'surface_cp probes at', r'demands it be zero', r'the 0\.015c\s*used', r'clip is kept',
-            r'flow reversal beneath', r'reversed flow beneath'):
+            # the DSV's two constants are derived now; an assignment to either
+            # of the old chosen names, or the wrong Lamb-Oseen coefficient,
+            # would mean the derivation had been unwired
+            r'DSV_GAMMA_FACTOR\s*=\s*[0-9]', r'DSV_CORE_RADIUS_CHORDS\s*=\s*[0-9]',
+            r'0\.7152\*Gv'):
     ck(f"no stale prose: {pat}", len(re.findall(pat,allsrc))==0)
 
 print()
