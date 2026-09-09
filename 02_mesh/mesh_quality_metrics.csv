@@ -20,3 +20,6 @@ min_cell_area_c2,2.02e-09
 inverted_cells,0
 wall_spacing_at_LE_chords,0.000154
 wall_spacing_at_TE_chords,0.00129
+farfield_angular_spacing_deg_min,0.0271
+farfield_angular_spacing_deg_max,2.2062
+farfield_angular_spacing_ratio,81.5

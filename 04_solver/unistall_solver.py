@@ -26,7 +26,8 @@ Two auxiliary modules make the solver "universal" for engineering output:
     "Cp_closure_worst_dCL_cycle" and "Cp_TE_jump_max_over_phases"
     recompute them on every run):
       - CLOSURE. Integrating the surface Cp now recovers the C_L it was given to
-        -0.28 % at alpha 2 deg, -0.37 % at 10 deg and -0.58 % at 17.5 deg with
+        -0.28 % at alpha 2 deg (C_L 0.22), -0.37 % at 10 deg (C_L 1.10) and
+        -0.58 % at 17.5 deg (C_L 1.91) with
         the dynamic-stall vortex switched off, and to -0.8 % (Case A) / -0.6 %
         (Case B) at peak lift with it present -- the published
         Cp_closure_error_pct. Those are single instants and are NOT a bound on
@@ -539,7 +540,9 @@ def _surface_velocity(xp, yp, xc, yc, L, sigma, gam, U, alpha):
     the only places the discrete solution actually satisfies the boundary
     condition. Measured at alpha=10 deg, C_L=1.10: the surface-C_p integral
     returned -48.7% of the circulation it was given with the self-term missing,
-    and -0.18% with this routine.
+    and -0.37% with this routine. (-0.18% stood here for a while: that was the
+    value BEFORE the panel-tangent fix described just below, which is worth a
+    point of closure at 17.5 deg and moved this condition too.)
     """
     # Tangents and normals come from the PANEL END-POINTS, which is what
     # _solve_panels imposed tangency with. Taking them from control-point to
@@ -727,8 +730,12 @@ def surface_cp(naca_csv, c, U, M, alpha_deg, CL, CNv, tau_over_Tvl):
          march. Scaling the resulting Cp again multiplied the reconstructed
          load by a further 1/beta = 1.048 at M = 0.3, i.e. +4.8%.
 
-    With all three corrected the closure error is -0.18% at alpha = 10 deg and
-    stays inside -0.4% up to 19 deg, against -12.4% published previously.
+    With all three corrected the closure error is -0.37% at alpha = 10 deg and
+    falls monotonically from -0.28% at 2 deg to -0.62% at 19 deg, against -12.4%
+    published previously. Both figures here read -0.18% and "inside -0.4% up to
+    19 deg" until this audit: they were the pre-panel-tangent values, and they
+    contradicted the -0.37% and -0.58% this module's own header already
+    published for the same conditions. The header is the measured set.
 
     Returns (x/c at the control points, Cp, upper_mask).
     """

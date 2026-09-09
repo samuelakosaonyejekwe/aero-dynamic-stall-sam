@@ -17,13 +17,18 @@ this project, so each one is a regression test rather than a hypothetical:
   * geometry                - the section is checked against the analytic NACA
                               0012 polynomial and its exact enclosed area.
   * mesh validity           - 22 folded cells were once hidden by an abs() in
-                              the area metric; inverted_cells must be zero.
+                              the area metric; inverted_cells must be zero, and
+                              the worst cells must be where the header says
+                              they are (it named the wrong place for a while).
   * mesh spacing precision  - the published spacing table was once rounded by
                               decimal places, so the geometric growth law it
                               documents could not be recovered from it.
   * reconstruction closure  - integrating the surface Cp must return the C_L the
                               reconstruction was given (Blasius). This read
-                              -12.4 % before three evaluation errors were fixed.
+                              -12.4 % before three evaluation errors were
+                              fixed, and the three figures the solver docstring
+                              publishes are parsed out of it and re-measured,
+                              because two further copies of them had gone stale.
   * Kutta reference         - the trailing-edge jump must vanish when the
                               inviscid attached circulation is imposed.
   * solver edge cases       - zero, negative and extreme inputs must stay finite.
@@ -113,15 +118,48 @@ ck("mesh max aspect ratio recomputes from published nodes",
    abs(_arr.max()-float(q['max_aspect_ratio']))<0.5, f"{_arr.max():.1f} vs {float(q['max_aspect_ratio']):.1f}")
 ck("mesh inverted cells recompute from published nodes",
    int(np.sum(_ar_area*np.sign(np.median(_ar_area))<=0))==int(float(q['inverted_cells'])))
+# The header names WHERE the worst cells are, after having named the wrong place
+# for a long time ("near the trailing edge"). Re-measure it, so the explanation
+# cannot go stale again: every one of the twenty worst-aspect-ratio cells must
+# be in the first wall-normal layer, and none of them at the trailing edge.
+_top=np.dstack(np.unravel_index(np.argsort(_arr.ravel())[-20:], _arr.shape))[0]
+ck("the worst cells are all in the first wall-normal layer",
+   bool(all(int(t[0])==0 for t in _top)), f"layers {sorted({int(t[0]) for t in _top})}")
+ck("the worst cells are at mid-chord, not at the trailing edge",
+   bool(all(0.15*_I < int(t[1]) < 0.85*_I for t in _top)),
+   f"wrap indices {sorted({int(t[1]) for t in _top})[:4]}")
+# and the far-field azimuthal spacing the metrics now publish must recompute
+_thf=np.unwrap(np.arctan2(_Y[-1,:]-0.0, _X[-1,:]-0.5*c))
+_dth=np.abs(np.diff(_thf)); _dth=_dth[_dth>0]
+ck("far-field angular spacing ratio recomputes from published nodes",
+   abs(_dth.max()/_dth.min()-float(q['farfield_angular_spacing_ratio']))<0.5,
+   f"{_dth.max()/_dth.min():.1f} vs {q['farfield_angular_spacing_ratio']}")
 ck("near-wall growth ratio recovers from published nodes",
    abs(np.hypot(np.diff(_X[:6,128]),np.diff(_Y[:6,128]))[1]/
        np.hypot(np.diff(_X[:6,128]),np.diff(_Y[:6,128]))[0]
        -float(q['wall_normal_growth_ratio']))<1e-3)
 
 # --- reconstruction invariants
-for a,CL in ((2.,0.22),(10.,1.10),(17.5,1.91)):
+# The three closure figures are PARSED OUT of the solver's own docstring and
+# checked against a fresh measurement, rather than restated here. Two other
+# copies of these numbers, in surface_cp and _surface_velocity, had gone stale
+# (-0.18 % against the header's -0.37 % for the same condition) because nothing
+# re-measured them. The docstring is the source; this is what keeps it true.
+_hdr=re.search(r'([-\d.]+) % at alpha 2 deg \(C_L ([\d.]+)\).*?'
+               r'([-\d.]+) % at 10 deg \(C_L ([\d.]+)\).*?'
+               r'([-\d.]+) % at 17\.5 deg \(C_L ([\d.]+)\)',
+               us.__doc__, re.S)
+ck("solver docstring states its three closure figures with their C_L", _hdr is not None)
+_trip=([(2.,float(_hdr.group(2)),float(_hdr.group(1))),
+        (10.,float(_hdr.group(4)),float(_hdr.group(3))),
+        (17.5,float(_hdr.group(6)),float(_hdr.group(5)))] if _hdr else
+       [(2.,0.22,None),(10.,1.10,None),(17.5,1.91,None)])
+for a,CL,want in _trip:
     _,pct,_=us.surface_load_closure(G,c,U,M,a,CL,0.,0.)
     ck(f"closure |err|<1.5% at alpha={a}", abs(pct)<1.5, f"{pct:+.2f}%")
+    if want is not None:
+        ck(f"closure at alpha={a} matches the figure the docstring publishes",
+           abs(pct-want)<0.01, f"measured {pct:+.3f}% vs documented {want:+.2f}%")
 ckl=us.kutta_reference_CL(G,c,U,M,10.0)
 _,_,tj=us.surface_load_closure(G,c,U,M,10.0,ckl,0.,0.)
 ck("TE jump vanishes at CL_kutta", tj<5e-3, f"{tj:.4f}")

@@ -11,11 +11,32 @@ CFD quality metrics for it.
 
 Quality caveat -- every number below is written to mesh_quality_metrics.csv by
 this script, so it cannot drift away from the grid it describes. Read them
-before reusing this grid for CFD. The worst cells sit near the trailing edge,
-where the wrap turns through the largest angle. The loads reported by this study
-do not depend on this grid -- the UIBS core is meshless and the field
-reconstruction is panel-based -- so the grid is a documentation and hand-off
-artefact, not a production CFD mesh.
+before reusing this grid for CFD. The loads reported by this study do not depend
+on this grid -- the UIBS core is meshless and the field reconstruction is
+panel-based -- so the grid is a documentation and hand-off artefact, not a
+production CFD mesh.
+
+WHERE THE WORST CELLS ACTUALLY ARE. This header used to say "near the trailing
+edge, where the wrap turns through the largest angle", which is not what the
+grid does. Measured from the published nodes: all twenty of the highest-aspect-
+ratio cells lie in the FIRST wall-normal layer at wrap indices 59-68 and
+187-196, i.e. at MID-CHORD on both surfaces (i = 0 and i = 256 are the trailing
+edge, i = 128 the leading edge); the worst is at x = 0.152 m, y = 0.016 m,
+which is 0.51c. That is the ordinary signature of a boundary-layer grid: the
+cosine wall distribution is coarsest at mid-chord and the first cell is 3.94e-06
+m tall for y+ = 1, so the ratio between them peaks exactly there. It has nothing
+to do with the trailing edge.
+
+FAR-FIELD AZIMUTHAL SPACING, the thing fig_mesh_full.png actually shows and the
+metrics did not report. Each wall point is given a far-field target at the same
+normalised ARCLENGTH around the outer circle, so the outer boundary inherits the
+wall's cosine clustering: the marching lines bunch towards the trailing- and
+leading-edge directions and thin out top and bottom. The ratio between the
+widest and narrowest angular gap on the outer circle is published as
+farfield_angular_spacing_ratio. It is a property of that mapping, not a fault --
+the grid has no inverted cells and the quality metrics above bound it -- but
+anyone taking this grid to CFD should see the number rather than infer it from
+a picture.
 
 Two defects that an unsigned quality metric cannot see were found and fixed here:
   * INVERTED CELLS. The previous grid contained 22 folded (negative-Jacobian)
@@ -50,11 +71,12 @@ Measured effect of the two fixes, old -> new (all rows of mesh_quality_metrics.c
 
 Outputs
   mesh_nodes.csv              every grid node (i, j, x_m, y_m, wall_distance_m)
-  mesh_quality_metrics.csv    scalar quality metrics (y+, growth, AR, ortho, skew)
+  mesh_quality_metrics.csv    scalar quality metrics (y+, growth, AR, ortho,
+                              skew, far-field azimuthal spacing)
   mesh_radial_spacing.csv     wall-normal spacing law
   fig_mesh_full.png           full O-grid (far field)
   fig_mesh_le_zoom.png        leading-edge boundary-layer zoom
-  fig_mesh_te_zoom.png        trailing-edge zoom
+  fig_mesh_te_zoom.png        trailing-edge zoom (no wake cut: this is an O-grid)
   fig_mesh_wall_spacing.png   first-cell height / growth-ratio plot
 
 Topology note: the wall line wraps the complete surface and every node is offset
@@ -219,6 +241,14 @@ _dwall = np.hypot(np.diff(xw), np.diff(yw))
 _iLE = int(np.argmin(xw))
 pct_skew_gt_05 = 100.0*float(np.mean(skew > 0.5))
 pct_ar_gt_1000 = 100.0*float(np.mean(ar > 1000.0))
+# Far-field azimuthal spacing. The outer boundary inherits the wall's cosine
+# clustering (see the header), which is the strongest visual feature of
+# fig_mesh_full.png and was the one property of this grid the metrics did not
+# report. Measured about the same mid-chord centre the targets are laid out from.
+_thf = np.unwrap(np.arctan2(Yg[:, -1] - CY, Xg[:, -1] - CX))
+_dth = np.abs(np.diff(_thf))
+_dth = _dth[_dth > 0]
+ff_ratio = float(_dth.max()/_dth.min())
 
 metrics = pd.DataFrame({
     "metric": ["topology", "i_nodes_wrap", "j_nodes_normal", "total_nodes",
@@ -227,13 +257,17 @@ metrics = pd.DataFrame({
                "max_aspect_ratio", "mean_aspect_ratio", "pct_cells_aspect_ratio_gt_1000",
                "min_orthogonality_deg", "max_skewness", "mean_skewness",
                "pct_cells_skewness_gt_0.5", "min_cell_area_c2", "inverted_cells",
-               "wall_spacing_at_LE_chords", "wall_spacing_at_TE_chords"],
+               "wall_spacing_at_LE_chords", "wall_spacing_at_TE_chords",
+               "farfield_angular_spacing_deg_min", "farfield_angular_spacing_deg_max",
+               "farfield_angular_spacing_ratio"],
     "value": ["O-grid (body-fitted, no wake cut)", I, J, I*J, (I-1)*(J-1), FARFIELD,
               round(y1,7), round(y1*CHORD,8), round(GR,4), Y_PLUS_TARGET,
               round(ar.max(),1), round(ar.mean(),1), round(pct_ar_gt_1000,3),
               round(ortho.min(),1), round(skew.max(),3), round(skew.mean(),3),
               round(pct_skew_gt_05,3), float("%.2e"%area_abs.min()), n_inverted,
-              float("%.2e"%_dwall[_iLE]), float("%.2e"%_dwall[0])],
+              float("%.2e"%_dwall[_iLE]), float("%.2e"%_dwall[0]),
+              round(float(np.degrees(_dth.min())), 4),
+              round(float(np.degrees(_dth.max())), 4), round(ff_ratio, 1)],
 })
 # Validate BEFORE writing anything. The guard used to sit immediately AFTER
 # this file was written, so a run that failed validation still published
@@ -308,7 +342,10 @@ fig.savefig(HERE/"fig_mesh_le_zoom.png"); plt.close(fig)
 fig, ax = plt.subplots(figsize=(6, 6))
 plot_grid(ax, 2, 1, lw=0.5)
 ax.set_xlim(0.85*CHORD, 1.10*CHORD); ax.set_ylim(-0.12*CHORD, 0.12*CHORD)
-ax.set_title("Trailing-edge / near-wake clustering")
+# "near-wake" was a C-grid word on an O-grid figure. This grid has no wake cut
+# -- the wall line wraps the whole section and the header says so -- so what is
+# downstream of the trailing edge here is the wrap closing, not a wake.
+ax.set_title("Trailing-edge clustering (O-grid: no wake cut)")
 ax.set_xlabel("x [m]"); ax.set_ylabel("y [m]")
 fig.savefig(HERE/"fig_mesh_te_zoom.png"); plt.close(fig)
 

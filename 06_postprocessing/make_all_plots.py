@@ -262,6 +262,17 @@ def contour_plot(xu, yu, Z, title, cbar_label, cmap, c, fname,
     from matplotlib.ticker import MaxNLocator
     cb.locator = MaxNLocator(nbins=7, steps=[1, 2, 2.5, 5, 10])
     cb.update_ticks()
+    # Drop any tick the locator puts OUTSIDE the colour limits. extend="both"
+    # gives the bar a triangle at each end, and a round tick just beyond the
+    # scale is drawn inside that triangle, hard against the last real tick: on
+    # the percentile-clipped temperature bars, whose whole range can be 0.5 K,
+    # the two labels then print on top of each other (291.2 over 291.1 on the
+    # case-B recovery-temperature fields). Every one of the 24 percentile-scaled
+    # bars was placing at least one tick out of range this way. The colour
+    # limits are read back off the mappable so this holds for the fixed scales
+    # too, not just the percentile ones.
+    _lo, _hi = cf.get_clim()
+    cb.set_ticks([t for t in cb.get_ticks() if _lo - 1e-9 <= t <= _hi + 1e-9])
     cb.set_label(cbar_label)
     ax.set_aspect("equal"); ax.grid(False)
     ax.set_xlim(xu.min(), xu.max()); ax.set_ylim(yu.min(), yu.max())
