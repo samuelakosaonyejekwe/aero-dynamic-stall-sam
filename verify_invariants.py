@@ -24,6 +24,11 @@ this project, so each one is a regression test rather than a hypothetical:
   * mesh spacing precision  - the published spacing table was once rounded by
                               decimal places, so the geometric growth law it
                               documents could not be recovered from it.
+  * panel solver vs exact   - a circle's Cp is 1 - 4 sin^2(theta) in closed
+                              form, so the panel routines are checked against
+                              something outside themselves, and the second-order
+                              convergence is pinned too. Symmetry and the
+                              Kirchhoff round-trip likewise.
   * reconstruction closure  - integrating the surface Cp must return the C_L the
                               reconstruction was given (Blasius). This read
                               -12.4 % before three evaluation errors were
@@ -33,6 +38,10 @@ this project, so each one is a regression test rather than a hypothetical:
   * Kutta reference         - the trailing-edge jump must vanish when the
                               inviscid attached circulation is imposed.
   * solver edge cases       - zero, negative and extreme inputs must stay finite.
+  * physical limits         - zero amplitude must give exactly the static
+                              polar, and k -> 0 must collapse the hysteresis
+                              loop onto it. Both check the march against
+                              physics rather than against its own output.
   * published metrics       - re-derived from the raw time histories.
   * drag                    - instantaneous C_D goes negative (real unsteady
                               thrust), but the CYCLE MEAN must stay positive.
@@ -60,7 +69,8 @@ this project, so each one is a regression test rather than a hypothetical:
                               lines and every long table 33 of the 38 rows its
                               caption claimed.
   * report completeness     - every paragraph, table cell and image of
-                              case.docx must reach the rendered PDF.
+                              case.docx must reach the rendered PDF, and no
+                              page may overlap its own content or run off it.
   * experimental provenance - the frame conditions must match the .mat files.
   * config vs code          - solver_config.json must still describe the
                               solver: f_min, n_panels, the default grid, the
@@ -167,6 +177,64 @@ ck("near-wall growth ratio recovers from published nodes",
        np.hypot(np.diff(_X[:6,128]),np.diff(_Y[:6,128]))[0]
        -float(q['wall_normal_growth_ratio']))<1e-3)
 
+# --- THE PANEL SOLVER AGAINST AN EXACT SOLUTION. Every other check on the
+#     reconstruction is internal -- closure against the circulation it was
+#     handed, the Kutta reference, convergence under refinement -- so all of
+#     them would pass a solver that was self-consistently wrong. A circle in
+#     uniform flow has Cp = 1 - 4 sin^2(theta) in closed form, so feeding the
+#     panel routines a circle tests them against something outside themselves.
+#     It also pins the ORDER: refining 160 -> 640 panels must cut the error
+#     roughly fourfold, which a first-order bug would not do.
+import tempfile as _tf
+_th=np.linspace(0,2*np.pi,401)
+_cd=pd.DataFrame({"x_over_c":0.5+0.5*np.cos(_th),"y_over_c":0.5*np.sin(_th)})
+_cf=_tf.NamedTemporaryFile(suffix='.csv',delete=False,mode='w')
+_cd.to_csv(_cf.name,index=False); _cf.close()
+_orig_af=us._airfoil_surface
+_cerr={}
+for _np_ in (160,640):
+    us._airfoil_surface=lambda csv,cc,n_panel=_np_,_o=_orig_af,_n=_np_: _o(csv,cc,_n)
+    _,_cp,_=us.surface_cp(_cf.name,1.0,100.0,0.0,0.0,0.0,0.0,0.0)
+    us._airfoil_surface=_orig_af
+    _xp,_yp=_orig_af(_cf.name,1.0,_np_)
+    _xcc=0.5*(_xp[:-1]+_xp[1:]); _ycc=0.5*(_yp[:-1]+_yp[1:])
+    _exact=1.0-4.0*np.sin(np.arctan2(_ycc,_xcc-0.5))**2
+    _cerr[_np_]=float(np.abs(_cp-_exact).max())
+os.unlink(_cf.name)
+ck("panel Cp matches the exact circle solution at 160 panels",
+   _cerr[160]<0.06, f"max|dCp| {_cerr[160]:.4f}")
+ck("panel Cp matches the exact circle solution at 640 panels",
+   _cerr[640]<0.02, f"max|dCp| {_cerr[640]:.4f}")
+ck("the panel discretisation is second order (4x refinement -> ~4x less error)",
+   3.0 < _cerr[160]/_cerr[640] < 5.5, f"ratio {_cerr[160]/_cerr[640]:.2f}")
+
+# --- the symmetric section must behave symmetrically. A sign or index error in
+#     the panel normals, the sheet, or the surface self-terms would break this
+#     while leaving every self-referential check intact.
+for _asym,_clsym in ((5.,0.55),(12.,1.32)):
+    _,_c1,_=us.surface_cp(G,c,U,M, _asym, _clsym,0,0)
+    _,_c2,_=us.surface_cp(G,c,U,M,-_asym,-_clsym,0,0)
+    ck(f"surface Cp mirrors between alpha=+-{_asym}", float(np.abs(_c1-_c2[::-1]).max())<1e-9,
+       f"{np.abs(_c1-_c2[::-1]).max():.2e}")
+    _l1,_,_=us.surface_load_closure(G,c,U,M, _asym, _clsym,0,0)
+    _l2,_,_=us.surface_load_closure(G,c,U,M,-_asym,-_clsym,0,0)
+    ck(f"integrated CL is antisymmetric at alpha=+-{_asym}", abs(_l1+_l2)<1e-9,
+       f"{_l1:+.6f} vs {_l2:+.6f}")
+
+# --- the Kirchhoff inversion must round-trip: the f it recovers from the
+#     measured polar must reproduce that polar through the forward relation.
+_sref=pd.read_csv('03_model_setup/static_polar_reference.csv')
+_CNa=json.load(open('03_model_setup/solver_config.json'))['lift_curve_slope_CNalpha_per_rad']
+_fst=us.calibrate_separation(_sref.alpha_deg,_sref.Cl,_sref.Cd,_CNa)
+_ar=np.radians(_sref.alpha_deg.values)
+_CNref=_sref.Cl.values*np.cos(_ar)+_sref.Cd.values*np.sin(_ar)
+_fv=_fst(_sref.alpha_deg.values)
+_CNfwd=_CNa*((1+np.sqrt(_fv))/2)**2*_ar
+_mk=(_fv>us.F_MIN+1e-9)&(_sref.alpha_deg.values>0.5)
+ck("Kirchhoff inversion round-trips to the measured polar",
+   float(np.abs(_CNfwd-_CNref)[_mk].max())<1e-12,
+   f"max |dCN| {np.abs(_CNfwd-_CNref)[_mk].max():.2e} over {int(_mk.sum())} points")
+
 # --- reconstruction invariants
 # The three closure figures are PARSED OUT of the solver's own docstring and
 # checked against a fresh measurement, rather than restated here. Two other
@@ -194,6 +262,44 @@ ck("TE jump vanishes at CL_kutta", tj<5e-3, f"{tj:.4f}")
 for a,CL,CNv,tau in ((0.,0.,0.,0.),(-10.,-1.1,0.,0.),(45.,2.5,0.,0.),(17.5,1.91,0.24,5.0)):
     x,cp,_=us.surface_cp(G,c,U,M,a,CL,CNv,tau)
     ck(f"surface_cp finite at edge case a={a},CL={CL}", np.all(np.isfinite(cp)))
+
+# --- PHYSICAL LIMITS OF THE MARCH. Everything else here checks the march
+#     against its own published output; these check it against physics. A
+#     reduced-order unsteady model has two limits it must hit exactly, and
+#     nothing tested either.
+_cfgm=json.load(open('03_model_setup/solver_config.json'))
+_CNam=_cfgm['lift_curve_slope_CNalpha_per_rad']
+_cst=dict(**_cfgm['indicial_circulatory'],**_cfgm['time_constants_semichords'])
+_cst.update({k:v for k,v in _cfgm['calibrated_constants'].items() if k!='comment'})
+_srf=pd.read_csv('03_model_setup/static_polar_reference.csv')
+_fsm=us.calibrate_separation(_srf.alpha_deg,_srf.Cl,_srf.Cd,_CNam)
+# the indicial deficiency must relax to the full circulatory load: A1+A2 = 1,
+# or the step response never reaches its steady value
+_ai=_cfgm['indicial_circulatory']
+ck("indicial A1+A2 = 1 (the step response relaxes to unity)",
+   abs(_ai['A1']+_ai['A2']-1.0) < 1e-12, f"A1+A2 = {_ai['A1']+_ai['A2']}")
+# ZERO AMPLITUDE: no motion, so no unsteady content at all -- the loads must be
+# constant and equal the static polar the separation law was fitted to.
+_o0=us.solve_dynamic_stall(8.0,0.0,0.10,0.30,0.30,102.09,_fsm,CNalpha=_CNam,
+                           consts=_cst,n_per_cycle=360,n_cycles=3)
+_f8=float(_fsm(8.0)); _a8=np.radians(8.0)
+_cl8=(_CNam*((1+np.sqrt(_f8))/2)**2*_a8)*np.cos(_a8) \
+     + _cst['eta']*_CNam*_a8**2*np.sqrt(_f8)*np.sin(_a8)
+ck("zero-amplitude motion produces no unsteady content",
+   float(_o0['CL'].max()-_o0['CL'].min())<1e-12, f"spread {_o0['CL'].max()-_o0['CL'].min():.2e}")
+ck("zero-amplitude load equals the static polar",
+   abs(float(_o0['CL'][0])-_cl8)<1e-9, f"{_o0['CL'][0]:.6f} vs {_cl8:.6f}")
+# QUASI-STEADY LIMIT: as the reduced frequency goes to zero the hysteresis loop
+# must collapse onto that same static polar.
+_oq=us.solve_dynamic_stall(8.0,2.0,1e-3,0.30,0.30,102.09,_fsm,CNalpha=_CNam,
+                           consts=_cst,n_per_cycle=720,n_cycles=6)
+_aq=_oq['alpha_deg']; _fq=_fsm(_aq); _arq=np.radians(_aq)
+_clq=(_CNam*((1+np.sqrt(_fq))/2)**2*_arq)*np.cos(_arq) \
+     + _cst['eta']*_CNam*_arq**2*np.sqrt(_fq)*np.sin(_arq)
+ck("k -> 0 collapses the loop onto the static polar",
+   float(np.abs(_oq['CL']-_clq).max())<5e-3, f"max |dCL| {np.abs(_oq['CL']-_clq).max():.5f}")
+ck("k -> 0 closes the hysteresis loop",
+   abs(float(us._trapz(_oq['CL'],_arq)))<2e-3, f"loop area {abs(us._trapz(_oq['CL'],_arq)):.2e}")
 
 # --- metrics re-derived
 for case,m in (('A_validation',mA),('B_application',mB)):
@@ -567,6 +673,43 @@ try:
     ck("no CSV column name is broken across lines in the report", not _broken,
        f"{len(_broken)} broken, e.g. {_broken[:4]}")
     _rp.close()
+except ImportError:
+    pass
+
+# --- NO PAGE of the shipped report may overlap its own content. The house rule
+#     the figures follow ("text never overlaps a figure") was only ever enforced
+#     inside individual matplotlib figures; nothing checked the assembled
+#     document, where the renderer lays out text, tables and images together.
+#     Text on text, text on an image, anything outside the page rectangle, or a
+#     body page left near-empty by a bad break -- all of it, on every page.
+try:
+    import fitz as _fz6
+    if os.path.exists('aero_dynamic_stall_report.pdf'):
+        def _ov(a, b, tol=1.5):
+            return (a[0] < b[2]-tol and b[0] < a[2]-tol
+                    and a[1] < b[3]-tol and b[1] < a[3]-tol)
+        _rp6 = _fz6.open('aero_dynamic_stall_report.pdf')
+        _nb6 = _rp6.page_count
+        for _cv in ('UNISTALL_data_dossier.pdf', 'UNISTALL_plots_album.pdf'):
+            if os.path.exists(_cv):
+                with _fz6.open(_cv) as _c6: _nb6 -= _c6.page_count
+        _bad6 = []
+        for _i6, _p6 in enumerate(_rp6):
+            _bl = [b for b in _p6.get_text("blocks") if b[4].strip()]
+            _im = [im['bbox'] for im in _p6.get_image_info()]
+            for _j in range(len(_bl)):
+                for _k in range(_j+1, len(_bl)):
+                    if _ov(_bl[_j][:4], _bl[_k][:4]): _bad6.append((_i6+1, 'text/text'))
+            for _b in _bl:
+                if any(_ov(_b[:4], _q) for _q in _im): _bad6.append((_i6+1, 'text/image'))
+                if (_b[0] < -1 or _b[1] < -1
+                        or _b[2] > _p6.rect.x1+1 or _b[3] > _p6.rect.y1+1):
+                    _bad6.append((_i6+1, 'outside page'))
+            if _i6 < _nb6 and not _im and len("".join(b[4] for b in _bl).strip()) < 40:
+                _bad6.append((_i6+1, 'near-empty body page'))
+        ck("no page of the report overlaps its own content or runs off it",
+           not _bad6, f"{len(_bad6)} on pages {sorted({b[0] for b in _bad6})[:6]}")
+        _rp6.close()
 except ImportError:
     pass
 
