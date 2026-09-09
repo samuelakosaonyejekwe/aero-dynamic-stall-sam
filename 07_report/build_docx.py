@@ -10,7 +10,6 @@ calibration sources.
 
 Author: Akosa Samuel Onyejekwe (independent).  No third-party attribution.
 """
-import glob
 from pathlib import Path
 import json
 import pandas as pd
@@ -288,7 +287,7 @@ P("The impulsive time constant as implemented, written out because it is a "
   "4K_αc/U. It is the convention the calibrated constants of §10 were fitted "
   "with; swapping both terms to the classical scaling and re-running the five "
   "real NACA 0012 frames of §12.2 with those same constants moves the held-out "
-  "mean peak-lift error from 1.7 % to 3.0 %, so the implemented form is kept "
+  "mean peak-lift error from 1.7 % to 2.9 %, so the implemented form is kept "
   "and documented rather than silently reinterpreted. This equation previously "
   "read T_I = K_αc/a, which the solver has never computed.",
   italic=True, size=10)
@@ -588,7 +587,7 @@ H("12.2 Dynamic validation against REAL digitised experimental loops", 2)
 P("The dynamic constants are calibrated ONLY on one real NACA 0012 loop "
   "(frame 9302 = Case A, 10°±10°, M0.30, k0.10) and then FROZEN. The frozen "
   "model is used to PREDICT four held-out real NACA 0012 loops spanning "
-  "light→deep stall and reduced frequency. Data: McAlister/Pucci/McCroskey/Carr "
+  "light→deep stall and reduced frequency. Data: McCroskey/McAlister/Carr/Pucci "
   "(1982), NASA TM-84245, digitised via the open BL-DSM-JFS-2021 repository.")
 P("Airfoil identity is CONFIRMED (not inferred) from that repository's "
   "load_frame.m mapping: frames 7019–14220 = NACA 0012, 24022–31310 = AMES-01, "
@@ -683,8 +682,18 @@ for _j, (title, pref) in enumerate(groups, start=1):
         P("The dynamic-stall vortex is a roll-up of upper-surface boundary-layer "
           "vorticity and so rotates in the same sense as the bound circulation; both "
           "appear with the same sign below. The suction it produces comes from its "
-          "low-pressure core, and the reversed flow beneath the core as it convects "
-          "aft is the characteristic signature of the stall. The reported loads come "
+          "low-pressure core. It does NOT reverse the flow beneath itself, and this "
+          "paragraph used to say it did: the reconstructed vortex's peak swirl is "
+          f"{_mA_c['DSV_peak_swirl_over_U']} of the free stream "
+          "(DSV_peak_swirl_over_U in metrics_*.csv, a closed-form Lamb-Oseen "
+          "maximum that depends on no grid), and a quarter of the free stream "
+          "cannot turn it over. The published fields agree: eight of the 36 826 "
+          "unmasked cells of the Case-A dsv field carry a negative streamwise "
+          "velocity and all eight sit under the LEADING EDGE on the pressure side, "
+          "which is ordinary stagnation-region turning at 17.5°, while the vortex is "
+          "at x/c = 0.79; two of the eight fields contain no reversed cell at all. "
+          "The cause is the diffuse core discussed in §4.9 — the same two constants "
+          "nothing in this study can calibrate. The reported loads come "
           "from the UIBS core and do not depend on this reconstruction.",
           italic=True, size=10)
     for f in sorted(plots.glob(pref + "*.png")):

@@ -14,7 +14,7 @@ Generates the two PDF deliverables that accompany case.docx:
                                   are too large to typeset and ship as CSV).
 Author: Akosa Samuel Onyejekwe (independent).  No black is used anywhere.
 """
-import sys, glob, json, textwrap
+import sys, json, textwrap
 from pathlib import Path
 import pandas as pd
 import matplotlib
@@ -111,9 +111,19 @@ print(f"[pdf] plots album: {n} figure pages -> {out1.name}")
 
 # ======================================================= 2. DATA DOSSIER
 # max_rows was 34, which cut the 36-row response-surface tables to 34 and
-# declared "first 34 of 36 rows" -- hiding two rows of a complete design
-# space for no gain. 38 shows them whole; measured to add no new overflow
-# (blocks outside the page rectangle unchanged) and no extra pages.
+# declared "first 34 of 36 rows" -- hiding two rows of a complete design space
+# for no gain. 38 shows them whole.
+#
+# Raising it was justified as "measured to add no new overflow (blocks outside
+# the page rectangle unchanged)", and that measurement was worthless: a
+# matplotlib table that runs off the page is CLIPPED at the media box, so the
+# rows that fall off leave no block outside the page rectangle to count -- they
+# leave nothing at all. Measured properly (count the rendered rows against the
+# row count the caption claims), a 39-row table -- header plus 38 -- came to
+# 1.173 of the axes height at the fixed 0.0301 cell height matplotlib gives it,
+# so only 33 data rows survived on EVERY table with more than 33 rows, under a
+# caption that said 38. _fit_rows below shrinks the rows and the type until the
+# table fits, so the caption and the page agree again.
 def table_page(pdf, df, title, max_rows=38, max_cols=10):
     """Render one table. A table WIDER than max_cols is split across pages, each
     carrying the first (identifier) column plus a block of the rest, rather than
@@ -130,6 +140,38 @@ def table_page(pdf, df, title, max_rows=38, max_cols=10):
                             f"{cols[0]}..{cols[-1]}")
         return
     _table_page_one(pdf, df, title, max_rows, None)
+
+
+# Axes fraction the table may occupy. The axes is [0.03, 0.03, 0.94, 0.88] of an
+# 11 x 8.5 sheet and the table is anchored "upper center" inside it, so 1.0 is
+# the whole axes; 0.99 leaves a hair so the last row's rule is not on the edge.
+_TABLE_MAX_H = 0.99
+
+
+def _fit_rows(tbl, n_rows, fs):
+    """Shrink the row height, and the type with it, until every row is on the page.
+
+    matplotlib gives a table cell a FIXED height (0.0301 of the axes here, and
+    it does not depend on the font size), so a 39-row table stands 1.17 axes
+    high and the bottom six rows are simply clipped away by the media box. They
+    do not overflow visibly and they do not appear in the PDF at all, which is
+    why the caption could claim 38 rows over a page showing 33 without anything
+    catching it. Rescale instead, and return the font size that goes with the
+    new row height so the text still sits inside its own cell.
+    """
+    cells = tbl.get_celld()
+    if not cells:
+        return fs
+    h = max(c.get_height() for c in cells.values())
+    total = h*n_rows
+    if total <= _TABLE_MAX_H:
+        return fs
+    k = _TABLE_MAX_H/total
+    for c in cells.values():
+        c.set_height(h*k)
+    fs_new = max(5.0, fs*k)
+    tbl.set_fontsize(fs_new)
+    return fs_new
 
 
 def _table_page_one(pdf, df, title, max_rows, block_note):
@@ -168,6 +210,7 @@ def _table_page_one(pdf, df, title, max_rows, block_note):
     tbl.auto_set_font_size(False)
     fs = 8 if d.shape[1] <= 7 else 6.5
     tbl.set_fontsize(fs); tbl.scale(1, 1.35)
+    fs = _fit_rows(tbl, len(d) + 1, fs)
     for (r, _c), cell in tbl.get_celld().items():
         cell.set_edgecolor(INK_SOFT)
         if r == 0:
@@ -242,7 +285,12 @@ with PdfPages(out2) as pdf:
     # gone on saying so after either was changed.
     _fc = json.load(open(ROOT/"03_model_setup"/"solver_config.json"))["field_reconstruction"]
     _field_rows = f"{_fc['grid_nx_solution']*_fc['grid_ny_solution']:,}".replace(",", "\u202f")
-    _n_exp = len(sorted((ROOT/"06_postprocessing"/"validation").glob("exp_frame_*.csv")))
+    # 12 FILES, not 12 loops: each frame contributes a C_L file and a C_M file,
+    # so the count the page prints is the number of extracted curves and the
+    # number of loops is half it. Both are derived, not typed.
+    _exp_files = sorted((ROOT/"06_postprocessing"/"validation").glob("exp_frame_*.csv"))
+    _n_exp = len(_exp_files)
+    _n_exp_frames = len({f.name.rsplit("_", 1)[0] for f in _exp_files})
     ax.text(0, 0.98,
             "IN FULL, one page per table (wide tables continue over further pages):\n"
             + _inc
@@ -255,15 +303,20 @@ with PdfPages(out2) as pdf:
               "    \u2022 05_solution/cp_distribution_B_application.csv  \u2014 the case-B "
               "counterpart of the sampled case-A table\n"
               f"    \u2022 06_postprocessing/validation/exp_frame_*.csv  \u2014 {_n_exp} "
-              "digitised experimental loops (NASA TM-84245)\n"
+              f"digitised C_L / C_M curves from {_n_exp_frames} experimental loops "
+              "(NASA TM-84245)\n"
               "\nEvery figure is in the companion volume UNISTALL_plots_album.pdf.",
             va="top", ha="left", fontsize=10.5, color=INK, linespacing=1.55)
     pdf.savefig(fig, **PAGE); plt.close(fig)
-    # solver config page
+    # solver config page(s). PAGINATED, not squeezed onto one sheet: the config
+    # wraps to 97 lines and only 82 fitted, so the shipped dossier ended
+    # mid-string inside field_reconstruction.comment and never reached
+    # calibration_state or the closing brace -- it printed JSON that would not
+    # parse. Nothing complained because matplotlib simply clips what runs off
+    # the page. CFG_LINES_PER_PAGE is derived from the axes height and the line
+    # pitch rather than guessed, so the config can grow without silently
+    # losing its tail again.
     cfg = json.load(open(ROOT/"03_model_setup"/"solver_config.json"))
-    fig = plt.figure(figsize=(11, 8.5)); ax = fig.add_axes([0.05, 0.04, 0.9, 0.9]); ax.axis("off")
-    ax.set_title("Solver configuration (solver_config.json)", color=ACC, fontsize=13,
-                 weight="bold", loc="left")
     # textwrap.wrap() collapses newlines, so wrapping the whole blob destroys the
     # JSON indentation. Wrap each line individually and keep its leading indent.
     lines = []
@@ -271,9 +324,22 @@ with PdfPages(out2) as pdf:
         indent = " " * (len(ln) - len(ln.lstrip()))
         lines += textwrap.wrap(ln, 108, initial_indent="", subsequent_indent=indent + "    ",
                                drop_whitespace=False, replace_whitespace=False) or [""]
-    ax.text(0, 0.99, "\n".join(lines), va="top", ha="left", fontsize=6.2,
-            family="monospace", color=INK, transform=ax.transAxes)
-    pdf.savefig(fig, **PAGE); plt.close(fig)
+    CFG_FS = 6.2
+    _axes_pt = 0.90*8.5*72.0                 # axes height of the sheet, in points
+    _line_pt = CFG_FS*1.32                   # matplotlib line pitch + a margin
+    CFG_LINES_PER_PAGE = int(_axes_pt//_line_pt)
+    _chunks = [lines[i:i+CFG_LINES_PER_PAGE]
+               for i in range(0, len(lines), CFG_LINES_PER_PAGE)] or [[]]
+    for _ci, _chunk in enumerate(_chunks, 1):
+        fig = plt.figure(figsize=(11, 8.5)); ax = fig.add_axes([0.05, 0.04, 0.9, 0.9])
+        ax.axis("off")
+        _ttl = "Solver configuration (solver_config.json)"
+        if len(_chunks) > 1:
+            _ttl += "   (page %d of %d)" % (_ci, len(_chunks))
+        ax.set_title(_ttl, color=ACC, fontsize=13, weight="bold", loc="left")
+        ax.text(0, 0.99, "\n".join(_chunk), va="top", ha="left", fontsize=CFG_FS,
+                family="monospace", color=INK, transform=ax.transAxes)
+        pdf.savefig(fig, **PAGE); plt.close(fig)
     np_ = 0
     for title, files in CSV_GROUPS:
         section(pdf, title)

@@ -39,7 +39,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 sys.path.insert(0, str(ROOT))          # for aero_style only: this stage reads
                                        # 05_solution CSVs and never imports the solver
-from aero_style import (apply_style, PALETTE, INK, INK_SOFT, 
+from aero_style import (apply_style, PALETTE, INK, INK_SOFT,
                         CMAP_PRESSURE, CMAP_CP, CMAP_TEMP, CMAP_VORT)
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon as MplPoly
@@ -283,7 +283,7 @@ for ff in field_files:
     # Cp scale is FIXED across all eight fields, not fitted to each one, so the
     # panels can be compared with each other; the colorbar extends at both ends
     # and nothing is clipped in the data. -5.0 is just inside the deepest value
-    # any published field reaches (-5.17, the Case-A dsv field), and +1.0 is the
+    # any published field reaches (-5.16, the Case-A dsv field), and +1.0 is the
     # stagnation bound Cp cannot exceed -- verify_invariants asserts that bound.
     CP_SCALE = (-5.0, 1.0)
     contour_plot(xu, yu, F["Cp"], f"Pressure coefficient $C_p$ — {tag} ({adeg.replace('a','α=')}°)",
@@ -338,14 +338,23 @@ for cs in CASES:
     # layer while still looking perfectly smooth.
     yt = np.interp(xq/c, AF["x_over_c"][:len(AF)//2][::-1],
                    AF["y_over_c"][:len(AF)//2][::-1])*c        # -> metres
-    OFF = 0.03*c                                               # standoff [m]
+    # STANDOFF, derived from the grid rather than chosen. The reconstruction
+    # blanks the body and the one ring of cells touching it, and a linear
+    # interpolation returns NaN if EITHER bracketing row is blank -- so a sample
+    # must clear the surface by three rows, not by a round number of chords. At
+    # the flat 0.03c it used to use (2.1 rows here) 12 of the 240 samples fell in
+    # that ring and the published profile broke in two places with nothing on the
+    # figure to say why. The 0.03c intent is kept as a floor; on this grid the
+    # three-row bound is what binds, and the title prints whichever applied.
+    _dy = float(yu[1] - yu[0])
+    OFF = max(0.03*c, 3.0*_dy)                                 # standoff [m]
     fig, ax = plt.subplots(figsize=(7.8, 4.6))
     for sgn, lab, col in [(+1.0, "upper surface", PALETTE[1]),
                           (-1.0, "lower surface", PALETTE[0])]:
         Tq = itp(np.column_stack([sgn*(yt + OFF), xq]))
         ax.plot(xq/c, Tq, color=col, lw=2, label=lab)
     ax.set_xlabel("x/c"); ax.set_ylabel("recovery temperature  $T_r$ [K]")
-    ax.set_title("Recovery (skin) temperature %.0f%%c off the surface — peak incidence"
+    ax.set_title("Recovery (skin) temperature %.1f%%c off the surface — peak incidence"
                  % (100*OFF/c), pad=10)
     ax.legend(loc="best")
     save(fig, f"temperature_profile_{cs}.png")

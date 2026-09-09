@@ -97,6 +97,12 @@ SPEC = dict(
     n_blades = 4,
     hub_from_nose      = 4650.0,          # 0.30 of the fuselage length
     tailrotor_from_nose = 15500.0 - 700.0,  # on the fin, 700 forward of the tail
+    # Tail-rotor hub height above ground. ONE value: sheet 1's side view wrote
+    # the literal 3500 and sheet 2 derived its own from the fin centroid
+    # (fin_c[2] + 250), so the two sheets placed the same hub 15 mm apart and
+    # nothing made them agree -- the defect the rest of this block exists to
+    # prevent.
+    tailrotor_hub_z    = 3500.0,
     blade_twist_deg    = -13.0,
     root_cutout_frac   = 0.20,
 )
@@ -331,11 +337,18 @@ def sheet1():
 
     # rotor diameter (vertical dim on the left)
     dim_v(ax, cyP - rP, cyP + rP, cxF - rP - 5.0, cxF - rP, f"Ø{int(Rdia)}")
-    # stabiliser span (horizontal, below plan)
-    # keep the dimension line BELOW the tail-rotor disc so its value never sits
-    # on top of the disc outline (tail rotor spans down to cyP - rP + ~1.5)
+    # stabiliser span (horizontal, below plan).
+    # The dimension line must clear the TAIL-ROTOR DISC, whose lowest point is
+    # DERIVED here rather than guessed. It was placed at cyP - rP - 8.5 on the
+    # strength of a comment claiming the disc "spans down to cyP - rP + ~1.5";
+    # the disc centre is at yT + 0.02*L_fus*S and its radius is trdia*S/2, which
+    # puts its lowest point at cyP - rP - 6.3 -- so the value and its opaque
+    # halo sat on the disc outline, against this module's own rule that
+    # dimension values live in clear space.
     ytail = cyP - L_fus * S * 0.55 + L_fus * S * 0.07
-    dim_h(ax, cxF - stab * S / 2, cxF + stab * S / 2, cyP - rP - 8.5, ytail,
+    _tr_bottom = (cyP - L_fus * S * 0.55) + L_fus * S * 0.02 - trdia * S / 2
+    _ydim = min(cyP - rP - 8.5, _tr_bottom - 4.5)
+    dim_h(ax, cxF - stab * S / 2, cxF + stab * S / 2, _ydim, ytail,
           f"{int(stab)}  STAB SPAN")
     # main rotor leader -> clear zone right of the disc
     leader(ax, (cxF + 0.62 * rP, cyP + 0.62 * rP),
@@ -506,7 +519,7 @@ def side_view(ax, cx, gy, S, L_fus, L_ovl, Hh, Hf, Rdia, trdia, wbase, hub_frac=
     ax.plot([hub_x - half_r, hub_x + half_r], [hub_y, hub_y], color=INK, lw=1.3)
     half = L_ovl * S / 2                      # overall extent, used for the ground line
     # tail rotor (disc face on fin), at the SPEC station so sheets 1 and 2 agree
-    trc = (P(SPEC["tailrotor_from_nose"]/SPEC["L_fus"], 3500))
+    trc = (P(SPEC["tailrotor_from_nose"]/SPEC["L_fus"], SPEC["tailrotor_hub_z"]))
     ax.add_patch(Circle(trc, trdia * S / 2, fill=False, ec=INK_SOFT, lw=0.9))
     centre_mark(ax, trc[0], trc[1], trdia * S / 2 * 1.1)
     # landing gear nose + main wheels
@@ -715,8 +728,15 @@ def sheet2():
     _paint(ax, _loft_faces(FUS), S, ox, oy, zorder=2)
 
     # ---- empennage ----------------------------------------------------------
-    fin_c = (tr_x, 0.0, (2470 + Hf)/2 + 120)
-    _paint(ax, _slab_faces(fin_c, 1500, 190, Hf - 2470 + 240, taper=0.78),
+    # The fin runs from the boom crown (the aft-most loft station, z = 2470) to
+    # the fin tip the SPEC states, and to nothing beyond it. It used to be
+    # centred at (2470+Hf)/2 + 120 and 240 mm deeper than the gap it spans, so
+    # it reached z = 4240 while its own callout, note 3 and sheet 1's side view
+    # all said 4000 -- the two sheets disagreeing about the same part, which is
+    # what the shared SPEC block exists to prevent.
+    FIN_ROOT_Z = 2470.0                       # aft-most fuselage loft station
+    fin_c = (tr_x, 0.0, (FIN_ROOT_Z + Hf)/2)
+    _paint(ax, _slab_faces(fin_c, 1500, 190, Hf - FIN_ROOT_Z, taper=0.78),
            S, ox, oy, zorder=3)
     _paint(ax, _slab_faces((tail_x + 1900, 0.0, 2280), 1150, 4000, 190),
            S, ox, oy, zorder=3)
@@ -755,7 +775,7 @@ def sheet2():
     ax.add_patch(Circle(hub, 1.5, fill=True, fc=INK_SOFT, ec=INK, lw=0.9, zorder=8))
 
     # ---- tail rotor on the port face of the fin -----------------------------
-    tr_c = (tr_x, 260.0, fin_c[2] + 250)
+    tr_c = (tr_x, 260.0, SPEC["tailrotor_hub_z"])
     trd = [iso(tr_c[0] + trdia/2*np.cos(a), tr_c[1], tr_c[2] + trdia/2*np.sin(a),
                S, ox, oy) for a in np.linspace(0, 2*np.pi, 80)]
     ax.add_patch(Polygon(trd, closed=True, fill=False, ec=INK_SOFT, lw=0.8,
@@ -899,7 +919,10 @@ def sheet3():
           f"{int(round(cutout))}  ROOT CUTOUT ({SPEC['root_cutout_frac']:.2f}R)")
     dim_h(ax, x0, xs, yTE - 10, yTE,
           f"{int(round(station))}  ({SPEC['section_station_frac']:.2f}R) SEC A-A")
-    dim_v(ax, yTE, yLE, xc - 4, xc, f"c = {int(round(chord))}")
+    # tpos="above": a rotated value centred on this dimension line lands on the
+    # root-grip rectangle and its opaque halo blanks a notch out of it. Same
+    # defect, and the same fix, as the section-A-A thickness value on sheet 4.
+    dim_v(ax, yTE, yLE, xc - 4, xc, f"c = {int(round(chord))}", tpos="above")
 
     # ---- EDGE / SIDE VIEW (thickness) ----------------------------------
     yE = 92.0
@@ -915,7 +938,11 @@ def sheet3():
     ax.plot([x0, xt + 4], [yE, yE], color=INK_SOFT, lw=0.6,
             dashes=(8, 2, 1.5, 2))
     view_title(ax, x0 + R * S / 2, yE - 12, "EDGE VIEW (THICKNESS EXAGGERATED)")
-    dim_v(ax, yE - tE / 2, yE + tE / 2, xc - 4, xc, f"t={thick:.1f} (12%c)")
+    # likewise: the edge view is only tE = 1.3 paper units thick, so a rotated
+    # value centred on it is fifteen times longer than the dimension it labels
+    # and blanks the grip stub and the centre line it crosses.
+    dim_v(ax, yE - tE / 2, yE + tE / 2, xc - 4, xc, f"t={thick:.1f} (12%c)",
+          tpos="above")
     leader(ax, (xt, yE), (xt + 6, yE + 9),
            f"LINEAR TWIST {SPEC['blade_twist_deg']:.0f}°\n(WASHOUT ROOT→TIP)", ha="left")
 

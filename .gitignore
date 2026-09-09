@@ -1,8 +1,18 @@
 # --- What is excluded from the public repository ---
 #
-# The rule is: every SOURCE file that the pipeline needs ships, so a clean
-# checkout can rebuild the whole study from scratch; every GENERATED artifact
-# is excluded, except the one consolidated report that is the deliverable.
+# The rule, stated as it actually is. Two things ship: every SOURCE file the
+# pipeline needs, so a clean checkout can rebuild the whole study from scratch,
+# AND the study's own generated data and figures (05_solution/*.csv, the plots,
+# the drawing sheets, the link-preview card, the consolidated report), so the
+# repository can be read without running anything. What is excluded is only the
+# REPORT BUILD's intermediates -- case.docx, the rendered equation images and
+# the two component PDFs, all of which are rebuilt from the same outputs on
+# every run -- plus Python caches.
+#
+# This header used to claim "every GENERATED artifact is excluded, except the
+# one consolidated report", which described a repository this has never been:
+# 135 generated CSVs, PNGs and the solver config under 01_..08_ are tracked,
+# deliberately, and so are the two link-preview images under assets/.
 #
 # Previously 07_report/, run_all.py, draw_engineering.py and 00_overview/ were
 # all excluded while the artifacts they produce were published. That shipped a

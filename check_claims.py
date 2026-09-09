@@ -24,6 +24,8 @@ from pathlib import Path
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT))
+from project_meta import STUDY_DATE           # the one date of record
 
 
 def _series(rel, key, val):
@@ -42,13 +44,40 @@ nr = pd.read_csv(ROOT / "06_postprocessing/validation/validation_nasa_real.csv"
 _x = nr.loc["frame_25104"]
 xcheck_pct = 100.0*abs(_x.CLmax_model - _x.CLmax_exp)/_x.CLmax_exp
 
+kin = pd.read_csv(ROOT / "03_model_setup/kinematics.csv").set_index("case_id")
+kA, kB = kin.loc["A_validation_rig"], kin.loc["B_application_rotor"]
+
 f = float
 sl = vst[vst.metric.str.startswith("lift-curve")].iloc[0]
 cm = vst[vst.metric.str.startswith("CL_max")].iloc[0]
 
+
+def _row(flow_col, kin_row, dp, k_dp):
+    """The trailing cells of one row of the README's "Configurations solved"
+    table. Case B's chord, Mach and k were already guarded one by one while
+    Case A's were not guarded at all and neither case's incidence was, so half
+    the table could drift. Guarding the rendered row covers all four at once.
+
+    dp is the decimal places the table gives the chord and the Mach (the two
+    happen to share one in both rows: 2 for the rig, 3 for the blade station);
+    k_dp is the k column's."""
+    return (f"| {f(flow_col['chord_c']):.{dp}f} m "
+            f"| {f(flow_col['freestream_mach_M']):.{dp}f} "
+            f"| {f(kin_row['reduced_freq_k']):.{k_dp}f} "
+            f"| {f(kin_row['alpha_mean_deg']):.0f}° ± {f(kin_row['alpha_amp_deg']):.0f}° |")
+
 # (document, exact substring that must be present, what it came from)
 CLAIMS = [
+    # ---- identity ---------------------------------------------------------
+    # The date of record lives in project_meta.py and is rendered onto every
+    # report cover and every drawing title block from there; the README states
+    # it in prose, which is a copy, so it is guarded like every other copy.
+    ("README.md", f"**Date:** {STUDY_DATE}", "project_meta.STUDY_DATE"),
     # ---- case conditions --------------------------------------------------
+    ("README.md", _row(A, kA, 2, 2), "flow_conditions + kinematics, case A table row"),
+    ("README.md", _row(B, kB, 3, 3), "flow_conditions + kinematics, case B table row"),
+    ("README.md", f"analysis station r/R = {f(B['radial_station_r_R']):.2f}",
+     "flow_conditions radial_station_r_R"),
     ("README.md", f"{f(B['chord_c']):.3f} m", "flow_conditions chord_c (B)"),
     ("README.md", f"{f(B['freestream_mach_M']):.3f}", "flow_conditions M (B)"),
     ("README.md", f"{f(B['reduced_frequency_k']):.3f}", "flow_conditions k (B)"),

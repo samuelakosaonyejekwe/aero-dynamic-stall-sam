@@ -11,7 +11,9 @@ Every check here corresponds to a defect that was actually found and fixed in
 this project, so each one is a regression test rather than a hypothetical:
 
   * setup thermodynamics    - flow_conditions.csv was once internally
-                              over-determined, with rho and U disagreeing.
+                              over-determined, with rho and U disagreeing; rho,
+                              a, M and Re are all re-derived from the
+                              independent quantities.
   * geometry                - the section is checked against the analytic NACA
                               0012 polynomial and its exact enclosed area.
   * mesh validity           - 22 folded cells were once hidden by an abs() in
@@ -30,13 +32,19 @@ this project, so each one is a regression test rather than a hypothetical:
                               thrust), but the CYCLE MEAN must stay positive.
   * response surface        - no published point may sit outside the range the
                               separation law was calibrated on.
-  * field bounds            - Cp <= 1 everywhere, on the grid the config
-                              declares the fields are written on.
+  * field bounds            - Cp <= 1 everywhere, the flow stays subsonic and
+                              the static temperature stays positive, on the
+                              grid the config declares the fields are written
+                              on.
   * closure bound           - the cycle-wide closure metric must bound the
                               peak-lift one; the peak-lift figure was once
                               quoted as though it bounded the whole cycle.
   * report equations        - the report must state the Cp and impulsive-lag
                               expressions the solver actually evaluates.
+  * dossier completeness    - a matplotlib page that overruns is CLIPPED, in
+                              silence: the solver config printed 82 of its 97
+                              lines and every long table 33 of the 38 rows its
+                              caption claimed.
   * experimental provenance - the frame conditions must match the .mat files.
   * config vs code          - solver_config.json must still describe the
                               solver: f_min, n_panels, the default grid, the
@@ -68,6 +76,11 @@ for case in ('case_A_validation','case_B_application'):
     ck(f"{case[5:6]} rho=p/RT", abs(p/(R*T)-float(col['air_density_rho']))/float(col['air_density_rho'])<2e-4)
     ck(f"{case[5:6]} a=sqrt(gRT)", abs(np.sqrt(g*R*T)-float(col['speed_of_sound_a']))/float(col['speed_of_sound_a'])<2e-4)
     ck(f"{case[5:6]} M=U/a", abs(float(col['freestream_velocity_U'])/float(col['speed_of_sound_a'])-float(col['freestream_mach_M']))<1e-4)
+    # Re is derived and published to four significant figures, like rho and a
+    # above; it was the one derived free-stream quantity nothing re-checked.
+    _re=float(col['air_density_rho'])*float(col['freestream_velocity_U'])*float(col['chord_c'])/float(col['dynamic_viscosity_mu'])
+    ck(f"{case[5:6]} Re=rho*U*c/mu", abs(_re-float(col['reynolds_number_Re_c']))/_re<5e-4,
+       f"{_re:.4g} vs {col['reynolds_number_Re_c']}")
 
 # --- geometry
 gg=pd.read_csv(G); xc,yc=gg['x_over_c'].values,gg['y_over_c'].values
@@ -181,12 +194,50 @@ _fcfg=json.load(open('03_model_setup/solver_config.json'))['field_reconstruction
 _nxy=_fcfg['grid_nx_solution']*_fcfg['grid_ny_solution']
 for f in sorted(glob.glob('05_solution/field_*.csv')):
     d=pd.read_csv(f); ck(f"{f.split('/')[-1]} Cp<=1", bool((d['Cp'].dropna()<=1+1e-9).all()))
+    # The reconstruction is subsonic-only: the compressibility it carries is the
+    # Prandtl-Glauert beta of the indicial march, and the thermal module is the
+    # isentropic stagnation relation. A published field that went sonic would
+    # invalidate both, and the report prints local-Mach contours as if it could
+    # not. Measured worst over the eight fields: M = 0.78, T = 261 K.
+    ck(f"{f.split('/')[-1]} stays subsonic", bool((d['Mach_local'].dropna()<1.0).all()),
+       f"max M {d['Mach_local'].max():.3f}")
+    ck(f"{f.split('/')[-1]} static temperature stays positive",
+       bool((d['T_static_K'].dropna()>0).all()), f"min T {d['T_static_K'].min():.1f} K")
     # the config DECLARES grid_*_solution as "the sizes written to
     # 05_solution/field_*.csv"; the writer used to carry its own literals, and
     # the DSV-core metric was measured on the coarser DEFAULT grid instead, so
     # it described no field this study ships.
     ck(f"{f.split('/')[-1]} is on the declared solution grid", len(d)==_nxy,
        f"{len(d)} rows vs {_nxy}")
+
+# --- the published DSV swirl ratio must equal the closed form, and must stay
+#     well below 1. "The vortex reverses the flow beneath it" was asserted in
+#     the solver docstring, in the reconstruction comment and in report section
+#     13.4, and none of the eight published fields shows it: the reversed cells
+#     they contain sit under the LEADING EDGE on the pressure side, which is
+#     stagnation-region turning. The ratio is what makes that checkable.
+for _case,_m in (('A_validation',mA),('B_application',mB)):
+    _thc=pd.read_csv(f'05_solution/time_history_{_case}.csv')
+    _rc=_thc.iloc[int(_thc.CN_vortex.idxmax())]
+    _cc=float(fl['case_'+('A_validation' if _case[0]=='A' else 'B_application')]['chord_c'])
+    _uu=float(fl['case_'+('A_validation' if _case[0]=='A' else 'B_application')]['freestream_velocity_U'])
+    _sw=us.dsv_peak_swirl_ratio(_rc.CN_vortex,_uu,_cc)
+    ck(f"{_case} DSV_peak_swirl_over_U matches the closed form",
+       abs(_sw-float(_m['DSV_peak_swirl_over_U']))<5e-4, f"{_sw:.4f} vs {_m['DSV_peak_swirl_over_U']}")
+    ck(f"{_case} reconstructed vortex cannot reverse the free stream",
+       _sw < 0.5, f"swirl ratio {_sw:.3f}")
+# and the reversed cells the fields DO contain must not be under the vortex, so
+# the claim cannot creep back in as an observation
+_thA2=pd.read_csv('05_solution/time_history_A_validation.csv')
+_rA2=_thA2.iloc[int(_thA2.CN_vortex.idxmax())]
+_tvl2=json.load(open('03_model_setup/solver_config.json'))['calibrated_constants']['Tvl']
+_xv=(0.25+0.55*min(_rA2.tau_v_semichords/_tvl2,1.3))
+_dsvf=glob.glob('05_solution/field_A_validation_dsv_*.csv')
+if _dsvf:
+    _fd=pd.read_csv(_dsvf[0]); _neg=_fd[_fd.u_ms<0]
+    ck("no reversed cell lies beneath the reconstructed vortex",
+       bool(len(_neg)==0 or (abs(_neg.x_m/c-_xv)>0.25).all()),
+       f"{len(_neg)} reversed cells, nearest x/c {(_neg.x_m/c).tolist()[:3]} vs vortex {_xv:.2f}")
 
 # --- the published vortex-core depth must be grid-independent. It was read off
 #     the field at the nearest grid node, which drifted -0.425 / -0.381 / -0.358
@@ -417,6 +468,55 @@ try:
 except ImportError:
     pass
 
+# --- the DATA DOSSIER must print what it says it prints. Two defects of the
+#     same kind were found here, and neither left any trace to notice: a
+#     matplotlib figure that overruns its page is CLIPPED at the media box, so
+#     the content that falls off does not appear anywhere -- not off the page,
+#     not in a warning, nowhere.
+#       * solver_config.json wrapped to 97 lines and 82 were rendered, so the
+#         dossier printed JSON that ended mid-string and never reached
+#         calibration_state or the closing brace.
+#       * every table with more than 33 rows printed 33 under a caption that
+#         said 38, response_surface.csv (36 rows) included -- the one table
+#         max_rows was raised to 38 in order to show whole.
+try:
+    import fitz as _fz4
+    if os.path.exists('UNISTALL_data_dossier.pdf'):
+        _dos=_fz4.open('UNISTALL_data_dossier.pdf')
+        _dostxt=[_p.get_text() for _p in _dos]
+        _flatdos=re.sub(r'\s+','', "".join(_dostxt))
+        _cfgtxt=json.load(open('03_model_setup/solver_config.json'))
+        _tail=re.sub(r'\s+','', json.dumps({"calibration_state": _cfgtxt["calibration_state"]},
+                                           indent=2).strip("{} \n"))
+        ck("dossier prints solver_config.json to its last key", _tail in _flatdos,
+           "calibration_state missing -- the config page is being clipped")
+        # Counted EXACTLY, against the file the page names: take the first N
+        # values of the table's key column and see how many appear on the page
+        # as whole words. A baseline count would do, but a wrapped title or a
+        # wrapped cell shifts it either way, and a row-count check that can pass
+        # by miscounting is the thing this check exists to replace.
+        _csvs={os.path.basename(_f):_f for _f in
+               subprocess.run(['git','ls-files'],capture_output=True,text=True).stdout.split()
+               if _f.endswith('.csv')}
+        _short=[]
+        for _pi,_pt in enumerate(_dostxt):
+            _one=re.sub(r'\s+',' ',_pt)
+            _m=re.search(r'first (\d+) of (\d+) rows', _one)
+            _hit=[_n for _n in re.findall(r'[A-Za-z0-9_\-]+\.csv', _one) if _n in _csvs]
+            if not _m or not _hit: continue
+            _fn=_hit[0]
+            _want=int(_m.group(1))
+            _df=pd.read_csv(_csvs[_fn]).head(_want)
+            _words={_w[4] for _w in _dos[_pi].get_text("words")}
+            _key=_df.columns[0]
+            _got=sum(1 for _v in _df[_key] if str(_v) in _words)
+            if _got < _want: _short.append((_fn,_got,_want))
+        ck("every sampled dossier table prints the rows its caption claims",
+           not _short, f"{_short[:3]}")
+        _dos.close()
+except ImportError:
+    pass
+
 # --- a drawing sheet states a SCALE, so its paper units must be millimetres on
 #     the page. They were not: the figure was 8.5 in tall while the sheet was 210
 #     paper units, and savefig.bbox="tight" then grew it further, so a sheet whose
@@ -462,7 +562,14 @@ except ImportError:
     pass
 
 # --- dead code / imports
-tot=0
+# The name an import binds is a NAME. It was being looked for among attribute
+# names as well, and then again as a bare word anywhere in the source -- both of
+# which let a real dead import hide behind an unrelated method of the same name:
+# "import glob" survived in build_docx.py and build_pdfs.py because those files
+# call Path.glob(), so the attribute "glob" and dozens of textual matches made
+# the import look used. An attribute is never how an imported name is READ
+# (a.b.c parses as Attribute(Attribute(Name('a')))), so Name is the whole test.
+_dead=[]
 for f in sorted(glob.glob('0*/**/*.py',recursive=True)+glob.glob('*.py')):
     src=open(f,encoding='utf-8').read(); tree=ast.parse(src)
     imp={}
@@ -472,9 +579,9 @@ for f in sorted(glob.glob('0*/**/*.py',recursive=True)+glob.glob('*.py')):
         elif isinstance(n,ast.ImportFrom):
             for al in n.names:
                 if al.name!='*': imp[al.asname or al.name]=1
-    used={n.id for n in ast.walk(tree) if isinstance(n,ast.Name)}|{n.attr for n in ast.walk(tree) if isinstance(n,ast.Attribute)}
-    tot+=len([k for k in imp if k not in used and len(re.findall(r'\b'+re.escape(k)+r'\b',src))<2])
-ck("no unused imports", tot==0, f"{tot} found")
+    used={n.id for n in ast.walk(tree) if isinstance(n,ast.Name)}
+    _dead+=[f"{f}:{k}" for k in imp if k not in used]
+ck("no unused imports", not _dead, f"{len(_dead)} found: {_dead[:4]}")
 
 # --- stale prose
 # This file is EXCLUDED from its own scan. It necessarily quotes the phrases it
@@ -485,7 +592,8 @@ _SELF = os.path.basename(__file__)
 allsrc="".join(open(f,encoding='utf-8',errors='replace').read()
                for f in subprocess.run(['git','ls-files'],capture_output=True,text=True).stdout.split()
                if f.endswith(('.py','.md','.json')) and os.path.basename(f) != _SELF)
-for pat in (r'surface_cp probes at', r'demands it be zero', r'the 0\.015c\s*used', r'clip is kept'):
+for pat in (r'surface_cp probes at', r'demands it be zero', r'the 0\.015c\s*used', r'clip is kept',
+            r'flow reversal beneath', r'reversed flow beneath'):
     ck(f"no stale prose: {pat}", len(re.findall(pat,allsrc))==0)
 
 print()

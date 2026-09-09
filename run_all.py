@@ -21,6 +21,9 @@ STEPS = [
     ("Validation (real NASA data)",  "06_postprocessing/validation/validate_nasa_real.py"),
     ("Validation (digitizer harness)", "06_postprocessing/validation/validate_digitized.py"),
     ("Engineering drawings", "08_engineering_drawings/draw_engineering.py"),
+    # the link-preview card carries three published numbers, so it is built from
+    # the artifacts like everything else rather than drawn by hand
+    ("Link-preview card", "assets/make_social_preview.py"),
     ("Report (docx)",   "07_report/build_docx.py"),
     ("Report (PDFs)",   "07_report/build_pdfs.py"),
     ("Report (consolidated PDF)", "07_report/build_report_pdf.py"),
@@ -28,11 +31,16 @@ STEPS = [
     ("Invariant check (physics & numerics)", "verify_invariants.py"),
     ("Claim check (README vs artifacts)", "check_claims.py"),
 ]
+# flush=True on every banner. Without it the parent's stdout is block-buffered
+# whenever the run is piped or redirected, while each child writes straight to
+# the same descriptor -- so a saved log showed all fifteen stage headers in a
+# block at the end, after the output they were supposed to introduce, and a
+# failure could not be attributed to a stage by reading the log.
 for name, rel in STEPS:
     script = ROOT/rel
-    print(f"\n========== {name}: {rel} ==========")
+    print(f"\n========== {name}: {rel} ==========", flush=True)
     r = subprocess.run([sys.executable, script.name], cwd=script.parent)
     if r.returncode != 0:
-        print(f"[run_all] FAILED at {name}"); sys.exit(r.returncode)
+        print(f"[run_all] FAILED at {name}", flush=True); sys.exit(r.returncode)
 print("\n[run_all] complete — see aero_dynamic_stall_report.pdf, "
-      "07_report/case.docx and the two component PDFs.")
+      "07_report/case.docx and the two component PDFs.", flush=True)

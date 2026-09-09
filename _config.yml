@@ -1,6 +1,10 @@
 theme: jekyll-theme-cayman
 title: "UNISTALL — Dynamic-Stall Prediction"
-description: "Reduced-order Unified Indicial–Beddoes State-Space (UIBS) solver for a helicopter retreating blade (NACA 0012), validated against NASA static and dynamic-stall experiments."
+# "calibrated ... and validated ...", not "validated against static and dynamic":
+# the static polar is what the separation law is FITTED to, so comparing against
+# it is a calibration check, not a prediction. README.md and report section 12.1
+# both make that distinction; this line used to collapse it.
+description: "Reduced-order Unified Indicial–Beddoes State-Space (UIBS) solver for a helicopter retreating blade (NACA 0012), calibrated to a published static polar and validated against held-out NASA dynamic-stall experiments."
 author: Akosa Samuel Onyejekwe
 lang: en-US
 
@@ -15,6 +19,9 @@ plugins:
 # assets/social-preview.png is the same 1280x640 image, lossless. It is NOT
 # referenced by the site: it is the master that GitHub's repository "Social
 # preview" setting is uploaded from by hand. Kept so that upload is repeatable.
+# Both files are GENERATED, by assets/make_social_preview.py, which reads the
+# three numbers on the card from the published metrics. They used to be a
+# hand-made image whose headline figures matched no result this study reports.
 #
 # assets/icon-512.png is likewise referenced by nothing in this repository --
 # checked, not assumed. It is the 512x512 square that {% seo %} used to fall

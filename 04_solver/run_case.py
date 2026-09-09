@@ -263,6 +263,16 @@ for name, C in CASES.items():
     _, _, cp_dsv_core = us.dsv_core_cp(
         GEO, C["c"], C["U"], C["M"], out["alpha_deg"][_v], out["CL"][_v],
         out["CNv"][_v], out["tau_v"][_v]/consts["Tvl"])
+    # ---- and the vortex's peak swirl against the free stream, closed form.
+    #      This exists because "the vortex reverses the flow beneath it" was
+    #      asserted in the solver docstring, in the field-reconstruction comment
+    #      and in report section 13.4, and none of the eight published fields
+    #      shows it: the few reversed cells they do contain sit under the
+    #      LEADING EDGE on the pressure side, which is stagnation-region
+    #      turning, not stall. A vortex whose peak swirl is a quarter of the
+    #      free stream cannot turn the flow over, and this row says so with a
+    #      number that depends on no grid.
+    dsv_swirl = us.dsv_peak_swirl_ratio(out["CNv"][_v], C["U"], C["c"])
     met = pd.DataFrame({
         "metric": ["CL_max_dynamic", "alpha_at_CLmax_deg", "CL_max_static",
                    "dynamic_overshoot_ratio", "CM_min(c/4)", "alpha_at_CMmin_deg",
@@ -274,7 +284,7 @@ for name, C in CASES.items():
                    "Cp_closure_worst_dCL_cycle",
                    "Cp_closure_worst_dCL_pct_of_CLmax",
                    "Cp_TE_jump_max_over_phases", "CL_kutta_inviscid",
-                   "Cp_DSV_core_min",
+                   "Cp_DSV_core_min", "DSV_peak_swirl_over_U",
                    "reduced_frequency_k", "mach_M", "mean_alpha_deg", "amp_alpha_deg"],
         "value": [round(CLmax,3), round(a[iCL],2), round(CL_static_max,3),
                   round(CLmax/CL_static_max,3), round(CMmin,3), round(a[iCM],2),
@@ -284,7 +294,7 @@ for name, C in CASES.items():
                   round(loopCL,4), round(cp_closure_pct,1),
                   round(cp_closure_worst_dCL,4),
                   round(100.0*cp_closure_worst_dCL/CLmax,2), round(cp_te_jump,3),
-                  round(cl_kutta,3), round(cp_dsv_core,3),
+                  round(cl_kutta,3), round(cp_dsv_core,3), round(dsv_swirl,3),
                   C["k"], C["M"], C["a_mean"], C["a_amp"]],
     })
     met.to_csv(SOL/f"metrics_{name}.csv", index=False)
@@ -340,9 +350,16 @@ for name, C in CASES.items():
             "T_recovery_K": fld["T_recovery"].ravel().round(3),
             "Mach_local": fld["Mlocal"].ravel().round(4),
             "vorticity_1s": fld["vort"].ravel().round(2)})
-        adeg = round(out["alpha_deg"][j],1)
+        # ONE rounding, not two. This was round(alpha, 1) formatted with "%.0f",
+        # which rounds twice: the Case-A dsv instant is alpha = 17.4896, which
+        # went 17.5 and then, by round-half-to-even, 18 -- so two field files and
+        # the fourteen contour figures that take their titles from these names
+        # announced "alpha = 18 deg" for a field computed half a degree lower.
+        # Formatting the raw value gives the nearest whole degree, which is what
+        # the tag claims to be.
+        adeg = float(out["alpha_deg"][j])
         dff.to_csv(SOL/f"field_{name}_{tag}_a{adeg:.0f}.csv", index=False)
-        fphases.append((tag, adeg, fld["xv"], fld["yv"]))
+        fphases.append((tag, round(adeg, 1), fld["xv"], fld["yv"]))
     print(f"[run] {name}: CLmax={CLmax:.2f}@{a[iCL]:.1f}deg CMmin={CMmin:.3f} "
           f"onset={onset:.2f}deg Cp-closure={cp_closure_pct:+.1f}% "
           f"(worst dCL over cycle {cp_closure_worst_dCL:.4f} at CL={_cl_at_worst:.2f}, "

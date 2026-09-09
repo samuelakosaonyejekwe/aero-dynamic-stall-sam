@@ -41,8 +41,8 @@ Two auxiliary modules make the solver "universal" for engineering output:
         from the small denominator. Unlike before the closure also CONVERGES:
         refining 160 -> 1280 panels drives it monotonically to -0.04 %, which is
         what Blasius requires and is the check that the formulation is right
-        rather than merely better. It previously
-        read -10.7 to -14.4 %, and the explanation recorded here for that
+        rather than merely better. It previously read -10.7 to -14.4 %, and
+        the explanation recorded here for that
         deficit -- the Cp clip at -8, with the further claim that it did not
         converge under refinement -- was WRONG on both counts. Tested directly:
         moving the clip from -8 to -1e9 changed the closure by 0.00 points, and
@@ -61,8 +61,8 @@ Two auxiliary modules make the solver "universal" for engineering output:
         is C_L = 1.220 at the 160 panels used, converging to 1.213 by 1280
         (implied lift slope 6.95/rad, against 2*pi*1.092 = 6.86 from the
         thin-aerofoil thickness rule, itself approximate), and imposing it
-        drives the trailing-edge jump to ~1e-3. The
-        reconstruction is instead handed the indicial C_L, which during dynamic
+        drives the trailing-edge jump to ~1e-3. The reconstruction is instead
+        handed the indicial C_L, which during dynamic
         stall departs from that value deliberately -- so a body carrying a
         non-Kutta circulation MUST show a trailing-edge jump. The published
         Cp_TE_jump_max_over_phases is therefore a measure of how far the modelled
@@ -71,17 +71,31 @@ Two auxiliary modules make the solver "universal" for engineering output:
         0.015c off the wall, the same offset that was hiding the closure error.
       - DYNAMIC-STALL VORTEX CORE, a stated limitation rather than a fixed one.
         The reconstructed vortex carries circulation DSV_GAMMA_FACTOR*CNv*U*c in
-        a core of radius DSV_CORE_RADIUS_CHORDS*c. Its sign, position and the
-        flow reversal beneath it are physical, but the core is diffuse: the
+        a core of radius DSV_CORE_RADIUS_CHORDS*c. Its sign and position are
+        physical. It does NOT reverse the flow beneath itself, and three places
+        in this study used to say it did. Measured: the Lamb-Oseen peak swirl is
+        0.7152*Gamma_v/(2*pi*rc), which at the Case-A vortex maximum is 24.6 m/s
+        against a 102.1 m/s free stream -- published as DSV_peak_swirl_over_U =
+        0.24 in metrics_*.csv, so the shortfall is a number rather than an
+        adjective. The published fields bear that out: 8 of the 36 826 unmasked
+        cells of the Case-A dsv field carry u < 0, and all eight sit under the
+        LEADING EDGE on the pressure side (x/c = 0.00-0.04, y/c = -0.04 to
+        -0.06), which is the ordinary stagnation-region turning of an aerofoil
+        at 17.5 deg, not a stall signature; the vortex itself is at x/c = 0.79,
+        y/c = 0.16. Two of the eight published fields contain no reversed cell
+        at all. The cause is the same diffuse core as below, and a swirl ratio
+        of 0.24 cannot reverse a free stream whatever the grid. The core is
+        diffuse: the
         measured suction at the core centre is published as Cp_DSV_core_min in
         metrics_*.csv -- -0.362 (Case A) and -0.263 (Case B), evaluated AT the
         vortex centre by dsv_core_cp rather than sampled off a grid -- where a
-        deep-stall vortex core is usually reported nearer -3 to -6. Making it deeper means shrinking the
-        core radius and raising the circulation factor together (0.06c and 2.5
+        deep-stall vortex core is usually reported nearer -3 to -6. Making it
+        deeper means shrinking the core radius and raising the circulation
+        factor together (0.06c and 2.5
         give -3.757), and NEITHER constant can be derived nor calibrated here:
         the experimental frames this study ships carry only integrated cl/cd/cm
-        against incidence, with no surface-pressure or field data
-        anywhere in the repository to fit a core size to. Both constants are
+        against incidence, with no surface-pressure or field data anywhere in
+        the repository to fit a core size to. Both constants are
         therefore named at the top of this module rather than buried as
         literals, and the resulting core depth is published as a number so the
         shallowness is checkable instead of being an adjective in a docstring.
@@ -200,7 +214,7 @@ def solve_dynamic_stall(alpha_mean_deg, alpha_amp_deg, k, M, c, U,
     # convention the calibrated constants in solver_config.json were fitted
     # with: swapping both terms to the classical scaling and re-running the five
     # real NACA 0012 frames with these same constants moves the held-out mean
-    # peak-lift error from 1.7 % to 3.0 %. Re-deriving it would require
+    # peak-lift error from 1.7 % to 2.9 %. Re-deriving it would require
     # re-calibrating against data this study does not ship, so the implemented
     # form is kept and documented (report section 4.3 states this T_I, not c/a).
     #
@@ -347,6 +361,8 @@ def solve_dynamic_stall(alpha_mean_deg, alpha_amp_deg, k, M, c, U,
 #  validation_realdata_summary.csv (rounding 0.072 up to 0.08 so the band is not
 #  tighter than the evidence), warns if this constant ever falls below the
 #  measured spread, and so keeps the number traceable.
+DAMPING_TOL = 0.08
+
 # --- dynamic-stall-vortex reconstruction constants ---------------------------
 # Neither is derived, and neither can be calibrated from anything this study
 # ships: the experimental frames carry only integrated cl/cd/cm against
@@ -356,8 +372,6 @@ def solve_dynamic_stall(alpha_mean_deg, alpha_amp_deg, k, M, c, U,
 # as Cp_DSV_core_min in metrics_*.csv. See the DSV entry under LIMITATIONS.
 DSV_GAMMA_FACTOR       = 1.4    # vortex circulation = this * CNv * U * c
 DSV_CORE_RADIUS_CHORDS = 0.16   # Lamb-Oseen core radius in chords
-
-DAMPING_TOL = 0.08
 
 
 def aerodynamic_damping(alpha_deg, CM, normalise=False):
@@ -617,7 +631,9 @@ def reconstruct_field(naca_csv, c, U, M, alpha_deg, CL, CNv,
     # bound surface sheet above. It does not need to supply the vortex lift -- Gamma is
     # already matched to the full UIBS C_L, which contains CNv -- so giving the
     # vortex its physical rotation costs nothing and buys the correct vorticity
-    # field and the flow reversal beneath the core that characterises the stall.
+    # field. It does NOT turn the flow over under the core, which this comment
+    # used to claim: the peak swirl is 0.24 of the free stream (published as
+    # DSV_peak_swirl_over_U), so the modelled vortex cannot reverse it.
     # The suction under the vortex comes from its low-pressure core (see
     # _core_pressure_deficit), not from accelerating the surface flow.
     Gv = DSV_GAMMA_FACTOR*max(CNv, 0.0)*U*c
@@ -743,6 +759,30 @@ def surface_cp(naca_csv, c, U, M, alpha_deg, CL, CNv, tau_over_Tvl):
     # reconstructing from potential flow, and it is stated rather than hidden.
     upper = yc >= 0
     return xc/c, Cp, upper
+
+
+def dsv_peak_swirl_ratio(CNv, U, c):
+    """Peak swirl of the reconstructed dynamic-stall vortex, as a fraction of the
+    free stream. Closed form, so it depends on no grid and no sampling.
+
+    For a Lamb-Oseen vortex v_theta = Gamma/(2*pi*r)*(1 - exp(-r^2/rc^2)) the
+    maximum is at r = 1.1209*rc and equals 0.7152*Gamma/(2*pi*rc). With
+    Gamma_v = DSV_GAMMA_FACTOR*CNv*U*c and rc = DSV_CORE_RADIUS_CHORDS*c the
+    chord and the speed both cancel, so this is a property of the two DSV
+    constants and CNv alone.
+
+    It exists because "the vortex reverses the flow beneath it" was asserted in
+    three places in this study and is false: the ratio is 0.24 at the Case-A
+    vortex maximum, and a vortex whose swirl is a quarter of the free stream
+    cannot turn it round. Publishing the ratio makes that checkable instead of
+    leaving a reader to trust an adjective. Deepening the core would raise it --
+    the 0.06c / 2.5 pair quoted under LIMITATIONS gives 1.15 -- and neither
+    constant can be calibrated from anything this study ships.
+    """
+    if U <= 0.0 or DSV_CORE_RADIUS_CHORDS <= 0.0:
+        return float("nan")
+    Gv = DSV_GAMMA_FACTOR*max(CNv, 0.0)*U*c
+    return float(0.7152*Gv/(2.0*np.pi*DSV_CORE_RADIUS_CHORDS*c)/U)
 
 
 def dsv_core_cp(naca_csv, c, U, M, alpha_deg, CL, CNv, tau_over_Tvl):

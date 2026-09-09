@@ -464,23 +464,36 @@ if __name__ == "__main__":
         for p in parts:
             with fitz.open(str(p)) as src:
                 merged.insert_file(str(p)); counts.append((p.name, src.page_count))
-        # ---- navigation. A 211-page report shipped with no contents page and no
-        #      PDF outline at all, so a reader had no way to reach section 12 or
-        #      the drawings except by scrolling. The outline is DERIVED from the
-        #      headings already on the pages -- top-level "N. Title" in the body,
-        #      then one entry per appendix volume and per album section divider --
-        #      so it cannot disagree with the document it indexes.
+        # ---- navigation. The report shipped with no PDF outline at all, so a
+        #      reader had no way to reach section 12 or the drawings except by
+        #      scrolling. (No page count is quoted here: it moves whenever a
+        #      table or a paragraph changes, and the build prints it below.)
+        #
+        #      The TITLES come from the docx headings and the PAGES from the
+        #      rendered text. Scraping the title off the page as well truncated
+        #      any heading the renderer wrapped: "12. Validation against
+        #      Published & Experimental Data" was indexed as "...& Experimental"
+        #      and section 16 lost "Sources", because the regex matched one
+        #      rendered LINE. Matching the docx heading against the page with
+        #      whitespace removed is immune to where the line breaks fall, and
+        #      the outline still cannot name a section the document does not
+        #      contain -- an unfound heading is simply not indexed.
+        _headings = [p.text.strip() for p in doc_src.paragraphs
+                     if p.style.name == "Heading 1"
+                     and re.match(r'^\s*\d{1,2}\.\s+\S', p.text or "")]
+        _flat = [re.sub(r'\s+', '', merged[_i].get_text()) for _i in range(n_body)]
         _toc = []
         _seen = set()
-        for _i in range(n_body):
-            # every heading on the page, not just the first: sections 2, 3 and 7
-            # share a page with the one before them, and breaking after the first
-            # match silently dropped all three from the outline.
-            for _ln in merged[_i].get_text().splitlines():
-                _m = re.match(r'^\s*(\d{1,2})\.\s+(\S.{2,70})$', _ln.strip())
-                if _m and _m.group(1) not in _seen:
-                    _seen.add(_m.group(1))
-                    _toc.append([1, f"{_m.group(1)}. {_m.group(2).strip()}", _i + 1])
+        for _h in _headings:
+            _num = _h.split(".", 1)[0].strip()
+            if _num in _seen:
+                continue
+            _key = re.sub(r'\s+', '', _h)
+            for _i, _pt in enumerate(_flat):
+                if _key in _pt:
+                    _seen.add(_num)
+                    _toc.append([1, _h, _i + 1])
+                    break
         _at = n_body
         for _name, _cnt in counts:
             _label = ("Appendix — Data & Tables Dossier" if "dossier" in _name.lower()

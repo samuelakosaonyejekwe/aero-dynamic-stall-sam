@@ -24,4 +24,4 @@ PyMuPDF>=1.23        # merges the report body with the dossier and plots album
 
 # Verified on (full run_all.py, all stages green):
 #   Python 3.12.3, numpy 1.26.4, scipy 1.11.4, pandas 3.0.3, matplotlib 3.6.3,
-#   python-docx 1.x, pillow 10.2.0, reportlab 5.0.1, PyMuPDF 1.27.2
+#   python-docx 1.2.0, pillow 10.2.0, reportlab 5.0.1, PyMuPDF 1.27.2.3

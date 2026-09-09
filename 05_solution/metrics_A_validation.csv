@@ -20,6 +20,7 @@ Cp_closure_worst_dCL_pct_of_CLmax,0.86
 Cp_TE_jump_max_over_phases,1.081
 CL_kutta_inviscid,2.111
 Cp_DSV_core_min,-0.362
+DSV_peak_swirl_over_U,0.241
 reduced_frequency_k,0.1
 mach_M,0.3
 mean_alpha_deg,10.0
