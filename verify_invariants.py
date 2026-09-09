@@ -898,14 +898,23 @@ except ImportError:
 #     the page. They were not: the figure was 8.5 in tall while the sheet was 210
 #     paper units, and savefig.bbox="tight" then grew it further, so a sheet whose
 #     title block read "1:270" printed at 1:263.8.
+#     Every sheet, not just the first: this checked sheet 1 alone while four
+#     ship, and each of the other three carries a scale in its title block too.
+#     savefig.bbox="tight" GROWS a canvas rather than clipping it, so a sheet
+#     that gained an annotation near its edge would still render completely --
+#     at the wrong size, with the stated scale silently false.
 try:
     from PIL import Image as _Img
-    _sh='08_engineering_drawings/sheet1_general_arrangement_3view.png'
-    if os.path.exists(_sh):
-        _im=_Img.open(_sh); _dpi=_im.info.get('dpi',(150,150))[1]
-        _mm=_im.size[1]/_dpi*25.4
-        ck("drawing sheet is 210 mm tall, so its stated scale is true",
-           abs(_mm-210.0)<0.5, f"{_mm:.2f} mm")
+    _sheets = sorted(glob.glob('08_engineering_drawings/sheet*.png'))
+    ck("all four drawing sheets are published", len(_sheets) == 4, str(len(_sheets)))
+    for _sh in _sheets:
+        _im = _Img.open(_sh); _dpi = _im.info.get('dpi', (150, 150))
+        _mmh = _im.size[1]/_dpi[1]*25.4
+        _mmw = _im.size[0]/_dpi[0]*25.4
+        ck(f"{os.path.basename(_sh)} is 210 mm tall, so its stated scale is true",
+           abs(_mmh - 210.0) < 0.5, f"{_mmh:.2f} mm")
+        ck(f"{os.path.basename(_sh)} keeps the sheet aspect (no silent growth)",
+           abs(_mmw - 271.59) < 1.0, f"{_mmw:.2f} mm wide")
 except ImportError:
     pass
 
@@ -1102,6 +1111,46 @@ ck("the harness recovers a known 2% perturbation, not the loop width",
 _ar = abs(us._trapz(np.append(_mod, _mod[0]), np.radians(np.append(_ea, _ea[0]))))
 ck("the matched model loop encloses an area (it did not: exactly 0)",
    _ar > 0.5*float(mA['CL_hysteresis_loop_area']), f"area {_ar:.4f}")
+
+# --- CLIPPED FIGURE CONTENT. Matplotlib clips silently: content that overruns
+#     the canvas simply is not drawn, leaving no error and no trace, which is how
+#     the data dossier lost table rows. The decisive test is the pixels, not the
+#     layout: an artist's tight bbox routinely exceeds the figure by the font's
+#     ascent and side bearings without a single pixel being lost, and an Axes3D
+#     reports its whole projection cube. Chasing that signal produced two
+#     "fixes" to figures that were never clipped. Ink ON the border means the
+#     drawing ran out of canvas.
+#
+#     Note what this can and cannot catch here. aero_style sets
+#     savefig.bbox="tight", under which matplotlib GROWS the canvas to fit an
+#     overrun instead of cutting it -- verified: the same over-wide note is cut
+#     (4 ink pixels on the right border) with tight off and merely widens the
+#     image with it on. So for these figures this is a guard against a figure
+#     that opts out of tight bbox, and the live risk of an overrun is silent
+#     GROWTH, which is checked where growth changes meaning: the drawing sheets,
+#     whose title blocks state a printed scale.
+_full_bleed = {'favicon-16x16.png', 'favicon-32x32.png', 'favicon.png',
+               'apple-touch-icon.png', 'icon-512.png', 'logo.png',
+               'social-preview.png'}          # brand art, coloured edge to edge
+try:
+    from PIL import Image as _PIL
+except ImportError:
+    _PIL = None
+if _PIL is not None:
+    _clipped, _scanned = [], 0
+    for _f in subprocess.run(['git','ls-files'],capture_output=True,text=True).stdout.split():
+        if not _f.endswith('.png') or os.path.basename(_f) in _full_bleed:
+            continue
+        _a = np.array(_PIL.open(_f).convert('RGBA'))
+        _scanned += 1
+        _ink = (_a[..., 3] > 10) & (_a[..., :3].astype(int).sum(-1) < 720)
+        _e = {'top': _ink[0, :].sum(), 'bottom': _ink[-1, :].sum(),
+              'left': _ink[:, 0].sum(), 'right': _ink[:, -1].sum()}
+        _on = {k: int(v) for k, v in _e.items() if v > 0}
+        if _on:
+            _clipped.append(f"{os.path.basename(_f)} {_on}")
+    ck(f"no published figure has content cut off at its edge ({_scanned} scanned)",
+       not _clipped, "; ".join(_clipped[:5]))
 
 # --- stale prose
 # This file is EXCLUDED from its own scan. It necessarily quotes the phrases it
