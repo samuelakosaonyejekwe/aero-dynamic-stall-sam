@@ -43,6 +43,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 FR = HERE/"experimental"/"nasa_frames"
 sys.path.insert(0, str(ROOT)); sys.path.insert(0, str(ROOT/"04_solver"))
+from loop_strokes import stroke_split
 from aero_style import apply_style, PALETTE
 import matplotlib.pyplot as plt
 import unistall_solver as us
@@ -89,19 +90,6 @@ def loadframe(fn):
     return dict(M=g("M"), k=g("k"), a0=g("alpha_0")*180/np.pi, da=g("delta_alpha")*180/np.pi,
                 acl=d["alpha_exp_cl"].ravel(), cl=d["cl_exp"].ravel(),       # already in deg
                 acm=d["alpha_exp_cm"].ravel(), cm=d["cm_exp"].ravel())
-
-def stroke_split(a):
-    """Label each experimental point up/down. The record is a closed loop that may
-    start anywhere, so split on BOTH turning points rather than assuming it opens
-    on the upstroke."""
-    a = np.asarray(a, float)
-    imax, imin = int(np.argmax(a)), int(np.argmin(a))
-    s = np.empty(len(a), dtype="<U4")
-    if imin <= imax:                       # ... min ... max ...  -> rising between them
-        s[:] = "down"; s[imin:imax+1] = "up"
-    else:                                  # ... max ... min ...  -> falling between them
-        s[:] = "up";   s[imax+1:imin+1] = "down"
-    return s
 
 def model_branches(o):
     a = o["alpha_deg"]; up = o["alpha_dot"] > 0; br = {}

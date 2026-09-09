@@ -29,7 +29,8 @@ If no experimental data are present, it writes a TEMPLATE + instructions and
 exits WITHOUT fabricating any data (honesty by construction).
 
 Experimental CSV schema (one file per test condition):
-    alpha_deg, CL [, CM] [, CD] [, stroke]     stroke in {up,down} (optional)
+    alpha_deg, CL [, CM] [, CD] [, stroke]     stroke in {up,down} (optional;
+    when absent it is inferred from the traced order by loop_strokes.stroke_split)
 Conditions are read from experimental/conditions.csv:
     file, mean, amp, k, M, c, U, source
 """
@@ -42,6 +43,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 EXP = HERE/"experimental"; EXP.mkdir(exist_ok=True)
 sys.path.insert(0, str(ROOT)); sys.path.insert(0, str(ROOT/"04_solver"))
+from loop_strokes import stroke_split
 from aero_style import apply_style, PALETTE
 import matplotlib.pyplot as plt
 import unistall_solver as us
@@ -106,89 +108,108 @@ def interp_branch(branches, stroke, aq):
     xa, ya = branches[stroke if stroke in branches else "up"]
     return np.interp(aq, xa, ya)
 
-cond_path = EXP/"conditions.csv"
-exp_files = [f for f in EXP.glob("*.csv") if f.name not in ("conditions.csv",)
-             and not f.name.startswith("validation_")]
-real = [f for f in exp_files if not f.name.startswith("TEMPLATE")]
 
-if not cond_path.exists() or not real:
-    write_template()
-    print("[digitized] no experimental data found — wrote TEMPLATE + README to "
-          f"{EXP.relative_to(ROOT)} . Add digitised CSV(s) + conditions.csv, then re-run.")
-    sys.exit(0)
+def main():
+    """The harness proper. Guarded so the pure helpers can be imported and tested
+    without running the stage or calling sys.exit."""
+    cond_path = EXP/"conditions.csv"
+    exp_files = [f for f in EXP.glob("*.csv") if f.name not in ("conditions.csv",)
+                 and not f.name.startswith("validation_")]
+    real = [f for f in exp_files if not f.name.startswith("TEMPLATE")]
 
-cond = pd.read_csv(cond_path).set_index("file")
-summary = []
-for f in real:
-    if f.name not in cond.index:
-        print(f"[digitized] skip {f.name}: no row in conditions.csv"); continue
-    c = cond.loc[f.name]
-    exp = pd.read_csv(f)
-    o = us.solve_dynamic_stall(c["mean"], c["amp"], c["k"], c["M"], c["c"], c["U"],
-                               f_static, CNalpha=CNALPHA, consts=FROZEN,
-                               n_per_cycle=720, n_cycles=6)
-    a = o["alpha_deg"]; dadt = o["alpha_dot"]
-    brCL = branch(a, o["CL"], dadt); brCM = branch(a, o["CM"], dadt)
-    strokes = exp["stroke"] if "stroke" in exp else pd.Series(["up"]*len(exp))
-    mCL = np.array([interp_branch(brCL, s, av) for s, av in zip(strokes, exp["alpha_deg"])])
-    rms_cl = float(np.sqrt(np.mean((mCL-exp["CL"])**2)))
-    maxe_cl = float(np.max(np.abs(mCL-exp["CL"])))
-    rec = {"file": f.name, "n_points": len(exp), "RMS_CL": round(rms_cl, 4),
-           "maxAbs_CL": round(maxe_cl, 4)}
-    if "CM" in exp and exp["CM"].notna().any():
-        mCM = np.array([interp_branch(brCM, s, av) for s, av in zip(strokes, exp["alpha_deg"])])
-        rec["RMS_CM"] = round(float(np.sqrt(np.mean((mCM-exp["CM"])**2))), 4)
-        rec["CMbreak_err"] = round(float(abs(o["CM"].min()-exp["CM"].min())), 4)
-    rec["CLmax_err"] = round(float(abs(o["CL"].max()-exp["CL"].max())), 4)
-    # ---- lift-loop area. The module docstring, experimental/README.txt and
-    #      report section 12.3 all promised this metric and none of them
-    #      computed it. Both loops are closed before integrating; the
-    #      experimental points are taken in the order they were digitised,
-    #      which is the order a loop is traced.
-    #
-    #      The COMPARISON integrates the model at the experiment's own incidences
-    #      and strokes -- the mCL the error metrics above already use -- not on
-    #      the solver's 720-point grid. Comparing a 720-point trapezoid against a
-    #      handful of digitised points measures the quadrature as much as the
-    #      model: probed with an 11-point synthetic loop, the published error was
-    #      +127.8 % where the like-for-like figure is +109.8 %, so 17.9 points of
-    #      it were resolution, not model. The dense-grid area is kept as its own
-    #      column so that difference stays visible instead of being folded into
-    #      an error the harness calls the model's.
-    _ae = np.radians(np.append(exp["alpha_deg"].values, exp["alpha_deg"].values[0]))
-    _ce = np.append(exp["CL"].values, exp["CL"].values[0])
-    area_exp = float(abs(us._trapz(_ce, _ae)))
-    area_mod = float(abs(us._trapz(np.append(mCL, mCL[0]), _ae)))
-    _am = np.radians(np.append(a, a[0]))
-    area_mod_dense = float(abs(us._trapz(np.append(o["CL"], o["CL"][0]), _am)))
-    rec["CL_loop_area_model"] = round(area_mod, 4)
-    rec["CL_loop_area_model_dense"] = round(area_mod_dense, 4)
-    rec["CL_loop_area_exp"] = round(area_exp, 4)
-    rec["CL_loop_area_err_pct"] = (round(100.0*(area_mod-area_exp)/area_exp, 1)
-                                   if area_exp > 0 else float("nan"))
-    rec["source"] = str(c["source"])
-    summary.append(rec)
-    pd.DataFrame([rec]).to_csv(HERE/f"validation_digitized_{f.stem}.csv", index=False)
+    if not cond_path.exists() or not real:
+        write_template()
+        print("[digitized] no experimental data found — wrote TEMPLATE + README to "
+              f"{EXP.relative_to(ROOT)} . Add digitised CSV(s) + conditions.csv, then re-run.")
+        sys.exit(0)          # reached only via __main__
 
-    # overlay figure
-    fig, axs = plt.subplots(1, 2 if "CM" in exp else 1,
-                            figsize=(11 if "CM" in exp else 6.5, 4.8), squeeze=False)
-    axs[0][0].plot(a, o["CL"], color=PALETTE[0], lw=2, label="UNISTALL (frozen)")
-    axs[0][0].plot(exp["alpha_deg"], exp["CL"], "o", color=PALETTE[1], ms=5,
-                   label="experiment (digitised)")
-    axs[0][0].set_xlabel("α [deg]"); axs[0][0].set_ylabel("$C_L$")
-    axs[0][0].set_title(f"Lift loop — {f.stem}  (RMS={rms_cl:.3f})", pad=10)
-    axs[0][0].legend(loc="upper center", bbox_to_anchor=(0.5, -0.16), ncol=2)
-    if "CM" in exp:
-        axs[0][1].plot(a, o["CM"], color=PALETTE[0], lw=2, label="UNISTALL (frozen)")
-        axs[0][1].plot(exp["alpha_deg"], exp["CM"], "o", color=PALETTE[1], ms=5,
+    cond = pd.read_csv(cond_path).set_index("file")
+    summary = []
+    for f in real:
+        if f.name not in cond.index:
+            print(f"[digitized] skip {f.name}: no row in conditions.csv"); continue
+        c = cond.loc[f.name]
+        exp = pd.read_csv(f)
+        o = us.solve_dynamic_stall(c["mean"], c["amp"], c["k"], c["M"], c["c"], c["U"],
+                                   f_static, CNalpha=CNALPHA, consts=FROZEN,
+                                   n_per_cycle=720, n_cycles=6)
+        a = o["alpha_deg"]; dadt = o["alpha_dot"]
+        brCL = branch(a, o["CL"], dadt); brCM = branch(a, o["CM"], dadt)
+        # `stroke` is optional in the schema. When absent it is INFERRED from the
+        # traced order -- it used to be assumed "up", which compared every
+        # down-stroke point against the up-stroke model a whole loop-width away
+        # (RMS_CL 0.3158 on data that was the solver's own output scaled by 1.02)
+        # and collapsed the matched model loop to exactly zero area, published as a
+        # loop-area error of -100.0 %.
+        strokes = (exp["stroke"] if "stroke" in exp
+                   else pd.Series(stroke_split(exp["alpha_deg"].values)))
+        mCL = np.array([interp_branch(brCL, s, av) for s, av in zip(strokes, exp["alpha_deg"])])
+        rms_cl = float(np.sqrt(np.mean((mCL-exp["CL"])**2)))
+        maxe_cl = float(np.max(np.abs(mCL-exp["CL"])))
+        rec = {"file": f.name, "n_points": len(exp), "RMS_CL": round(rms_cl, 4),
+               "maxAbs_CL": round(maxe_cl, 4)}
+        if "CM" in exp and exp["CM"].notna().any():
+            mCM = np.array([interp_branch(brCM, s, av) for s, av in zip(strokes, exp["alpha_deg"])])
+            rec["RMS_CM"] = round(float(np.sqrt(np.mean((mCM-exp["CM"])**2))), 4)
+            rec["CMbreak_err"] = round(float(abs(o["CM"].min()-exp["CM"].min())), 4)
+        rec["CLmax_err"] = round(float(abs(o["CL"].max()-exp["CL"].max())), 4)
+        # ---- lift-loop area. The module docstring, experimental/README.txt and
+        #      report section 12.3 all promised this metric and none of them
+        #      computed it. Both loops are closed before integrating; the
+        #      experimental points are taken in the order they were digitised,
+        #      which is the order a loop is traced.
+        #
+        #      The COMPARISON integrates the model at the experiment's own incidences
+        #      and strokes -- the mCL the error metrics above already use -- not on
+        #      the solver's 720-point grid. Comparing a 720-point trapezoid against a
+        #      handful of digitised points measures the quadrature as much as the
+        #      model: probed with an 11-point synthetic loop, the published error was
+        #      +127.8 % where the like-for-like figure is +109.8 %, so 17.9 points of
+        #      it were resolution, not model. The dense-grid area is kept as its own
+        #      column so that difference stays visible instead of being folded into
+        #      an error the harness calls the model's.
+        _ae = np.radians(np.append(exp["alpha_deg"].values, exp["alpha_deg"].values[0]))
+        _ce = np.append(exp["CL"].values, exp["CL"].values[0])
+        area_exp = float(abs(us._trapz(_ce, _ae)))
+        area_mod = float(abs(us._trapz(np.append(mCL, mCL[0]), _ae)))
+        _am = np.radians(np.append(a, a[0]))
+        area_mod_dense = float(abs(us._trapz(np.append(o["CL"], o["CL"][0]), _am)))
+        rec["CL_loop_area_model"] = round(area_mod, 4)
+        rec["CL_loop_area_model_dense"] = round(area_mod_dense, 4)
+        rec["CL_loop_area_exp"] = round(area_exp, 4)
+        # An open curve is not a loop and has no area to compare. Guard BOTH sides:
+        # a zero model area was published as a -100 % error, which reads as the model
+        # predicting no hysteresis rather than as the metric not applying.
+        rec["CL_loop_area_err_pct"] = (round(100.0*(area_mod-area_exp)/area_exp, 1)
+                                       if area_exp > 0 and area_mod > 0
+                                       else float("nan"))
+        rec["source"] = str(c["source"])
+        summary.append(rec)
+        pd.DataFrame([rec]).to_csv(HERE/f"validation_digitized_{f.stem}.csv", index=False)
+
+        # overlay figure
+        fig, axs = plt.subplots(1, 2 if "CM" in exp else 1,
+                                figsize=(11 if "CM" in exp else 6.5, 4.8), squeeze=False)
+        axs[0][0].plot(a, o["CL"], color=PALETTE[0], lw=2, label="UNISTALL (frozen)")
+        axs[0][0].plot(exp["alpha_deg"], exp["CL"], "o", color=PALETTE[1], ms=5,
                        label="experiment (digitised)")
-        axs[0][1].set_xlabel("α [deg]"); axs[0][1].set_ylabel("$C_{M,c/4}$")
-        axs[0][1].set_title("Moment loop", pad=10)
-        axs[0][1].legend(loc="upper center", bbox_to_anchor=(0.5, -0.16), ncol=2)
-    fig.savefig(HERE/f"fig_validation_digitized_{f.stem}.png"); plt.close(fig)
+        axs[0][0].set_xlabel("α [deg]"); axs[0][0].set_ylabel("$C_L$")
+        axs[0][0].set_title(f"Lift loop — {f.stem}  (RMS={rms_cl:.3f})", pad=10)
+        axs[0][0].legend(loc="upper center", bbox_to_anchor=(0.5, -0.16), ncol=2)
+        if "CM" in exp:
+            axs[0][1].plot(a, o["CM"], color=PALETTE[0], lw=2, label="UNISTALL (frozen)")
+            axs[0][1].plot(exp["alpha_deg"], exp["CM"], "o", color=PALETTE[1], ms=5,
+                           label="experiment (digitised)")
+            axs[0][1].set_xlabel("α [deg]"); axs[0][1].set_ylabel("$C_{M,c/4}$")
+            axs[0][1].set_title("Moment loop", pad=10)
+            axs[0][1].legend(loc="upper center", bbox_to_anchor=(0.5, -0.16), ncol=2)
+        fig.savefig(HERE/f"fig_validation_digitized_{f.stem}.png"); plt.close(fig)
 
-if summary:
-    pd.DataFrame(summary).to_csv(HERE/"validation_digitized_summary.csv", index=False)
-    print(f"[digitized] validated {len(summary)} experimental file(s); "
-          "see validation_digitized_summary.csv")
+    if summary:
+        pd.DataFrame(summary).to_csv(HERE/"validation_digitized_summary.csv", index=False)
+        print(f"[digitized] validated {len(summary)} experimental file(s); "
+              "see validation_digitized_summary.csv")
+
+
+if __name__ == "__main__":
+    main()

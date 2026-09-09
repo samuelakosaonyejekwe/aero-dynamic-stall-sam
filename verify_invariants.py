@@ -1049,6 +1049,60 @@ ck("stall onset settles under refinement (spread < 0.3 deg over the last four ro
 ck("stall onset does move at the coarsest step (the quantisation is real)",
    float(_on.iloc[0] - _on.iloc[-1]) > 0.1)
 
+# --- THE DIGITISER HARNESS. It only does anything when experimental data are
+#     present, and none ship, so its working branch had never run. Exercised with
+#     a synthetic loop it produced two wrong numbers, both presented as
+#     measurements: RMS_CL 0.3158 on data that was the solver's own output scaled
+#     by 1.02, and a loop-area error of -100.0 %. Cause: the schema calls the
+#     `stroke` column optional, and when it was absent every point was forced
+#     onto the UP branch -- so down-stroke points were compared against the
+#     up-stroke model a whole loop-width away, and the model's area collapsed to
+#     exactly zero because one branch is single-valued in alpha. These checks run
+#     the harness's own matching on shipped data and write nothing.
+#     There is now ONE implementation, in loop_strokes.py, importable with no
+#     side effects, replacing the robust copy in validate_nasa_real.py and the
+#     absent one in validate_digitized.py.
+sys.path.insert(0, os.path.join(os.getcwd(), '06_postprocessing', 'validation'))
+import validate_digitized as _vd
+from loop_strokes import stroke_split as _stroke
+
+ck("both validation harnesses use the one stroke implementation",
+   all('from loop_strokes import stroke_split' in open(f, encoding='utf-8').read()
+       for f in ('06_postprocessing/validation/validate_digitized.py',
+                 '06_postprocessing/validation/validate_nasa_real.py')))
+
+_tri = _stroke([0, 5, 10, 15, 10, 5, 0])
+ck("stroke is inferred from the traced order, not assumed up",
+   list(_tri[:3]) == ["up"]*3 and list(_tri[4:]) == ["down"]*3, str(_tri))
+ck("a monotone sweep is all one stroke",
+   set(_stroke([0, 4, 8, 12])) == {"up"})
+# a loop that starts mid-cycle must still split correctly -- this is why the
+# turning-point method was kept over the sign-of-increment one
+_mid = _stroke([12, 16, 20, 16, 10, 4, 0, 6, 12])
+ck("a loop that starts mid-cycle splits on both turning points",
+   list(_mid[:3]) == ["up"]*3 and list(_mid[3:7]) == ["down"]*4
+   and list(_mid[7:]) == ["up"]*2, str(_mid))
+
+# end-to-end: perturb the shipped Case-A loop by a known 2 % and check the
+# harness's matching recovers it. Before the fix this read 0.3158, an error 15x
+# the perturbation being measured.
+_th = pd.read_csv('05_solution/time_history_A_validation.csv')
+_sub = _th.iloc[::max(1, len(_th)//40)]
+_ea, _ec = _sub['alpha_deg'].values, _sub['CL'].values*1.02
+_br = _vd.branch(_th['alpha_deg'].values, _th['CL'].values, _th['alpha_dot_rad_s'].values)
+_st = _stroke(_ea)
+_mod = np.array([_vd.interp_branch(_br, _s, _a) for _s, _a in zip(_st, _ea)])
+_rms = float(np.sqrt(np.mean((_mod - _ec)**2)))
+_expect = 0.02*float(np.sqrt(np.mean(_th['CL'].values**2)))
+ck("the harness recovers a known 2% perturbation, not the loop width",
+   abs(_rms - _expect) < 0.25*_expect, f"RMS {_rms:.4f} vs expected {_expect:.4f}")
+
+# and the model's loop area must not collapse: a single-branch match integrates
+# to zero, which was published as a -100 % error
+_ar = abs(us._trapz(np.append(_mod, _mod[0]), np.radians(np.append(_ea, _ea[0]))))
+ck("the matched model loop encloses an area (it did not: exactly 0)",
+   _ar > 0.5*float(mA['CL_hysteresis_loop_area']), f"area {_ar:.4f}")
+
 # --- stale prose
 # This file is EXCLUDED from its own scan. It necessarily quotes the phrases it
 # forbids, so including it makes every stale-prose check match itself and fail --
