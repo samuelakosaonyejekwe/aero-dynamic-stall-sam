@@ -179,7 +179,14 @@ def calibrate_separation(alpha_deg, Cl, Cd, CNalpha):
         # 15x the neighbouring steps -- purely as an artefact of the clamp.
         deep = F_MIN + (f_end - F_MIN)*np.exp(-(q - amax)/S_EXT)
         out = np.where(q <= amax, out, deep)
-        out = np.where(q >= amin, out, 1.0)            # below data -> attached
+        # Below the data -> attached. This branch does NOT fire for the polar
+        # this study ships, which is tabulated from alpha = 0 and is queried on
+        # |alpha|, so q >= amin always. It is a live guard rather than a dead
+        # line: fed a polar starting at 4 deg it returns f = 1.0 at 0 deg
+        # instead of the NaN PchipInterpolator(extrapolate=False) would give,
+        # which is the physically right answer below the fitted range. Tested
+        # both ways rather than assumed.
+        out = np.where(q >= amin, out, 1.0)
         return np.clip(np.nan_to_num(out, nan=1.0), F_MIN, 1.0)
     return f_static
 
