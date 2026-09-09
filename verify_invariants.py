@@ -38,6 +38,8 @@ this project, so each one is a regression test rather than a hypothetical:
                               thrust), but the CYCLE MEAN must stay positive.
   * response surface        - no published point may sit outside the range the
                               separation law was calibrated on.
+  * reconstruction scaling  - its non-dimensional outputs must not depend on
+                              chord, speed or Mach, as the march's do not.
   * dynamic-stall vortex    - its circulation and core are DERIVED from the
                               shear-layer vorticity flux and the model's own
                               vortex clock; every published number recomputes
@@ -347,6 +349,22 @@ ck("LAMB_OSEEN_PEAK is the peak-swirl coefficient",
 ck("config Tvl literature default comes from the solver",
    json.load(open('03_model_setup/solver_config.json'))['time_constants_semichords']['Tvl']
    == us.TVL_DEFAULT)
+
+# --- the RECONSTRUCTION must be chord- and speed-independent in its
+#     non-dimensional outputs, the way the march already is (the validation
+#     stage asserts that for the march). Nothing checked it for the
+#     reconstruction, and the vortex derivation added two more places where a
+#     stray dimensional term could hide.
+_ref=None
+for _cc2,_uu2,_mm2 in ((0.30,102.0,0.30),(1e-4,102.0,0.30),(50.0,102.0,0.30),
+                       (0.30,1e-3,0.30),(0.30,102.0,0.90)):
+    _s2=us.dsv_vortex_state(G,_cc2,_uu2,_mm2,17.5,1.9,0.24,1.0,6.0)
+    _,_,_c2=us.dsv_core_cp(G,_cc2,_uu2,_mm2,17.5,1.9,0.24,1.0,6.0)
+    _v2=(round(_s2['rc_chords'],9), round(_s2['Gamma_over_Uc'],9),
+         round(_s2['peak_swirl_over_U'],9), round(_c2,7))
+    if _ref is None: _ref=_v2
+    ck(f"reconstruction is chord/speed independent (c={_cc2}, U={_uu2}, M={_mm2})",
+       _v2==_ref, f"{_v2} vs {_ref}")
 
 # --- the published vortex-core depth must be grid-independent. It was read off
 #     the field at the nearest grid node, which drifted -0.425 / -0.381 / -0.358
