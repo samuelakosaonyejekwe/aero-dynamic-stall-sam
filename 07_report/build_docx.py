@@ -272,7 +272,9 @@ EQ(r"\alpha_{E}=\alpha_{3/4}-X_{1}-X_{2},\qquad C_{N}^{C}=C_{N\alpha}\,\alpha_{E
 # Values taken FROM solver_config.json, not restated. They were written here as
 # literals, a second copy of numbers the solver reads from the config, and a
 # change to one would have left the report quoting the other.
-_ic = json.load(open(ROOT/"03_model_setup"/"solver_config.json"))["indicial_circulatory"]
+_cfgj = json.load(open(ROOT/"03_model_setup"/"solver_config.json"))
+_ic = _cfgj["indicial_circulatory"]
+_us_fmin = _cfgj["separation_model"]["f_min"]      # read, never restated
 EQ(r"(A_{1},A_{2},b_{1},b_{2})=(%.2f,\;%.2f,\;%.2f,\;%.2f)"
    % (_ic["A1"], _ic["A2"], _ic["b1"], _ic["b2"]))
 H("4.3 Non-circulatory (impulsive / added-mass) loads", 2)
@@ -298,9 +300,16 @@ EQ(r"D_{p}^{\,n}=D_{p}^{\,n-1}e^{-\Delta s/T_{p}}+\left(C_{N}^{P,n}-C_{N}^{P,n-1
 EQ(r"C_{N}'=C_{N}^{P}-D_{p},\qquad \alpha_{f}=\frac{C_{N}'}{C_{N\alpha}},\qquad f'=f_{\mathrm{static}}(\alpha_{f})")
 EQ(r"D_{f}^{\,n}=D_{f}^{\,n-1}e^{-\Delta s/T_{f}}+\left(f'_{n}-f'_{n-1}\right)e^{-\Delta s/2T_{f}}")
 P("Dynamic separation point and the Kirchhoff/Helmholtz normal force:")
-EQ(r"f''=f'-D_{f},\qquad C_{N}^{f}=C_{N\alpha}\,\alpha_{E}\left(\frac{1+\sqrt{f''}}{2}\right)^{2}+C_{N}^{I}")
+EQ(r"f''=\mathrm{clip}\!\left(f'-D_{f},\;f_{\min},\;1\right),\qquad "
+   r"C_{N}^{f}=C_{N\alpha}\,\alpha_{E}\left(\frac{1+\sqrt{f''}}{2}\right)^{2}+C_{N}^{I}")
+P("The clip is not decoration: f_min is a published solver constant "
+  f"(separation_model.f_min = {_us_fmin}) and the march applies it at every step, "
+  "so the separation point never reaches zero and the Kirchhoff factor never "
+  "collapses. This equation read f'' = f' - D_f until this audit, which is not "
+  "what is evaluated.", italic=True, size=10)
 P("Calibration of the static separation point by inversion of the Kirchhoff relation:")
-EQ(r"f_{\mathrm{static}}=\left(2\sqrt{\frac{C_{N}^{\,st}}{C_{N\alpha}\,\alpha}}-1\right)^{2}")
+EQ(r"f_{\mathrm{static}}=\mathrm{clip}\!\left(2\sqrt{\frac{C_{N}^{\,st}}"
+   r"{C_{N\alpha}\,\alpha}}-1,\;\sqrt{f_{\min}},\;1\right)^{2}")
 H("4.5 Leading-edge dynamic-stall vortex", 2)
 P("Vortex shedding is triggered when the delayed normal force reaches the critical "
   "value on the up-stroke; the vortex is then fed and convected:")
@@ -327,12 +336,37 @@ P("A verdict is only reported outside a neutral band. That band is set by the mo
   "0.08). The measured "
   "spread and the band in force are both tabulated in §12.2.", italic=True, size=10)
 H("4.7 Field reconstruction (pressure / velocity / vorticity)", 2)
-EQ(r"\sum_{j}\sigma_{j}\left(\frac{\partial\phi_{j}}{\partial n}\right)_{i}=-\,\mathbf{U}_{\infty}\!\cdot\mathbf{n}_{i}")
+EQ(r"\sum_{j}\sigma_{j}\left(\frac{\partial\phi_{j}}{\partial n}\right)_{i}"
+   r"=-\left(\mathbf{U}_{\infty}+\mathbf{u}_{\gamma}+\mathbf{u}_{v}\right)_{i}"
+   r"\!\cdot\mathbf{n}_{i}")
+P("All three terms, because all three are in the right-hand side the solver "
+  "builds: the free stream, the bound vortex sheet, and the dynamic-stall "
+  "vortex. This equation showed only the free stream. Leaving the vortex out of "
+  "the boundary condition is not a cosmetic omission — a free vortex added to "
+  "the solution afterwards drives flow straight through the body, 7.4 % of the "
+  "free stream at worst here, and admitting it changes the surface C_p by up to "
+  "1.41. The vortex's core also depends on the edge speed the panel solution "
+  "gives, so the two are swept to convergence against each other.",
+  italic=True, size=10)
 P("Bound circulation from Kutta–Joukowski, carried as a uniform vortex sheet on "
   "the body surface and solved together with the source panels, so the trailing edge "
   "satisfies the Kutta condition to within the residual quoted in §4.9:")
 EQ(r"\Gamma=\frac{1}{2}C_{L}U c,\qquad \gamma=\frac{\Gamma}{\oint \mathrm{d}s}")
-EQ(r"V_{\theta}=\frac{\Gamma_{v}}{2\pi r}\left(1-e^{-r^{2}/r_{c}^{2}}\right),\qquad \Gamma_{v}\propto C_{N}^{v}")
+EQ(r"V_{\theta}=\frac{\Gamma_{v}}{2\pi r}\left(1-e^{-r^{2}/r_{c}^{2}}\right)")
+EQ(r"\Gamma_{v}=\frac{1}{2}C_{N}^{v}U c,\qquad "
+   r"r_{c}=\frac{\Lambda\,\Gamma_{v}}{2\pi V_{e}},\qquad "
+   r"\Lambda=\max_{u}\frac{1-e^{-u^{2}}}{u}=0.6382")
+P("Both are DERIVED, and this equation said only “Γ_v ∝ C_N^v” while the two "
+  "constants behind it were chosen by hand. The circulation is Kutta–Joukowski "
+  "on the vortex's own normal-force contribution — the same relation the bound "
+  "sheet uses — so the vortex carries exactly the C_N^v/C_N share of the "
+  "circulation the lift implies and the budget closes. The core is the radius at "
+  "which that circulation swirls at V_e, the edge speed of the shear layer that "
+  "rolls it up, read off the panel solution at the vortex centre with the vortex "
+  "excluded. Λ is the Lamb–Oseen peak-swirl coefficient, computed rather than "
+  "quoted; it is not 0.7152, which is the fraction of the circulation enclosed "
+  "at that radius. See §4.9 for the numbers all of this produces.",
+  italic=True, size=10)
 P("Surface and field pressure coefficient. There is deliberately NO "
   "Prandtl–Glauert factor on this expression, and the equation used to carry "
   "one: compressibility has already entered through β in the indicial march "

@@ -55,6 +55,10 @@ this project, so each one is a regression test rather than a hypothetical:
                               from that, the core lands in the measured -3 to
                               -6 band, and the field shows the flow reversal
                               beneath it.
+  * field self-consistency  - every column of a published field must re-derive
+                              from the others using only the published thermo
+                              properties, so a consumer recomputing from the CSV
+                              gets the published numbers back.
   * field bounds            - Cp <= 1 everywhere, the flow stays subsonic and
                               the static temperature stays positive, on the
                               grid the config declares the fields are written
@@ -62,8 +66,12 @@ this project, so each one is a regression test rather than a hypothetical:
   * closure bound           - the cycle-wide closure metric must bound the
                               peak-lift one; the peak-lift figure was once
                               quoted as though it bounded the whole cycle.
-  * report equations        - the report must state the Cp and impulsive-lag
-                              expressions the solver actually evaluates.
+  * report equations        - every governing equation must state what the
+                              solver actually evaluates: the Cp expression, the
+                              impulsive lag, the two separation clips, the full
+                              panel boundary condition and the derived vortex
+                              circulation. All thirty were read against the code
+                              and four of them were not.
   * dossier completeness    - a matplotlib page that overruns is CLIPPED, in
                               silence: the solver config printed 82 of its 97
                               lines and every long table 33 of the 38 rows its
@@ -362,6 +370,9 @@ ck("response surface fully calibrated", bool(rs['within_calibration'].all()))
 ck("peak alpha <= polar range", rs['peak_alpha_deg'].max()<=float(pd.read_csv('03_model_setup/static_polar_reference.csv')['alpha_deg'].max())+1e-9)
 
 # --- fields
+_thp=pd.read_csv('03_model_setup/material_thermo_properties.csv').set_index('property')['value']
+_gth,_Rth,_cpth,_rth=[float(_thp[k]) for k in
+                      ('air_gamma','air_gas_constant_R','air_cp','recovery_factor_r')]
 _fcfg=json.load(open('03_model_setup/solver_config.json'))['field_reconstruction']
 _nxy=_fcfg['grid_nx_solution']*_fcfg['grid_ny_solution']
 for f in sorted(glob.glob('05_solution/field_*.csv')):
@@ -375,6 +386,23 @@ for f in sorted(glob.glob('05_solution/field_*.csv')):
        f"max M {d['Mach_local'].max():.3f}")
     ck(f"{f.split('/')[-1]} static temperature stays positive",
        bool((d['T_static_K'].dropna()>0).all()), f"min T {d['T_static_K'].min():.1f} K")
+    # EVERY COLUMN must re-derive from the others using only the published
+    # thermo properties. This checks the written artifact rather than the code
+    # that wrote it: a consumer who opens the CSV and recomputes the speed from
+    # u and v, or the temperatures from the speed, must get the published
+    # numbers back. Nothing tested that the eight files are internally coherent.
+    _dc=d.dropna()
+    _cl2='case_A_validation' if 'A_valid' in f else 'case_B_application'
+    _U2=float(fl[_cl2]['freestream_velocity_U']); _M2=float(fl[_cl2]['freestream_mach_M'])
+    _T02=float(fl[_cl2]['static_temperature_T_inf'])*(1+(_gth-1)/2*_M2*_M2)
+    ck(f"{f.split('/')[-1]} speed = |(u,v)|",
+       float(np.abs(np.hypot(_dc.u_ms,_dc.v_ms)-_dc.speed_ms).max())<2e-3)
+    ck(f"{f.split('/')[-1]} temperatures follow from the speed",
+       float(np.abs((_T02-_dc.speed_ms**2/(2*_cpth))-_dc.T_static_K).max())<2e-3
+       and float(np.abs((_T02-(1-_rth)*_dc.speed_ms**2/(2*_cpth))-_dc.T_recovery_K).max())<2e-3)
+    ck(f"{f.split('/')[-1]} local Mach follows from speed and temperature",
+       float(np.abs(_dc.speed_ms/np.sqrt(_gth*_Rth*np.maximum(_dc.T_static_K,1.0))
+                    -_dc.Mach_local).max())<2e-4)
     # the config DECLARES grid_*_solution as "the sizes written to
     # 05_solution/field_*.csv"; the writer used to carry its own literals, and
     # the DSV-core metric was measured on the coarser DEFAULT grid instead, so
@@ -870,6 +898,54 @@ if _bd:
     ck("report states the impulsive time constant the solver uses",
        ('T_{I}=\\frac{K_{\\alpha}c}{U}' in _bd
         and 'T_{I}=\\frac{K_{\\alpha}c}{a}' not in _bd))
+    # --- and the rest of section 4 must state what the march evaluates too.
+    #     Four equations printed something the solver does not compute until
+    #     this audit read all thirty against the code: the separation point and
+    #     its inverse-Kirchhoff calibration are both CLIPPED and neither showed
+    #     it; the panel boundary condition carried only the free-stream term
+    #     when the right-hand side also holds the bound sheet and the
+    #     dynamic-stall vortex; and the vortex circulation was given as a
+    #     proportionality when it is a derived equality.
+    ck("report shows the separation point is clipped",
+       "f''=\\mathrm{clip}" in _bd, "f'' printed without its clip")
+    ck("report shows the Kirchhoff inversion is clipped",
+       'f_{\\mathrm{static}}=\\mathrm{clip}' in _bd, "f_static printed without its clip")
+    ck("report's panel boundary condition carries the sheet and the vortex",
+       ('\\mathbf{u}_{\\gamma}+\\mathbf{u}_{v}' in _bd
+        and '=-\\,\\mathbf{U}_{\\infty}\\!\\cdot\\mathbf{n}_{i}' not in _bd))
+    ck("report gives the vortex circulation as the derived equality",
+       ('\\Gamma_{v}=\\frac{1}{2}C_{N}^{v}U c' in _bd
+        and '\\Gamma_{v}\\propto C_{N}^{v}' not in _bd))
+    # EVERY equation must actually RENDER. EQ() rasterises each one through
+    #     matplotlib's mathtext, which is not full LaTeX -- \tfrac, for one, does
+    #     not exist there. Editing an equation in this file can therefore break
+    #     the report build, and did during this audit. Rendering all of them here
+    #     costs a few seconds and turns that into a caught failure rather than a
+    #     stack trace two stages later.
+    try:
+        import matplotlib as _mpl
+        _mpl.use("Agg")
+        import matplotlib.pyplot as _plt, tempfile as _tfm
+        _plt.rcParams["mathtext.fontset"] = "cm"
+        _eqs = re.findall(r'EQ\((r"(?:[^"\\]|\\.)*"(?:\s*\n\s*r"(?:[^"\\]|\\.)*")*)', _bd)
+        _badeq = []
+        for _i7, _e7 in enumerate(_eqs, 1):
+            _lat = "".join(re.findall(r'r"((?:[^"\\]|\\.)*)"', _e7)).replace('%.2f', '0.30')
+            try:
+                _f7 = _plt.figure(figsize=(.01, .01))
+                _f7.text(0, 0, f"${_lat}$", fontsize=12)
+                _t7 = _tfm.NamedTemporaryFile(suffix='.png', delete=False); _t7.close()
+                _f7.savefig(_t7.name, dpi=50, bbox_inches='tight')
+                _plt.close(_f7); os.unlink(_t7.name)
+            except Exception:
+                _badeq.append(_i7)
+        ck(f"all {len(_eqs)} report equations render through mathtext",
+           not _badeq, f"equations {_badeq} fail")
+    except ImportError:
+        pass
+    # the report must not restate f_min either; it is a published config value
+    ck("report reads f_min from the config rather than restating it",
+       re.search(r'f_\{\\min\}\s*=\s*[0-9]', _bd) is None)
 try:
     import fitz as _fz3
     _rp3=_fz3.open('aero_dynamic_stall_report.pdf'); _rp3.close()
