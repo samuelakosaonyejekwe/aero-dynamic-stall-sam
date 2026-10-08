@@ -1,0 +1,3 @@
+M,frame,set,CL_alpha_per_deg,CN_alpha_per_rad,alpha_zero_lift_deg,CL_max,alpha_at_CL_max_deg,CN_at_CL_max,fit_range_deg,source
+0.215,frame_13308,calibration,0.118,6.759,-0.01,1.644,16.2,1.598,-5 to 8 (up sweep),"NASA TM-84245 quasi-steady sweep frame_13308 (k = 0.001), not wall-corrected, same measurement chain as the dynamic frames"
+0.302,frame_12102,calibration,0.117,6.703,0.24,1.364,13.6,1.336,-5 to 8 (up sweep),"NASA TM-84245 quasi-steady sweep frame_12102 (k = 0.001), not wall-corrected, same measurement chain as the dynamic frames"

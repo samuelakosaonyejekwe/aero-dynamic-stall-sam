@@ -1,0 +1,22 @@
+alpha_deg,CD_static_data,kind,CD_model_slow_sweep,CD_model_without_CD0,error,error_without_CD0,sweep_k
+-5.0,0.00843,"total drag, wake survey",0.01202,0.00482,0.00359,-0.00361,0.002
+-2.0,0.00729,"total drag, wake survey",0.00799,0.00079,0.0007,-0.0065,0.002
+0.0,0.00711,"total drag, wake survey",0.0072,-0.0,9e-05,-0.00711,0.002
+2.0,0.00718,"total drag, wake survey",0.00795,0.00075,0.00077,-0.00643,0.002
+5.0,0.00865,"total drag, wake survey",0.0119,0.0047,0.00325,-0.00395,0.002
+8.0,0.01031,"total drag, wake survey",0.01903,0.01183,0.00872,0.00152,0.002
+10.0,0.0119,"total drag, wake survey",0.02551,0.01831,0.01361,0.00641,0.002
+12.0,0.01711,"total drag, wake survey",0.03494,0.02774,0.01783,0.01063,0.002
+14.0,0.02901,"total drag, wake survey",0.09273,0.08553,0.06372,0.05652,0.002
+9.98,0.018,"pressure (form) drag, excludes skin friction; not wall-corrected",0.02544,0.01824,0.00744,0.00024,0.002
+11.1,0.023,"pressure (form) drag, excludes skin friction; not wall-corrected",0.02923,0.02203,0.00623,-0.00097,0.002
+12.08,0.028,"pressure (form) drag, excludes skin friction; not wall-corrected",0.03609,0.02889,0.00809,0.00089,0.002
+13.06,0.034,"pressure (form) drag, excludes skin friction; not wall-corrected",0.05815,0.05095,0.02415,0.01695,0.002
+13.53,0.044,"pressure (form) drag, excludes skin friction; not wall-corrected",0.0698,0.0626,0.0258,0.0186,0.002
+14.03,0.173,"pressure (form) drag, excludes skin friction; not wall-corrected",0.09501,0.08781,-0.07799,-0.08519,0.002
+14.54,0.194,"pressure (form) drag, excludes skin friction; not wall-corrected",0.15491,0.14771,-0.03909,-0.04629,0.002
+15.01,0.199,"pressure (form) drag, excludes skin friction; not wall-corrected",0.18633,0.17913,-0.01267,-0.01987,0.002
+15.48,0.104,"pressure (form) drag, excludes skin friction; not wall-corrected",0.21665,0.20945,0.11265,0.10545,0.002
+15.99,0.116,"pressure (form) drag, excludes skin friction; not wall-corrected",0.22932,0.22212,0.11332,0.10612,0.002
+17.87,0.199,"pressure (form) drag, excludes skin friction; not wall-corrected",0.26871,0.26151,0.06971,0.06251,0.002
+20.0,0.378,"pressure (form) drag, excludes skin friction; not wall-corrected",0.31593,0.30873,-0.06207,-0.06927,0.002

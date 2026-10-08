@@ -1,0 +1,212 @@
+{
+  "author": "Akosa Samuel Onyejekwe (independent)",
+  "cm_unsteady": 0.728,
+  "bounds": [
+    0.3,
+    1.2
+  ],
+  "rule": "the attached part of every calibration loop: measured moment points that the model, with literature stall constants, places before stall onset (see basis)",
+  "basis": {
+    "cm_unsteady": 0.728,
+    "interval_95": [
+      0.606,
+      0.892
+    ],
+    "n_loops": 19,
+    "n_points": 184,
+    "onset_margin_deg": 1.0,
+    "loops": [
+      {
+        "frame": "frame_7023",
+        "k": 0.201,
+        "points": 12,
+        "model_reaches_onset": true,
+        "factor_this_loop": 0.963
+      },
+      {
+        "frame": "frame_7101",
+        "k": 0.15,
+        "points": 10,
+        "model_reaches_onset": true,
+        "factor_this_loop": 1.004
+      },
+      {
+        "frame": "frame_7104",
+        "k": 0.025,
+        "points": 6,
+        "model_reaches_onset": true,
+        "factor_this_loop": 0.898
+      },
+      {
+        "frame": "frame_7110",
+        "k": 0.1,
+        "points": 8,
+        "model_reaches_onset": true,
+        "factor_this_loop": 0.477
+      },
+      {
+        "frame": "frame_7119",
+        "k": 0.099,
+        "points": 7,
+        "model_reaches_onset": true,
+        "factor_this_loop": 0.996
+      },
+      {
+        "frame": "frame_7200",
+        "k": 0.025,
+        "points": 5,
+        "model_reaches_onset": true,
+        "factor_this_loop": -0.063
+      },
+      {
+        "frame": "frame_7212",
+        "k": 0.149,
+        "points": 9,
+        "model_reaches_onset": true,
+        "factor_this_loop": 0.59
+      },
+      {
+        "frame": "frame_7305",
+        "k": 0.151,
+        "points": 6,
+        "model_reaches_onset": true,
+        "factor_this_loop": 0.811
+      },
+      {
+        "frame": "frame_9210",
+        "k": 0.01,
+        "points": 7,
+        "model_reaches_onset": true,
+        "factor_this_loop": 3.342
+      },
+      {
+        "frame": "frame_9213",
+        "k": 0.024,
+        "points": 6,
+        "model_reaches_onset": true,
+        "factor_this_loop": 0.037
+      },
+      {
+        "frame": "frame_9222",
+        "k": 0.024,
+        "points": 8,
+        "model_reaches_onset": true,
+        "factor_this_loop": 0.502
+      },
+      {
+        "frame": "frame_9302",
+        "k": 0.096,
+        "points": 14,
+        "model_reaches_onset": true,
+        "factor_this_loop": 0.609
+      },
+      {
+        "frame": "frame_10104",
+        "k": 0.048,
+        "points": 6,
+        "model_reaches_onset": true,
+        "factor_this_loop": 0.646
+      },
+      {
+        "frame": "frame_10203",
+        "k": 0.025,
+        "points": 6,
+        "model_reaches_onset": true,
+        "factor_this_loop": 0.26
+      },
+      {
+        "frame": "frame_10212",
+        "k": 0.198,
+        "points": 10,
+        "model_reaches_onset": true,
+        "factor_this_loop": 0.904
+      },
+      {
+        "frame": "frame_10218",
+        "k": 0.01,
+        "points": 9,
+        "model_reaches_onset": false,
+        "factor_this_loop": 1.406
+      },
+      {
+        "frame": "frame_10221",
+        "k": 0.099,
+        "points": 22,
+        "model_reaches_onset": false,
+        "factor_this_loop": 0.598
+      },
+      {
+        "frame": "frame_10305",
+        "k": 0.099,
+        "points": 25,
+        "model_reaches_onset": true,
+        "factor_this_loop": 0.885
+      },
+      {
+        "frame": "frame_14220",
+        "k": 0.103,
+        "points": 8,
+        "model_reaches_onset": true,
+        "factor_this_loop": 0.859
+      }
+    ]
+  },
+  "factor_from_the_loops_below_static_stall_alone": 0.647,
+  "range_over_loops_with_a_closed_moment_loop": [
+    0.598,
+    0.707
+  ],
+  "frames": [
+    {
+      "frame": "frame_7110",
+      "M": 0.301,
+      "k": 0.1,
+      "moment_loop_closed": true,
+      "damping_measured": 0.16,
+      "damping_without_factor": 0.2117,
+      "damping_with_factor": 0.1654,
+      "damping_static_part": 0.0417,
+      "damping_unlagged_static": 0.1699,
+      "nRMS_CM_without_factor": 0.1393,
+      "nRMS_CM_with_factor": 0.1182,
+      "nRMS_CM_unlagged_static": 0.088,
+      "best_factor_this_loop": 0.707,
+      "peak_vortex_normal_force": 0.0162,
+      "peak_CN_prime_over_CN1": 1.0545
+    },
+    {
+      "frame": "frame_10218",
+      "M": 0.3,
+      "k": 0.01,
+      "moment_loop_closed": false,
+      "damping_measured": null,
+      "damping_without_factor": 0.0216,
+      "damping_with_factor": 0.0169,
+      "damping_static_part": 0.0041,
+      "damping_unlagged_static": 0.0175,
+      "nRMS_CM_without_factor": 0.0976,
+      "nRMS_CM_with_factor": 0.1002,
+      "nRMS_CM_unlagged_static": 0.0973,
+      "best_factor_this_loop": 1.199,
+      "peak_vortex_normal_force": 0.0,
+      "peak_CN_prime_over_CN1": 0.8508
+    },
+    {
+      "frame": "frame_10221",
+      "M": 0.301,
+      "k": 0.099,
+      "moment_loop_closed": true,
+      "damping_measured": 0.1395,
+      "damping_without_factor": 0.1998,
+      "damping_with_factor": 0.1535,
+      "damping_static_part": 0.0297,
+      "damping_unlagged_static": 0.1701,
+      "nRMS_CM_without_factor": 0.1705,
+      "nRMS_CM_with_factor": 0.1171,
+      "nRMS_CM_unlagged_static": 0.128,
+      "best_factor_this_loop": 0.598,
+      "peak_vortex_normal_force": 0.0,
+      "peak_CN_prime_over_CN1": 0.8008
+    }
+  ]
+}

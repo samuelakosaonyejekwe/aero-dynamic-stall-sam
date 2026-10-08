@@ -1,0 +1,24 @@
+check,variant,k,lift_amp_err_pct,lift_phase_err_deg,moment_amp_err_pct,moment_phase_err_deg,max_abs_difference,frame,M,nRMS_CL,nRMS_CM,RMS_CL,RMS_CM,range_CM,Xi_model,Xi_exp,measurement_floor_nRMS_CL,measurement_floor_nRMS_CM
+Theodorsen,the model (low-Mach blend),0.05,-0.69,-0.43,0.0,-0.06,,,,,,,,,,,,
+Theodorsen,the model (low-Mach blend),0.1,-0.27,0.62,0.0,-0.06,,,,,,,,,,,,
+Theodorsen,the model (low-Mach blend),0.2,1.86,-0.02,0.01,-0.06,,,,,,,,,,,,
+Theodorsen,incompressible form alone,0.05,-0.83,-0.42,-0.0,-0.0,,,,,,,,,,,,
+Theodorsen,incompressible form alone,0.1,-0.41,0.63,-0.0,-0.0,,,,,,,,,,,,
+Theodorsen,incompressible form alone,0.2,1.69,-0.01,-0.0,-0.0,,,,,,,,,,,,
+Theodorsen,"compressible indicial constants alone, M = 0.05",0.05,5.8,0.05,-6.83,-3.13,,,,,,,,,,,,
+Theodorsen,"compressible indicial constants alone, M = 0.05",0.1,6.43,-2.6,-8.16,-6.07,,,,,,,,,,,,
+Theodorsen,"compressible indicial constants alone, M = 0.05",0.2,1.7,-6.54,-12.9,-11.18,,,,,,,,,,,,
+Theodorsen,compressible constants with the simplified impulsive moment [DH19 Eq. 1.27],0.05,5.8,0.05,49.76,-2.5,,,,,,,,,,,,
+Theodorsen,compressible constants with the simplified impulsive moment [DH19 Eq. 1.27],0.1,6.43,-2.6,48.37,-4.86,,,,,,,,,,,,
+Theodorsen,compressible constants with the simplified impulsive moment [DH19 Eq. 1.27],0.2,1.7,-6.54,43.4,-9.02,,,,,,,,,,,,
+Theodorsen second axis,"incompressible form, pitch axis at 0.4 chord",0.05,-0.83,-0.42,-0.0,-0.0,,,,,,,,,,,,
+Theodorsen second axis,"incompressible form, pitch axis at 0.4 chord",0.1,-0.41,0.63,-0.0,-0.0,,,,,,,,,,,,
+Theodorsen second axis,"incompressible form, pitch axis at 0.4 chord",0.2,1.69,-0.01,-0.0,-0.0,,,,,,,,,,,,
+chord and speed independence,Leishman-Beddoes march,,,,,,5.040412531798211e-14,,,,,,,,,,,
+no-stall frame,Table 8: C_M0 and aerodynamic centre,0.099,,,,,,frame_10221,0.301,0.03394894763331169,0.14765888395196008,0.036665359381142265,0.00517006960727631,0.03501360344128268,0.1784224530460314,0.13950744021275954,,
+no-stall frame,Fig. 9: measured static C_M at the effective incidence,0.099,,,,,,frame_10221,0.301,0.03394894763331169,0.15403976847406217,0.036665359381142265,0.005393487367537811,0.03501360344128268,0.1887809670553022,0.13950744021275954,,
+no-stall frame,Table 8: C_M0 and aerodynamic centre,0.01,,,,,,frame_10218,0.3,0.025959986436280166,0.22688884450423527,0.028951570703045104,0.006134174135726742,0.02703603233173607,0.018831187052899292,,,
+no-stall frame,Fig. 9: measured static C_M at the effective incidence,0.01,,,,,,frame_10218,0.3,0.025959986436280166,0.09641920300802165,0.028951570703045104,0.0026067926899250972,0.02703603233173607,0.020218204556127092,,,
+"no-stall frame, the model",the calibrated model,0.1,,,,,,frame_7110,0.301,0.042497914462578695,0.12347680205010284,0.0436758760068075,0.005430175867187338,0.043977295953809614,0.1528884695828138,0.16003128967899788,0.029593535990955384,0.16078905395393986
+"no-stall frame, the model",the calibrated model,0.01,,,,,,frame_10218,0.3,0.030406691342597332,0.10117915539271177,0.0339107062483126,0.0027354829164951034,0.02703603233173607,0.01565585788600005,,0.027271133991539586,0.2615423640977507
+"no-stall frame, the model",the calibrated model,0.099,,,,,,frame_10221,0.301,0.03388300597701777,0.11159010286279647,0.03659414142904788,0.003907171609609899,0.03501360344128268,0.14149724048377954,0.13950744021275954,0.02816055673426368,0.2019520162705777

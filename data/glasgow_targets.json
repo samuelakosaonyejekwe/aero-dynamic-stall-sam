@@ -1,0 +1,60 @@
+{
+  "author": "Akosa Samuel Onyejekwe (independent)",
+  "frozen_on": "2026-10-07",
+  "rule": "Targets, procedure and go rule are stated here before any held-out Glasgow run is scored and are not changed after a result is seen.",
+  "statement": "No held-out Glasgow run had been scored, plotted against the model or otherwise evaluated when this file was written. The only model results that existed for any Glasgow run were on calibration-type runs: two (11011992 and 11012142) solved once at literature constants to time the march. A check that the fold routine runs was started on six calibration-type runs and stopped before it gave any result; the routine was then checked with a made-up loop in place of the model. No fit, no cross-validation and no forecast existed.",
+  "targets_copied_from": "data/targets.json, 'held_out_validation' (same measures, same limits)",
+  "held_out_validation": {
+    "group": "held-out Glasgow NACA 0012 runs inside the Mach range of the static stations whose measured peak incidence is at or below 25 deg, the end of the static lift data (group 'primary')",
+    "mean_nRMS_CL_max": 0.1,
+    "mean_nRMS_CM_max": 0.15,
+    "mean_nRMS_CD_max": 0.2,
+    "mean_abs_dalpha_CLmax_deg_max": 0.7238,
+    "mean_abs_dalpha_Mstall_deg_max": 1.0,
+    "damping_sign_agreement_min": 0.8
+  },
+  "procedure": {
+    "split": "data/glasgow_split.json: run number divisible by 3 -> calibration, otherwise held_out",
+    "conditions": "every run is solved at its own measured mean incidence and amplitude ((max+min)/2 and (max-min)/2 of the incidence column), its stored reduced frequency and Mach number, chord 0.55 m, pitch axis at the quarter chord, as a pure sine",
+    "measured_loads": "C_l and pressure C_d formed from the stored C_n and C_t; C_m about the quarter chord as stored; 128 points per run, the average of 10 cycles",
+    "static_inputs": "unistall/glasgow_static.py, source 'static': the static runs of the same model dated from 1991-03-01 on (doi:10.5525/gla.researchdata.464), three Mach stations, interpolated in Mach number; slope, zero-lift incidence, static-stall incidence, C_N1, f(alpha), static C_m and the pressure C_D0 by the rule of static_stations.py and static_model.py; post-stall curve 'more' separated, the default of the model. None is fitted. No held-out run enters them.",
+    "constants": "literature values of dsmodel.DEFAULTS and the attached-flow moment factor of results/attached_moment_factor.json (NASA calibration loops) held fixed; C_D0 from the static runs; Tp, Tf0, Tv0, Tvl, eta candidates for fitting within the bounds of calibrate.FIT",
+    "fitted_on": "the primary calibration-type runs only",
+    "cost": "sum over runs of nRMS_CL^2 + nRMS_CM^2 + nRMS_CD^2 (unistall/metrics.py), as unistall/calibrate.py",
+    "selection": "5-fold cross-validation inside the calibration-type runs, seed 20261006, 2 starts a fold, candidates none / sensitive only / all, the one-standard-error rule of data/targets.json ('calibration', 'selection_rule')",
+    "forecast": "the left-out scores of the kept candidate: each primary calibration-type run scored once, at the reporting resolution, by constants fitted without it",
+    "final_constants": "the kept set refitted on all primary calibration-type runs from 8 seeded starts at the search march of unistall.calibrate (step 0.32 semichords), the lowest cost kept. This is how every fold of the forecast fits, so the forecast describes these constants. The refinement of every start at the reporting resolution that calibrate.fit adds is left out: one evaluation of the cost on these runs at that resolution is 1.9 million steps of the march. Every score, in the forecast and in the blind test, is at the reporting resolution.",
+    "measures": "those of data/targets.json 'held_out_validation', computed by unistall/metrics.py: mean nRMS of C_L, C_M, C_D; mean absolute error of the incidence of C_L,max and of moment stall; cycle-damping sign agreement; means over runs with bootstrap 95 % intervals",
+    "scoring": "unistall.glasgow_blind score, once, after the seal; a no-go verdict means it is never run",
+    "static_source_uncertainty": "the forecast is repeated with the 'quasi_steady' static source on the calibration-type runs only; it takes no part in the go rule and no held-out run is scored with it"
+  },
+  "go_rule": {
+    "status": "binding",
+    "statement": "GO if, in the cross-validated forecast on the primary calibration-type runs (static source 'static', the candidate kept by the selection rule), the mean left-out nRMS of C_L, of C_M and of C_D are each at most 1.24 times the corresponding target: C_L 0.124, C_M 0.186, C_D 0.248. Otherwise NO-GO.",
+    "factor": 1.24,
+    "measures": [
+      "mean_nRMS_CL",
+      "mean_nRMS_CM",
+      "mean_nRMS_CD"
+    ],
+    "if_go": "the held-out runs are scored once by unistall.glasgow_blind score, after the seal, and the result is reported against the targets whatever it is",
+    "if_no_go": "the held-out runs are never scored; the case is reported as a stated limit of the model, with the forecast numbers",
+    "reason_for_the_factor": "The forecast is taken as near the targets if the held-out means it implies could still meet them. On the NASA loops the held-out error was 0.9355 of the error forecast by cross-validation (pooled RMS of the three normalised loop errors), and the 95 % interval of a mean loop error was up to 15.7 % of the mean either side. factor = (1 + that half-width) / that ratio, rounded to two decimals. The measures of incidence and of damping are reported in the forecast but are not in the rule: the fit does not minimise them.",
+    "basis": {
+      "factor": 1.24,
+      "held_out_over_left_out": 0.9355,
+      "nasa_left_out_rms_error": 0.1836,
+      "nasa_held_out_rms_error": 0.1718,
+      "nasa_left_out_candidate": "all",
+      "nasa_calibration_loops": 20,
+      "nasa_held_out_loops": 45,
+      "widest_relative_half_interval_of_a_mean": 0.1566,
+      "files_used": {
+        "cross_validation.csv": "41e71be332ff0e0d52d581f0b9d19e2a0e9194b4c31e91217ffbf8d8d4a7d6f4",
+        "calibrated_constants.json": "5ded404bc7b32a60f0018dcf6d0ebec16da882cd64b4e509a508f8128228a144",
+        "validation_table.csv": "582a80880de61558480b6cdac855a7ee367b2d573d6fe46bfdba9f592e84082d",
+        "validation_summary.csv": "a7b43975d01030aec090282e7ba99a4fe55a9c0b8450093662ccc2a37903ec72"
+      }
+    }
+  }
+}

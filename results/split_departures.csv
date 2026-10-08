@@ -1,0 +1,19 @@
+group,metric,value,ci95_lo,ci95_hi,n_frames
+split as fixed,mean_nRMS_CL,0.1067,0.0906,0.124,45
+split as fixed,mean_nRMS_CM,0.1959,0.1726,0.2202,45
+split as fixed,mean_nRMS_CD,0.1526,0.1306,0.1781,45
+split as fixed,mean_abs_dalpha_CLmax_deg,0.5723,0.4135,0.7737,45
+split as fixed,mean_abs_dalpha_Mstall_deg,0.6216,0.3923,0.8841,29
+split as fixed,mean_Xi_sign_agree,0.6,0.4661,0.7333,45
+departing frames moved to the set the rule gives,mean_nRMS_CL,0.1046,0.0888,0.122,45
+departing frames moved to the set the rule gives,mean_nRMS_CM,0.1916,0.1684,0.2158,45
+departing frames moved to the set the rule gives,mean_nRMS_CD,0.1504,0.1282,0.1752,45
+departing frames moved to the set the rule gives,mean_abs_dalpha_CLmax_deg,0.5676,0.4079,0.7637,45
+departing frames moved to the set the rule gives,mean_abs_dalpha_Mstall_deg,0.6067,0.3943,0.8514,30
+departing frames moved to the set the rule gives,mean_Xi_sign_agree,0.6222,0.4667,0.7556,45
+departing frames left out,mean_nRMS_CL,0.1055,0.0896,0.123,44
+departing frames left out,mean_nRMS_CM,0.1933,0.1696,0.218,44
+departing frames left out,mean_nRMS_CD,0.1513,0.1284,0.1757,44
+departing frames left out,mean_abs_dalpha_CLmax_deg,0.5731,0.408,0.7792,44
+departing frames left out,mean_abs_dalpha_Mstall_deg,0.6216,0.393,0.8768,29
+departing frames left out,mean_Xi_sign_agree,0.6136,0.4773,0.75,44

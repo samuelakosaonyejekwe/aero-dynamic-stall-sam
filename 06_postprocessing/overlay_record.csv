@@ -1,0 +1,3 @@
+case,measured_frame,drawn,note,M,k,alpha_mean_deg,alpha_amp_deg
+A_validation,frame_9302,True,drawn,0.302,0.096,9.8,9.9
+B_application,,False,the case has no measured loop,,,,

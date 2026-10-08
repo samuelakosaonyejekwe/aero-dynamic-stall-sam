@@ -1,0 +1,17 @@
+constant,value,status,literature_value,lower_bound,upper_bound
+Tp,1.651526,fitted,1.7,0.3,4.0
+Tf0,6.278239,fitted,3.0,0.5,10.0
+Tv0,6.317996,fitted,6.0,1.0,15.0
+Tvl,8.391549,fitted,7.0,3.0,13.0
+eta,0.906958,fitted,0.95,0.6,1.0
+xcp_v,0.2,fixed,0.2,,
+St_sh,0.19,fixed,0.19,,
+cm_lag,0.1,fixed,0.1,,
+CD0,0.0072,fixed,0.0072,,
+cn1_factor,1.0,fixed,1.0,,
+cmq_kirchhoff,1.0,fixed,1.0,,
+cm_unsteady,0.728,fixed,1.0,,
+sigma_rules,1.0,fixed,1.0,,
+cc_geometric,1.0,fixed,1.0,,
+cc_offset,0.0,fixed,0.0,,
+cc_floor,1.0,fixed,1.0,,

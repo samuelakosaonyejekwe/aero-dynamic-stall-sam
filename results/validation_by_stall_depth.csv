@@ -1,0 +1,4 @@
+group,n_frames,nRMS_CL,nRMS_CM,nRMS_CD,damping_sign_agreement,mean_abs_measured_damping
+attached or marginal (peak less than 2 deg beyond static stall),19,0.0927,0.2407,0.209,0.4737,0.0983
+light stall (2 to 6 deg beyond),7,0.1306,0.1553,0.1517,0.4286,0.0563
+deep stall (6 deg or more beyond),19,0.112,0.166,0.0964,0.7895,0.1246

@@ -1,0 +1,5 @@
+case,static_inputs,static_mach,CL_max,CM_min,CD_max,stall_onset_alpha_deg
+B_application,interpolated to the case's Mach number (reported),0.28,1.74544,-0.23686,0.4361,13.84663
+B_application,Mach station 0.215,0.215,1.907,-0.29343,0.5182,15.29105
+B_application,Mach station 0.302,0.302,1.70216,-0.2399,0.41373,13.33879
+B_application,spread between the stations,,0.20484,0.05354,0.10447,1.95226

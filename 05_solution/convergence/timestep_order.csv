@@ -1,0 +1,9 @@
+case,quantity,steps_reported,value_reported,value_twice_the_steps,value_four_times_the_steps,monotone,observed_order,order_observed,richardson_estimate,discretisation_uncertainty,uncertainty_pct_of_reported,uncertainty_basis
+A_validation,CL_max,3240,1.7950485,1.79503131,1.79497225,True,-1.7804579,False,,7.625e-05,0.00424785,range of the three finest marches (no order observed)
+A_validation,CM_min,3240,-0.28961152,-0.28957938,-0.2895662,True,1.28549283,True,-0.28955703,5.448e-05,0.01881217,distance of the reported value from the Richardson estimate
+A_validation,CD_max,3240,0.55543212,0.55539028,0.55536277,True,0.60474225,True,0.55530993,0.00012218,0.02199755,distance of the reported value from the Richardson estimate
+A_validation,stall_onset_alpha_deg,3240,14.42665873,14.42683304,14.42691758,True,1.04374268,True,14.42699723,0.0003385,0.00234633,distance of the reported value from the Richardson estimate
+B_application,CL_max,4320,1.74543727,1.7454225,1.74540245,True,-0.44160806,False,,3.482e-05,0.0019947,range of the three finest marches (no order observed)
+B_application,CM_min,4320,-0.23686119,-0.23684569,-0.23684497,True,4.43530588,False,,1.622e-05,0.00684809,range of the three finest marches (no order observed)
+B_application,CD_max,4320,0.43609994,0.43607565,0.43606918,True,1.90761092,True,0.43606682,3.312e-05,0.00759511,distance of the reported value from the Richardson estimate
+B_application,stall_onset_alpha_deg,4320,13.8466305,13.84664104,13.8466447,True,1.52353728,True,13.84664666,1.615e-05,0.00011666,distance of the reported value from the Richardson estimate

@@ -1,0 +1,4 @@
+frame,M,CN_max_measured,CN_max_model,CN_max_error_pct,alpha_stall_measured,alpha_stall_model,alpha_stall_error_deg,RMS_CN_up_to_stall
+frame_12109,0.279,1.394,1.416,1.62,14.35,14.1,-0.25,0.0166
+frame_12208,0.244,1.528,1.51,-1.15,15.99,15.1,-0.89,0.1105
+frame_13303,0.247,1.546,1.502,-2.81,15.69,15.05,-0.64,0.0904

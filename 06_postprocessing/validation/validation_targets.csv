@@ -1,0 +1,7 @@
+measure,target,kind,measured,met,note
+mean_nRMS_CL,0.1,at most,0.1067,False,
+mean_nRMS_CM,0.15,at most,0.1959,False,
+mean_nRMS_CD,0.2,at most,0.1526,True,
+mean_abs_dalpha_CLmax_deg,0.7238,at most,0.5723,True,
+mean_abs_dalpha_Mstall_deg,1.0,at most,0.6216,True,judged on the 29 loops where measurement and model both show a moment stall; the model misses a measured one on 3 loops and predicts an unmeasured one on 0
+damping_sign_agreement,0.8,at least,0.6,False,

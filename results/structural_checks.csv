@@ -1,0 +1,7 @@
+alpha_mean_deg,alpha_amp_deg,k,M,cycle_damping,cycle_work_J_per_m,work_from_damping_J_per_m,work_identity_error_pct,free_log_growth_per_cycle,predicted_log_growth_per_cycle,free_over_predicted_growth,free_amplitude_first_deg,free_amplitude_last_deg,free_mean_drift_deg,free_log_growth_per_cycle_state_space,state_space_agrees_in_sign,free_response,prescribed_damping,agree,dimensional_identity_max_abs,peak_lift_N_per_m,min_moment_Nm_per_m
+5.0,5.0,0.1,0.3,0.1575,-7.3044,-7.3043,0.0013,-0.00833,-0.00824,1.011,4.99,3.92,0.008,-0.00833,True,decays,positive,True,5.551115123125783e-16,3384.1,-27.89
+9.0,5.0,0.1,0.3,0.1741,-8.0762,-8.0759,0.0044,-0.00896,-0.00912,0.983,4.987,3.842,0.009,-0.00897,True,decays,positive,True,6.661338147750939e-16,4703.9,-11.84
+11.0,5.0,0.1,0.3,0.048,-2.2277,-2.2277,0.0029,-0.00268,-0.00251,1.066,4.99,4.619,0.01,-0.00274,True,decays,positive,True,8.881784197001252e-16,5118.1,-259.46
+12.0,5.0,0.05,0.3,0.0284,-1.318,-1.3231,0.3814,-0.00139,-0.00149,0.934,4.987,4.785,0.01,-0.00146,True,decays,positive,True,8.881784197001252e-16,4867.0,-382.56
+15.0,5.0,0.1,0.29,-0.0506,2.195,2.1954,0.0153,0.00159,0.00265,0.601,5.009,5.267,-0.001,0.00155,True,grows,negative,True,9.992007221626409e-16,4887.7,-278.39
+10.0,8.0,0.15,0.25,0.0532,-4.3837,-4.3763,0.17,-0.00384,-0.00278,1.381,7.976,7.148,0.01,-0.00394,True,decays,positive,True,1.1379786002407855e-15,4021.4,-258.82

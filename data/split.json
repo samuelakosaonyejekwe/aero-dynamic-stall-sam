@@ -1,0 +1,29 @@
+{
+  "author": "Akosa Samuel Onyejekwe (independent)",
+  "fixed_on": "2026-10-06",
+  "purpose": "Which measured frames may be used to fit model constants (calibration) and which may only be predicted (held_out). Fixed before any model change and not altered afterwards.",
+  "frames": {
+    "calibration": [
+      {"frame": "frame_9302", "airfoil": "NACA 0012"}
+    ],
+    "held_out": [
+      {"frame": "frame_9217", "airfoil": "NACA 0012"},
+      {"frame": "frame_9214", "airfoil": "NACA 0012"},
+      {"frame": "frame_7113", "airfoil": "NACA 0012"},
+      {"frame": "frame_10118", "airfoil": "NACA 0012"}
+    ],
+    "other_airfoil": [
+      {"frame": "frame_25104", "airfoil": "AMES-01"}
+    ]
+  },
+  "rule_for_frames_added_later": {
+    "statement": "A frame added after this date is assigned by its frame number alone, before its data are examined. NACA 0012: frame number divisible by 3 -> calibration, otherwise held_out. Any other aerofoil: other_airfoil (its static polar calibrates the separation law; the dynamic constants stay fixed, so its frames are never fitted).",
+    "naca0012_calibration_if": "frame_number % 3 == 0",
+    "existing_assignments_take_precedence": true
+  },
+  "uses_permitted": {
+    "calibration": "fitting constants, choosing model form, attached-flow acceptance checks",
+    "held_out": "scoring only",
+    "other_airfoil": "scoring only"
+  }
+}

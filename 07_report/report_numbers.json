@@ -1,0 +1,4222 @@
+{
+ "author": "Akosa Samuel Onyejekwe (independent)",
+ "note": "Every number quoted in the text of the report, in the order it is quoted, with the file and the field it was read from. Tables shown whole are listed under tables. Equations are listed with the numbered lines of docs/formulation.md they are taken from.",
+ "documents": {
+  "report_blocks": 263,
+  "equations": 24,
+  "references": 7,
+  "album_images": 112,
+  "report_images_as": {
+   "jpeg": 11,
+   "palette": 85
+  },
+  "album_images_as": {
+   "jpeg": 6,
+   "palette": 106
+  },
+  "dossier_tables": 47,
+  "report_numbers_quoted": 599
+ },
+ "numbers": [
+  {
+   "text": "45",
+   "value": 45,
+   "file": "results/validation_table.csv",
+   "field": "number of rows with model=tabulated, set=held_out, in_mach_range=True"
+  },
+  {
+   "text": "0.22",
+   "value": 0.22,
+   "file": "results/validation_table.csv",
+   "field": "smallest M over rows with model=tabulated, set=held_out, in_mach_range=True"
+  },
+  {
+   "text": "0.30",
+   "value": 0.302,
+   "file": "results/validation_table.csv",
+   "field": "largest M over rows with model=tabulated, set=held_out, in_mach_range=True"
+  },
+  {
+   "text": "0.107",
+   "value": 0.1067,
+   "file": "results/validation_targets.csv",
+   "field": "measured [measure=mean_nRMS_CL]"
+  },
+  {
+   "text": "0.100",
+   "value": 0.1,
+   "file": "results/validation_targets.csv",
+   "field": "target [measure=mean_nRMS_CL]"
+  },
+  {
+   "text": "0.196",
+   "value": 0.1959,
+   "file": "results/validation_targets.csv",
+   "field": "measured [measure=mean_nRMS_CM]"
+  },
+  {
+   "text": "0.150",
+   "value": 0.15,
+   "file": "results/validation_targets.csv",
+   "field": "target [measure=mean_nRMS_CM]"
+  },
+  {
+   "text": "0.60",
+   "value": 0.6,
+   "file": "results/validation_targets.csv",
+   "field": "measured [measure=damping_sign_agreement]"
+  },
+  {
+   "text": "0.80",
+   "value": 0.8,
+   "file": "results/validation_targets.csv",
+   "field": "target [measure=damping_sign_agreement]"
+  },
+  {
+   "text": "two",
+   "value": 2,
+   "file": "project_meta.py",
+   "field": "number of entries of CASES"
+  },
+  {
+   "text": "0.30",
+   "value": "0.3",
+   "file": "03_model_setup/flow_conditions.csv",
+   "field": "A_validation [parameter=freestream_mach_M]"
+  },
+  {
+   "text": "0.1000",
+   "value": 0.1,
+   "file": "03_model_setup/kinematics.csv",
+   "field": "reduced_freq_k [case=A_validation]"
+  },
+  {
+   "text": "10",
+   "value": 10.0,
+   "file": "03_model_setup/kinematics.csv",
+   "field": "alpha_mean_deg [case=A_validation]"
+  },
+  {
+   "text": "10",
+   "value": 10.0,
+   "file": "03_model_setup/kinematics.csv",
+   "field": "alpha_amp_deg [case=A_validation]"
+  },
+  {
+   "text": "1.80",
+   "value": 1.79505,
+   "file": "05_solution/summary_all_cases.csv",
+   "field": "CL_max [case=A_validation]"
+  },
+  {
+   "text": "-3.3",
+   "value": -3.3392,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "mean_error [quantity=CL_max]"
+  },
+  {
+   "text": "5.3",
+   "value": 5.3378,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "std_error [quantity=CL_max]"
+  },
+  {
+   "text": "18.1",
+   "value": 18.0673,
+   "file": "05_solution/summary_all_cases.csv",
+   "field": "alpha_at_CLmax_deg [case=A_validation]"
+  },
+  {
+   "text": "-0.3",
+   "value": -0.2677,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "mean_error [quantity=alpha_at_CLmax_deg]"
+  },
+  {
+   "text": "0.8",
+   "value": 0.8138,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "std_error [quantity=alpha_at_CLmax_deg]"
+  },
+  {
+   "text": "-0.29",
+   "value": -0.289612,
+   "file": "05_solution/summary_all_cases.csv",
+   "field": "CM_min_c4 [case=A_validation]"
+  },
+  {
+   "text": "+0.02",
+   "value": 0.0167,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "mean_error [quantity=CM_min_c4]"
+  },
+  {
+   "text": "0.05",
+   "value": 0.0508,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "std_error [quantity=CM_min_c4]"
+  },
+  {
+   "text": "0.56",
+   "value": 0.555432,
+   "file": "05_solution/summary_all_cases.csv",
+   "field": "CD_max [case=A_validation]"
+  },
+  {
+   "text": "-0.05",
+   "value": -0.0525,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "mean_error [quantity=CD_max]"
+  },
+  {
+   "text": "0.08",
+   "value": 0.0765,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "std_error [quantity=CD_max]"
+  },
+  {
+   "text": "14.4",
+   "value": 14.4267,
+   "file": "05_solution/summary_all_cases.csv",
+   "field": "stall_onset_alpha_deg [case=A_validation]"
+  },
+  {
+   "text": "-0.6",
+   "value": -0.6083,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "mean_error [quantity=moment_stall_alpha_deg]"
+  },
+  {
+   "text": "0.7",
+   "value": 0.6898,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "std_error [quantity=moment_stall_alpha_deg]"
+  },
+  {
+   "text": "0.28",
+   "value": "0.28",
+   "file": "03_model_setup/flow_conditions.csv",
+   "field": "B_application [parameter=freestream_mach_M]"
+  },
+  {
+   "text": "0.0747",
+   "value": 0.0747168934628072,
+   "file": "03_model_setup/kinematics.csv",
+   "field": "reduced_freq_k [case=B_application]"
+  },
+  {
+   "text": "12",
+   "value": 12.0,
+   "file": "03_model_setup/kinematics.csv",
+   "field": "alpha_mean_deg [case=B_application]"
+  },
+  {
+   "text": "8",
+   "value": 8.0,
+   "file": "03_model_setup/kinematics.csv",
+   "field": "alpha_amp_deg [case=B_application]"
+  },
+  {
+   "text": "1.75",
+   "value": 1.74544,
+   "file": "05_solution/summary_all_cases.csv",
+   "field": "CL_max [case=B_application]"
+  },
+  {
+   "text": "-3.3",
+   "value": -3.3392,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "mean_error [quantity=CL_max]"
+  },
+  {
+   "text": "5.3",
+   "value": 5.3378,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "std_error [quantity=CL_max]"
+  },
+  {
+   "text": "17.0",
+   "value": 17.0255,
+   "file": "05_solution/summary_all_cases.csv",
+   "field": "alpha_at_CLmax_deg [case=B_application]"
+  },
+  {
+   "text": "-0.3",
+   "value": -0.2677,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "mean_error [quantity=alpha_at_CLmax_deg]"
+  },
+  {
+   "text": "0.8",
+   "value": 0.8138,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "std_error [quantity=alpha_at_CLmax_deg]"
+  },
+  {
+   "text": "-0.24",
+   "value": -0.236861,
+   "file": "05_solution/summary_all_cases.csv",
+   "field": "CM_min_c4 [case=B_application]"
+  },
+  {
+   "text": "+0.02",
+   "value": 0.0167,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "mean_error [quantity=CM_min_c4]"
+  },
+  {
+   "text": "0.05",
+   "value": 0.0508,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "std_error [quantity=CM_min_c4]"
+  },
+  {
+   "text": "0.44",
+   "value": 0.4361,
+   "file": "05_solution/summary_all_cases.csv",
+   "field": "CD_max [case=B_application]"
+  },
+  {
+   "text": "-0.05",
+   "value": -0.0525,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "mean_error [quantity=CD_max]"
+  },
+  {
+   "text": "0.08",
+   "value": 0.0765,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "std_error [quantity=CD_max]"
+  },
+  {
+   "text": "13.8",
+   "value": 13.8466,
+   "file": "05_solution/summary_all_cases.csv",
+   "field": "stall_onset_alpha_deg [case=B_application]"
+  },
+  {
+   "text": "-0.6",
+   "value": -0.6083,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "mean_error [quantity=moment_stall_alpha_deg]"
+  },
+  {
+   "text": "0.7",
+   "value": 0.6898,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "std_error [quantity=moment_stall_alpha_deg]"
+  },
+  {
+   "text": "45",
+   "value": 45,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "n_loops [quantity=CL_max]"
+  },
+  {
+   "text": "12",
+   "value": 12,
+   "file": "results/targets_scoreboard.csv",
+   "field": "rows with met=yes [kind_of_target=physical]"
+  },
+  {
+   "text": "17",
+   "value": 17,
+   "file": "results/targets_scoreboard.csv",
+   "field": "number of rows [kind_of_target=physical]"
+  },
+  {
+   "text": "8",
+   "value": 8,
+   "file": "results/targets_scoreboard.csv",
+   "field": "rows with met=yes [kind_of_target=numerical]"
+  },
+  {
+   "text": "8",
+   "value": 8,
+   "file": "results/targets_scoreboard.csv",
+   "field": "number of rows [kind_of_target=numerical]"
+  },
+  {
+   "text": "8",
+   "value": 8,
+   "file": "results/targets_scoreboard.csv",
+   "field": "rows with met=yes [kind_of_target=software]"
+  },
+  {
+   "text": "9",
+   "value": 9,
+   "file": "results/targets_scoreboard.csv",
+   "field": "number of rows [kind_of_target=software]"
+  },
+  {
+   "text": "6",
+   "value": 6,
+   "file": "results/targets_scoreboard.csv",
+   "field": "number of rows with met=no"
+  },
+  {
+   "text": "45",
+   "value": 45,
+   "file": "results/validation_table.csv",
+   "field": "number of rows with model=tabulated, set=held_out, in_mach_range=True"
+  },
+  {
+   "text": "0.22",
+   "value": 0.22,
+   "file": "results/validation_table.csv",
+   "field": "smallest M over rows with model=tabulated, set=held_out, in_mach_range=True"
+  },
+  {
+   "text": "0.30",
+   "value": 0.302,
+   "file": "results/validation_table.csv",
+   "field": "largest M over rows with model=tabulated, set=held_out, in_mach_range=True"
+  },
+  {
+   "text": "0.20",
+   "value": 0.2,
+   "file": "03_model_setup/solver_config.json",
+   "field": "compared_range.k_max"
+  },
+  {
+   "text": "25",
+   "value": 25.0,
+   "file": "03_model_setup/solver_config.json",
+   "field": "compared_range.peak_alpha_max_deg"
+  },
+  {
+   "text": "45",
+   "value": 45,
+   "file": "results/validation_table.csv",
+   "field": "number of rows with model=tabulated, set=held_out, in_mach_range=True"
+  },
+  {
+   "text": "0.22",
+   "value": 0.22,
+   "file": "results/validation_table.csv",
+   "field": "smallest M over rows with model=tabulated, set=held_out, in_mach_range=True"
+  },
+  {
+   "text": "0.30",
+   "value": 0.302,
+   "file": "results/validation_table.csv",
+   "field": "largest M over rows with model=tabulated, set=held_out, in_mach_range=True"
+  },
+  {
+   "text": "0.20",
+   "value": 0.2,
+   "file": "03_model_setup/solver_config.json",
+   "field": "compared_range.k_max"
+  },
+  {
+   "text": "25",
+   "value": 25.0,
+   "file": "03_model_setup/solver_config.json",
+   "field": "compared_range.peak_alpha_max_deg"
+  },
+  {
+   "text": "tunnel condition of NASA TM-84245, frame 9302",
+   "value": "tunnel condition of NASA TM-84245, frame 9302",
+   "file": "03_model_setup/flow_conditions.csv",
+   "field": "A_validation [parameter=description]"
+  },
+  {
+   "text": "an aerofoil at a rotor-blade-station condition (steady stream, prescribed pitch); not a rotor calculation",
+   "value": "an aerofoil at a rotor-blade-station condition (steady stream, prescribed pitch); not a rotor calculation",
+   "file": "03_model_setup/flow_conditions.csv",
+   "field": "B_application [parameter=description]"
+  },
+  {
+   "text": "0.30",
+   "value": "0.3",
+   "file": "03_model_setup/flow_conditions.csv",
+   "field": "A_validation [parameter=freestream_mach_M]"
+  },
+  {
+   "text": "0.28",
+   "value": "0.28",
+   "file": "03_model_setup/flow_conditions.csv",
+   "field": "B_application [parameter=freestream_mach_M]"
+  },
+  {
+   "text": "0.610",
+   "value": "0.61",
+   "file": "03_model_setup/flow_conditions.csv",
+   "field": "A_validation [parameter=chord_c]"
+  },
+  {
+   "text": "0.527",
+   "value": "0.527",
+   "file": "03_model_setup/flow_conditions.csv",
+   "field": "B_application [parameter=chord_c]"
+  },
+  {
+   "text": "102.09",
+   "value": "102.0876860595831",
+   "file": "03_model_setup/flow_conditions.csv",
+   "field": "A_validation [parameter=freestream_velocity_U]"
+  },
+  {
+   "text": "95.28",
+   "value": "95.28184032227759",
+   "file": "03_model_setup/flow_conditions.csv",
+   "field": "B_application [parameter=freestream_velocity_U]"
+  },
+  {
+   "text": "4.3 × 10⁶",
+   "value": "4263000.0",
+   "file": "03_model_setup/flow_conditions.csv",
+   "field": "A_validation [parameter=reynolds_number_Re_c]"
+  },
+  {
+   "text": "3.4 × 10⁶",
+   "value": "3438000.0",
+   "file": "03_model_setup/flow_conditions.csv",
+   "field": "B_application [parameter=reynolds_number_Re_c]"
+  },
+  {
+   "text": "0.1000",
+   "value": 0.1,
+   "file": "03_model_setup/kinematics.csv",
+   "field": "reduced_freq_k [case=A_validation]"
+  },
+  {
+   "text": "0.0747",
+   "value": 0.0747168934628072,
+   "file": "03_model_setup/kinematics.csv",
+   "field": "reduced_freq_k [case=B_application]"
+  },
+  {
+   "text": "10.0",
+   "value": 10.0,
+   "file": "03_model_setup/kinematics.csv",
+   "field": "alpha_mean_deg [case=A_validation]"
+  },
+  {
+   "text": "12.0",
+   "value": 12.0,
+   "file": "03_model_setup/kinematics.csv",
+   "field": "alpha_mean_deg [case=B_application]"
+  },
+  {
+   "text": "10.0",
+   "value": 10.0,
+   "file": "03_model_setup/kinematics.csv",
+   "field": "alpha_amp_deg [case=A_validation]"
+  },
+  {
+   "text": "8.0",
+   "value": 8.0,
+   "file": "03_model_setup/kinematics.csv",
+   "field": "alpha_amp_deg [case=B_application]"
+  },
+  {
+   "text": "5.327",
+   "value": 5.327134,
+   "file": "03_model_setup/kinematics.csv",
+   "field": "freq_Hz [case=A_validation]"
+  },
+  {
+   "text": "4.300",
+   "value": 4.3,
+   "file": "03_model_setup/kinematics.csv",
+   "field": "freq_Hz [case=B_application]"
+  },
+  {
+   "text": "0.1877",
+   "value": 0.187718,
+   "file": "03_model_setup/kinematics.csv",
+   "field": "period_s [case=A_validation]"
+  },
+  {
+   "text": "0.2326",
+   "value": 0.232558,
+   "file": "03_model_setup/kinematics.csv",
+   "field": "period_s [case=B_application]"
+  },
+  {
+   "text": "3240",
+   "value": 3240,
+   "file": "03_model_setup/solver_config.json",
+   "field": "cases.A_validation.march.steps_per_cycle"
+  },
+  {
+   "text": "4320",
+   "value": 4320,
+   "file": "03_model_setup/solver_config.json",
+   "field": "cases.B_application.march.steps_per_cycle"
+  },
+  {
+   "text": "5",
+   "value": 5,
+   "file": "03_model_setup/solver_config.json",
+   "field": "cases.A_validation.march.cycles"
+  },
+  {
+   "text": "4",
+   "value": 4,
+   "file": "03_model_setup/solver_config.json",
+   "field": "cases.B_application.march.cycles"
+  },
+  {
+   "text": "9302",
+   "value": "9302",
+   "file": "project_meta.py",
+   "field": "CASES.A_validation.measured_frame"
+  },
+  {
+   "text": "4",
+   "value": "4",
+   "file": "08_engineering_drawings/dimensions.csv",
+   "field": "value [name=Case B number of blades]"
+  },
+  {
+   "text": "26.83",
+   "value": "26.83",
+   "file": "08_engineering_drawings/dimensions.csv",
+   "field": "value [name=Case B rotor radius, in feet]"
+  },
+  {
+   "text": "20.76",
+   "value": "20.76",
+   "file": "08_engineering_drawings/dimensions.csv",
+   "field": "value [name=Case B blade chord, in inches]"
+  },
+  {
+   "text": "258",
+   "value": "258",
+   "file": "08_engineering_drawings/dimensions.csv",
+   "field": "value [name=Case B rotor speed]"
+  },
+  {
+   "text": "Bousman, NASA/TP-2003-212265 (UH-60A main rotor)",
+   "value": "Bousman, NASA/TP-2003-212265 (UH-60A main rotor)",
+   "file": "08_engineering_drawings/dimensions.csv",
+   "field": "source [name=Case B rotor radius]"
+  },
+  {
+   "text": "0.75",
+   "value": "0.75",
+   "file": "08_engineering_drawings/dimensions.csv",
+   "field": "value [name=Case B analysis station, fraction of rotor radius]"
+  },
+  {
+   "text": "165.7",
+   "value": "165.709",
+   "file": "03_model_setup/station_condition.csv",
+   "field": "value [quantity=station_rotational_speed]"
+  },
+  {
+   "text": "0.28",
+   "value": "0.28",
+   "file": "03_model_setup/station_condition.csv",
+   "field": "value [quantity=station_mach_M]"
+  },
+  {
+   "text": "270",
+   "value": "270.0",
+   "file": "03_model_setup/station_condition.csv",
+   "field": "value [quantity=station_azimuth]"
+  },
+  {
+   "text": "70.4",
+   "value": "70.43",
+   "file": "03_model_setup/station_condition.csv",
+   "field": "value [quantity=forward_speed_implied]"
+  },
+  {
+   "text": "137",
+   "value": "136.9",
+   "file": "03_model_setup/station_condition.csv",
+   "field": "value [quantity=forward_speed_implied_kt]"
+  },
+  {
+   "text": "0.32",
+   "value": "0.3188",
+   "file": "03_model_setup/station_condition.csv",
+   "field": "value [quantity=advance_ratio_implied]"
+  },
+  {
+   "text": "4.30",
+   "value": "4.3",
+   "file": "03_model_setup/station_condition.csv",
+   "field": "value [quantity=pitch_frequency]"
+  },
+  {
+   "text": "0.0747",
+   "value": "0.074717",
+   "file": "03_model_setup/station_condition.csv",
+   "field": "value [quantity=reduced_frequency_k]"
+  },
+  {
+   "text": "0.28",
+   "value": "0.28",
+   "file": "03_model_setup/station_condition.csv",
+   "field": "value [quantity=mach_at_station_lowest]"
+  },
+  {
+   "text": "0.69",
+   "value": "0.6939",
+   "file": "03_model_setup/station_condition.csv",
+   "field": "value [quantity=mach_at_station_highest]"
+  },
+  {
+   "text": "0.1200",
+   "value": "0.12001",
+   "file": "01_geometry/section_geometry_summary.csv",
+   "field": "value [property=max_thickness_t_c]"
+  },
+  {
+   "text": "0.299",
+   "value": "0.2995",
+   "file": "01_geometry/section_geometry_summary.csv",
+   "field": "value [property=x_at_max_thickness_x_c]"
+  },
+  {
+   "text": "0.0159",
+   "value": "0.01587",
+   "file": "01_geometry/section_geometry_summary.csv",
+   "field": "value [property=LE_radius_r_c]"
+  },
+  {
+   "text": "0.0",
+   "value": "0.0",
+   "file": "01_geometry/section_geometry_summary.csv",
+   "field": "value [property=TE_gap_percent_chord]"
+  },
+  {
+   "text": "0.10, 0.20",
+   "value": "0.10, 0.20",
+   "file": "docs/formulation.md",
+   "field": "section 5, constant 'blend limits in (18a)', column Value"
+  },
+  {
+   "text": "0.02",
+   "value": "0.02",
+   "file": "docs/formulation.md",
+   "field": "section 5, constant 'F_MIN', column Value"
+  },
+  {
+   "text": "0.728",
+   "value": 0.728,
+   "file": "results/attached_moment_factor.json",
+   "field": "cm_unsteady"
+  },
+  {
+   "text": "three",
+   "value": 3,
+   "file": "results/attached_moment_factor.json",
+   "field": "number of entries of frames"
+  },
+  {
+   "text": "0.60",
+   "value": 0.598,
+   "file": "results/attached_moment_factor.json",
+   "field": "range_over_loops_with_a_closed_moment_loop, first"
+  },
+  {
+   "text": "0.71",
+   "value": 0.707,
+   "file": "results/attached_moment_factor.json",
+   "field": "range_over_loops_with_a_closed_moment_loop, second"
+  },
+  {
+   "text": "0.02",
+   "value": 0.02,
+   "file": "03_model_setup/solver_config.json",
+   "field": "march_rule.largest_step_semichords"
+  },
+  {
+   "text": "720",
+   "value": 720,
+   "file": "03_model_setup/solver_config.json",
+   "field": "march_rule.steps_min"
+  },
+  {
+   "text": "200",
+   "value": 200.0,
+   "file": "03_model_setup/solver_config.json",
+   "field": "march_rule.settle_semichords"
+  },
+  {
+   "text": "3",
+   "value": 3,
+   "file": "03_model_setup/solver_config.json",
+   "field": "march_rule.cycles_min"
+  },
+  {
+   "text": "8",
+   "value": 8,
+   "file": "03_model_setup/solver_config.json",
+   "field": "march_rule.cycles_max"
+  },
+  {
+   "text": "1.906",
+   "value": 1.90576495,
+   "file": "results/calibrated_constants.json",
+   "field": "cost"
+  },
+  {
+   "text": "2.143",
+   "value": 2.14349292,
+   "file": "results/calibrated_constants.json",
+   "field": "cost_at_literature_values"
+  },
+  {
+   "text": "20",
+   "value": 20,
+   "file": "results/calibrated_constants.json",
+   "field": "n_frames"
+  },
+  {
+   "text": "five",
+   "value": 5,
+   "file": "results/calibrated_constants.json",
+   "field": "number of entries of constants"
+  },
+  {
+   "text": "two",
+   "value": 2,
+   "file": "results/static_by_mach_naca0012.csv",
+   "field": "number of rows"
+  },
+  {
+   "text": "0.215",
+   "value": 0.215,
+   "file": "results/static_by_mach_naca0012.csv",
+   "field": "M"
+  },
+  {
+   "text": "0.302",
+   "value": 0.302,
+   "file": "results/static_by_mach_naca0012.csv",
+   "field": "M"
+  },
+  {
+   "text": "2.14",
+   "value": 2.14349,
+   "file": "results/static_curve_choice.csv",
+   "field": "cost [post_stall_curve=more separated]"
+  },
+  {
+   "text": "3.33",
+   "value": 3.33002,
+   "file": "results/static_curve_choice.csv",
+   "field": "cost [post_stall_curve=less separated]"
+  },
+  {
+   "text": "6.705",
+   "value": 6.70492,
+   "file": "03_model_setup/solver_config.json",
+   "field": "cases.A_validation.static_inputs.CN_alpha_per_rad"
+  },
+  {
+   "text": "6.718",
+   "value": 6.71809,
+   "file": "03_model_setup/solver_config.json",
+   "field": "cases.B_application.static_inputs.CN_alpha_per_rad"
+  },
+  {
+   "text": "0.23",
+   "value": 0.2343,
+   "file": "03_model_setup/solver_config.json",
+   "field": "cases.A_validation.static_inputs.alpha0_deg"
+  },
+  {
+   "text": "0.18",
+   "value": 0.1768,
+   "file": "03_model_setup/solver_config.json",
+   "field": "cases.B_application.static_inputs.alpha0_deg"
+  },
+  {
+   "text": "-0.027",
+   "value": -0.02741,
+   "file": "03_model_setup/solver_config.json",
+   "field": "cases.A_validation.static_inputs.CN_static_at_zero_incidence"
+  },
+  {
+   "text": "-0.021",
+   "value": -0.02073,
+   "file": "03_model_setup/solver_config.json",
+   "field": "cases.B_application.static_inputs.CN_static_at_zero_incidence"
+  },
+  {
+   "text": "13.66",
+   "value": 13.6598,
+   "file": "03_model_setup/solver_config.json",
+   "field": "cases.A_validation.static_inputs.alpha_stall_deg"
+  },
+  {
+   "text": "14.26",
+   "value": 14.2575,
+   "file": "03_model_setup/solver_config.json",
+   "field": "cases.B_application.static_inputs.alpha_stall_deg"
+  },
+  {
+   "text": "1.342",
+   "value": 1.34202,
+   "file": "03_model_setup/solver_config.json",
+   "field": "cases.A_validation.static_inputs.CN1_onset"
+  },
+  {
+   "text": "1.402",
+   "value": 1.40225,
+   "file": "03_model_setup/solver_config.json",
+   "field": "cases.B_application.static_inputs.CN1_onset"
+  },
+  {
+   "text": "+0.23",
+   "value": 0.2343,
+   "file": "03_model_setup/solver_config.json",
+   "field": "cases.A_validation.static_inputs.alpha0_deg"
+  },
+  {
+   "text": "+0.18",
+   "value": 0.1768,
+   "file": "03_model_setup/solver_config.json",
+   "field": "cases.B_application.static_inputs.alpha0_deg"
+  },
+  {
+   "text": "-0.027",
+   "value": -0.02741,
+   "file": "03_model_setup/solver_config.json",
+   "field": "cases.A_validation.static_inputs.CN_static_at_zero_incidence"
+  },
+  {
+   "text": "-0.021",
+   "value": -0.02073,
+   "file": "03_model_setup/solver_config.json",
+   "field": "cases.B_application.static_inputs.CN_static_at_zero_incidence"
+  },
+  {
+   "text": "0.215",
+   "value": 0.215,
+   "file": "05_solution/static_station_spread.csv",
+   "field": "static_mach of a station row"
+  },
+  {
+   "text": "0.302",
+   "value": 0.302,
+   "file": "05_solution/static_station_spread.csv",
+   "field": "static_mach of a station row"
+  },
+  {
+   "text": "1.91",
+   "value": 1.907,
+   "file": "05_solution/static_station_spread.csv",
+   "field": "CL_max [static_inputs=Mach station 0.215]"
+  },
+  {
+   "text": "1.70",
+   "value": 1.70216,
+   "file": "05_solution/static_station_spread.csv",
+   "field": "CL_max [static_inputs=Mach station 0.302]"
+  },
+  {
+   "text": "1.75",
+   "value": 1.74544,
+   "file": "05_solution/static_station_spread.csv",
+   "field": "CL_max [static_inputs=interpolated to the case's Mach number (reported)]"
+  },
+  {
+   "text": "-0.29",
+   "value": -0.29343,
+   "file": "05_solution/static_station_spread.csv",
+   "field": "CM_min [static_inputs=Mach station 0.215]"
+  },
+  {
+   "text": "-0.24",
+   "value": -0.2399,
+   "file": "05_solution/static_station_spread.csv",
+   "field": "CM_min [static_inputs=Mach station 0.302]"
+  },
+  {
+   "text": "-0.24",
+   "value": -0.23686,
+   "file": "05_solution/static_station_spread.csv",
+   "field": "CM_min [static_inputs=interpolated to the case's Mach number (reported)]"
+  },
+  {
+   "text": "15.3",
+   "value": 15.29105,
+   "file": "05_solution/static_station_spread.csv",
+   "field": "stall_onset_alpha_deg [static_inputs=Mach station 0.215]"
+  },
+  {
+   "text": "13.3",
+   "value": 13.33879,
+   "file": "05_solution/static_station_spread.csv",
+   "field": "stall_onset_alpha_deg [static_inputs=Mach station 0.302]"
+  },
+  {
+   "text": "13.8",
+   "value": 13.84663,
+   "file": "05_solution/static_station_spread.csv",
+   "field": "stall_onset_alpha_deg [static_inputs=interpolated to the case's Mach number (reported)]"
+  },
+  {
+   "text": "0.20",
+   "value": 0.20484,
+   "file": "05_solution/static_station_spread.csv",
+   "field": "CL_max [static_inputs=spread between the stations]"
+  },
+  {
+   "text": "0.054",
+   "value": 0.05354,
+   "file": "05_solution/static_station_spread.csv",
+   "field": "CM_min [static_inputs=spread between the stations]"
+  },
+  {
+   "text": "0.10",
+   "value": 0.10447,
+   "file": "05_solution/static_station_spread.csv",
+   "field": "CD_max [static_inputs=spread between the stations]"
+  },
+  {
+   "text": "2.0",
+   "value": 1.95226,
+   "file": "05_solution/static_station_spread.csv",
+   "field": "stall_onset_alpha_deg [static_inputs=spread between the stations]"
+  },
+  {
+   "text": "20",
+   "value": 20,
+   "file": "results/calibrated_constants.json",
+   "field": "n_frames"
+  },
+  {
+   "text": "8",
+   "value": 8,
+   "file": "results/calibrated_constants.json",
+   "field": "starts"
+  },
+  {
+   "text": "11",
+   "value": 11.090681372532824,
+   "file": "results/calibrated_constants.json",
+   "field": "100 (cost_at_literature_values - cost) / cost_at_literature_values"
+  },
+  {
+   "text": "1.906",
+   "value": 1.905765,
+   "file": "results/calibrated_constants.json",
+   "field": "lowest of polished_costs"
+  },
+  {
+   "text": "2.013",
+   "value": 2.013453,
+   "file": "results/calibrated_constants.json",
+   "field": "highest of polished_costs"
+  },
+  {
+   "text": "0.92",
+   "value": 0.92,
+   "file": "results/onset_level_check.csv",
+   "field": "smallest onset_level_factor"
+  },
+  {
+   "text": "1.08",
+   "value": 1.08,
+   "file": "results/onset_level_check.csv",
+   "field": "largest onset_level_factor"
+  },
+  {
+   "text": "1.906",
+   "value": 1.90576,
+   "file": "results/onset_level_check.csv",
+   "field": "smallest cost"
+  },
+  {
+   "text": "1.00",
+   "value": 1.0,
+   "file": "results/onset_level_check.csv",
+   "field": "onset_level_factor at the smallest cost"
+  },
+  {
+   "text": "45",
+   "value": 45,
+   "file": "results/validation_table.csv",
+   "field": "number of rows with model=tabulated, set=held_out, in_mach_range=True"
+  },
+  {
+   "text": "0.22",
+   "value": 0.22,
+   "file": "results/validation_table.csv",
+   "field": "smallest M over rows with model=tabulated, set=held_out, in_mach_range=True"
+  },
+  {
+   "text": "0.30",
+   "value": 0.302,
+   "file": "results/validation_table.csv",
+   "field": "largest M over rows with model=tabulated, set=held_out, in_mach_range=True"
+  },
+  {
+   "text": "six",
+   "value": 6,
+   "file": "results/validation_targets.csv",
+   "field": "number of rows"
+  },
+  {
+   "text": "0.028",
+   "value": 0.0279,
+   "file": "results/uncertainty_summary.csv",
+   "field": "measurement_floor [metric=nRMS_CL]"
+  },
+  {
+   "text": "0.059",
+   "value": 0.0589,
+   "file": "results/uncertainty_summary.csv",
+   "field": "measurement_floor [metric=nRMS_CM]"
+  },
+  {
+   "text": "0.059",
+   "value": 0.059,
+   "file": "results/uncertainty_summary.csv",
+   "field": "measurement_floor [metric=nRMS_CD]"
+  },
+  {
+   "text": "False",
+   "value": false,
+   "file": "results/validation_targets.csv",
+   "field": "met [measure=mean_nRMS_CL]"
+  },
+  {
+   "text": "0.107",
+   "value": 0.1067,
+   "file": "results/validation_targets.csv",
+   "field": "measured [measure=mean_nRMS_CL]"
+  },
+  {
+   "text": "at most",
+   "value": "at most",
+   "file": "results/validation_targets.csv",
+   "field": "kind [measure=mean_nRMS_CL]"
+  },
+  {
+   "text": "0.100",
+   "value": 0.1,
+   "file": "results/validation_targets.csv",
+   "field": "target [measure=mean_nRMS_CL]"
+  },
+  {
+   "text": "False",
+   "value": false,
+   "file": "results/validation_targets.csv",
+   "field": "met [measure=mean_nRMS_CM]"
+  },
+  {
+   "text": "0.196",
+   "value": 0.1959,
+   "file": "results/validation_targets.csv",
+   "field": "measured [measure=mean_nRMS_CM]"
+  },
+  {
+   "text": "at most",
+   "value": "at most",
+   "file": "results/validation_targets.csv",
+   "field": "kind [measure=mean_nRMS_CM]"
+  },
+  {
+   "text": "0.150",
+   "value": 0.15,
+   "file": "results/validation_targets.csv",
+   "field": "target [measure=mean_nRMS_CM]"
+  },
+  {
+   "text": "True",
+   "value": true,
+   "file": "results/validation_targets.csv",
+   "field": "met [measure=mean_nRMS_CD]"
+  },
+  {
+   "text": "0.153",
+   "value": 0.1526,
+   "file": "results/validation_targets.csv",
+   "field": "measured [measure=mean_nRMS_CD]"
+  },
+  {
+   "text": "at most",
+   "value": "at most",
+   "file": "results/validation_targets.csv",
+   "field": "kind [measure=mean_nRMS_CD]"
+  },
+  {
+   "text": "0.200",
+   "value": 0.2,
+   "file": "results/validation_targets.csv",
+   "field": "target [measure=mean_nRMS_CD]"
+  },
+  {
+   "text": "True",
+   "value": true,
+   "file": "results/validation_targets.csv",
+   "field": "met [measure=mean_abs_dalpha_CLmax_deg]"
+  },
+  {
+   "text": "0.57",
+   "value": 0.5723,
+   "file": "results/validation_targets.csv",
+   "field": "measured [measure=mean_abs_dalpha_CLmax_deg]"
+  },
+  {
+   "text": "at most",
+   "value": "at most",
+   "file": "results/validation_targets.csv",
+   "field": "kind [measure=mean_abs_dalpha_CLmax_deg]"
+  },
+  {
+   "text": "0.72",
+   "value": 0.7238,
+   "file": "results/validation_targets.csv",
+   "field": "target [measure=mean_abs_dalpha_CLmax_deg]"
+  },
+  {
+   "text": "True",
+   "value": true,
+   "file": "results/validation_targets.csv",
+   "field": "met [measure=mean_abs_dalpha_Mstall_deg]"
+  },
+  {
+   "text": "0.62",
+   "value": 0.6216,
+   "file": "results/validation_targets.csv",
+   "field": "measured [measure=mean_abs_dalpha_Mstall_deg]"
+  },
+  {
+   "text": "at most",
+   "value": "at most",
+   "file": "results/validation_targets.csv",
+   "field": "kind [measure=mean_abs_dalpha_Mstall_deg]"
+  },
+  {
+   "text": "1.00",
+   "value": 1.0,
+   "file": "results/validation_targets.csv",
+   "field": "target [measure=mean_abs_dalpha_Mstall_deg]"
+  },
+  {
+   "text": "False",
+   "value": false,
+   "file": "results/validation_targets.csv",
+   "field": "met [measure=damping_sign_agreement]"
+  },
+  {
+   "text": "0.60",
+   "value": 0.6,
+   "file": "results/validation_targets.csv",
+   "field": "measured [measure=damping_sign_agreement]"
+  },
+  {
+   "text": "at least",
+   "value": "at least",
+   "file": "results/validation_targets.csv",
+   "field": "kind [measure=damping_sign_agreement]"
+  },
+  {
+   "text": "0.80",
+   "value": 0.8,
+   "file": "results/validation_targets.csv",
+   "field": "target [measure=damping_sign_agreement]"
+  },
+  {
+   "text": "12",
+   "value": 12,
+   "file": "results/targets_scoreboard.csv",
+   "field": "rows with met=yes [kind_of_target=physical]"
+  },
+  {
+   "text": "17",
+   "value": 17,
+   "file": "results/targets_scoreboard.csv",
+   "field": "number of rows [kind_of_target=physical]"
+  },
+  {
+   "text": "8",
+   "value": 8,
+   "file": "results/targets_scoreboard.csv",
+   "field": "rows with met=yes [kind_of_target=numerical]"
+  },
+  {
+   "text": "8",
+   "value": 8,
+   "file": "results/targets_scoreboard.csv",
+   "field": "number of rows [kind_of_target=numerical]"
+  },
+  {
+   "text": "8",
+   "value": 8,
+   "file": "results/targets_scoreboard.csv",
+   "field": "rows with met=yes [kind_of_target=software]"
+  },
+  {
+   "text": "9",
+   "value": 9,
+   "file": "results/targets_scoreboard.csv",
+   "field": "number of rows [kind_of_target=software]"
+  },
+  {
+   "text": "6",
+   "value": 6,
+   "file": "results/targets_scoreboard.csv",
+   "field": "number of rows with met=no"
+  },
+  {
+   "text": "1.86",
+   "value": "1.86",
+   "file": "results/tables.md",
+   "field": "Table 9, row 'the model (low-Mach blend)', Lift amplitude, %"
+  },
+  {
+   "text": "0.62",
+   "value": "0.62",
+   "file": "results/tables.md",
+   "field": "Table 9, row 'the model (low-Mach blend)', Lift phase, deg"
+  },
+  {
+   "text": "0.01",
+   "value": "0.01",
+   "file": "results/tables.md",
+   "field": "Table 9, row 'the model (low-Mach blend)', Moment amplitude, %"
+  },
+  {
+   "text": "0.06",
+   "value": "0.06",
+   "file": "results/tables.md",
+   "field": "Table 9, row 'the model (low-Mach blend)', Moment phase, deg"
+  },
+  {
+   "text": "18",
+   "value": 18,
+   "file": "results/comparison_same_constants.csv",
+   "field": "number of rows with a verdict"
+  },
+  {
+   "text": "0.0017",
+   "value": 0.0017,
+   "file": "results/comparison_same_constants.csv",
+   "field": "largest |paired_difference| over the nRMS rows"
+  },
+  {
+   "text": "0.02",
+   "value": 0.0178,
+   "file": "results/comparison_same_constants.csv",
+   "field": "largest |paired_difference| over the dalpha rows"
+  },
+  {
+   "text": "5",
+   "value": 5,
+   "file": "results/comparison_same_constants.csv",
+   "field": "rows with verdict 'reference better'"
+  },
+  {
+   "text": "2",
+   "value": 2,
+   "file": "results/comparison_same_constants.csv",
+   "field": "rows with verdict 'tabulated better'"
+  },
+  {
+   "text": "95",
+   "value": "95",
+   "file": "results/comparison_same_constants.csv",
+   "field": "level named in verdict"
+  },
+  {
+   "text": "three",
+   "value": 3,
+   "file": "results/comparison_same_constants.csv",
+   "field": "number of distinct values of constants"
+  },
+  {
+   "text": "0.153",
+   "value": 0.1526,
+   "file": "results/comparison.csv",
+   "field": "tabulated [metric=mean |nRMS_CD|]"
+  },
+  {
+   "text": "0.151",
+   "value": 0.1512,
+   "file": "results/comparison.csv",
+   "field": "reference [metric=mean |nRMS_CD|]"
+  },
+  {
+   "text": "4.53",
+   "value": 4.5311,
+   "file": "results/comparison.csv",
+   "field": "tabulated [metric=mean |CLmax_err_pct|]"
+  },
+  {
+   "text": "4.35",
+   "value": 4.3475,
+   "file": "results/comparison.csv",
+   "field": "reference [metric=mean |CLmax_err_pct|]"
+  },
+  {
+   "text": "0.0116",
+   "value": 0.01158,
+   "file": "results/equivalence.csv",
+   "field": "largest mean_rms_difference_over_range [coefficient=CL]"
+  },
+  {
+   "text": "0.0140",
+   "value": 0.01402,
+   "file": "results/equivalence.csv",
+   "field": "largest ci95_hi [coefficient=CL]"
+  },
+  {
+   "text": "0.010",
+   "value": 0.01,
+   "file": "results/equivalence.csv",
+   "field": "margin [coefficient=CL]"
+  },
+  {
+   "text": "0.047",
+   "value": 0.04697,
+   "file": "results/equivalence.csv",
+   "field": "largest worst_loop_rms_over_range [coefficient=CL]"
+  },
+  {
+   "text": "0.0074",
+   "value": 0.00744,
+   "file": "results/equivalence.csv",
+   "field": "largest mean_rms_difference_over_range [coefficient=CM]"
+  },
+  {
+   "text": "0.0114",
+   "value": 0.01143,
+   "file": "results/equivalence.csv",
+   "field": "largest ci95_hi [coefficient=CM]"
+  },
+  {
+   "text": "0.015",
+   "value": 0.015,
+   "file": "results/equivalence.csv",
+   "field": "margin [coefficient=CM]"
+  },
+  {
+   "text": "0.081",
+   "value": 0.0805,
+   "file": "results/equivalence.csv",
+   "field": "largest worst_loop_rms_over_range [coefficient=CM]"
+  },
+  {
+   "text": "0.0096",
+   "value": 0.00963,
+   "file": "results/equivalence.csv",
+   "field": "largest mean_rms_difference_over_range [coefficient=CD]"
+  },
+  {
+   "text": "0.0116",
+   "value": 0.01159,
+   "file": "results/equivalence.csv",
+   "field": "largest ci95_hi [coefficient=CD]"
+  },
+  {
+   "text": "0.020",
+   "value": 0.02,
+   "file": "results/equivalence.csv",
+   "field": "margin [coefficient=CD]"
+  },
+  {
+   "text": "0.038",
+   "value": 0.03817,
+   "file": "results/equivalence.csv",
+   "field": "largest worst_loop_rms_over_range [coefficient=CD]"
+  },
+  {
+   "text": "45",
+   "value": 45,
+   "file": "results/validation_damping.csv",
+   "field": "n_frames [group=all primary held-out loops with a closed moment loop]"
+  },
+  {
+   "text": "0.60",
+   "value": 0.6,
+   "file": "results/validation_damping.csv",
+   "field": "sign_agreement [group=all primary held-out loops with a closed moment loop]"
+  },
+  {
+   "text": "0.67",
+   "value": 0.6667,
+   "file": "results/validation_damping.csv",
+   "field": "sign_agreement_if_always_positive [group=all primary held-out loops with a closed moment loop]"
+  },
+  {
+   "text": "0.33",
+   "value": 0.33,
+   "file": "results/validation_damping.csv",
+   "field": "correlation [group=all primary held-out loops with a closed moment loop]"
+  },
+  {
+   "text": "0.120",
+   "value": 0.1202,
+   "file": "results/validation_damping.csv",
+   "field": "rms_error [group=all primary held-out loops with a closed moment loop]"
+  },
+  {
+   "text": "15",
+   "value": 15,
+   "file": "results/validation_damping.csv",
+   "field": "measured_negative [group=all primary held-out loops with a closed moment loop]"
+  },
+  {
+   "text": "0",
+   "value": 0,
+   "file": "results/validation_damping.csv",
+   "field": "predicted_negative [group=measured damping negative]"
+  },
+  {
+   "text": "3",
+   "value": 3,
+   "file": "results/validation_damping.csv",
+   "field": "predicted_negative [group=measured damping positive]"
+  },
+  {
+   "text": "19",
+   "value": 19,
+   "file": "results/validation_damping.csv",
+   "field": "n_frames [group=deep stall (6 deg or more beyond static stall)]"
+  },
+  {
+   "text": "0.79",
+   "value": 0.7895,
+   "file": "results/validation_damping.csv",
+   "field": "sign_agreement [group=deep stall (6 deg or more beyond static stall)]"
+  },
+  {
+   "text": "3240",
+   "value": 3240,
+   "file": "03_model_setup/solver_config.json",
+   "field": "cases.A_validation.march.steps_per_cycle"
+  },
+  {
+   "text": "0.0194",
+   "value": 0.019393,
+   "file": "03_model_setup/solver_config.json",
+   "field": "cases.A_validation.march.step_semichords"
+  },
+  {
+   "text": "5",
+   "value": 5,
+   "file": "03_model_setup/solver_config.json",
+   "field": "cases.A_validation.march.cycles"
+  },
+  {
+   "text": "4320",
+   "value": 4320,
+   "file": "03_model_setup/solver_config.json",
+   "field": "cases.B_application.march.steps_per_cycle"
+  },
+  {
+   "text": "0.0195",
+   "value": 0.019466,
+   "file": "03_model_setup/solver_config.json",
+   "field": "cases.B_application.march.step_semichords"
+  },
+  {
+   "text": "4",
+   "value": 4,
+   "file": "03_model_setup/solver_config.json",
+   "field": "cases.B_application.march.cycles"
+  },
+  {
+   "text": "20",
+   "value": 20,
+   "file": "results/convergence_summary.csv",
+   "field": "n_frames [study=step size]"
+  },
+  {
+   "text": "4 times as many steps",
+   "value": "4 times as many steps",
+   "file": "results/convergence_summary.csv",
+   "field": "default_compared_with [study=step size]"
+  },
+  {
+   "text": "4 more cycles",
+   "value": "4 more cycles",
+   "file": "results/convergence_summary.csv",
+   "field": "default_compared_with [study=cycles marched]"
+  },
+  {
+   "text": "0.0008",
+   "value": 0.000758,
+   "file": "results/convergence_summary.csv",
+   "field": "worst_change_in_loop_error [study=step size]"
+  },
+  {
+   "text": "0",
+   "value": 0.0,
+   "file": "results/convergence_summary.csv",
+   "field": "worst_change_in_loop_error [study=cycles marched]"
+  },
+  {
+   "text": "0.002",
+   "value": 0.002,
+   "file": "results/convergence_summary.csv",
+   "field": "target_change_in_loop_error [study=step size]"
+  },
+  {
+   "text": "12960",
+   "value": 12960,
+   "file": "05_solution/convergence/timestep_refinement.csv",
+   "field": "largest steps_per_cycle [case=A_validation]"
+  },
+  {
+   "text": "0.004",
+   "value": 0.00424803,
+   "file": "05_solution/convergence/timestep_refinement.csv",
+   "field": "pct_from_finest_CL_max [case=A_validation] [reported=True]"
+  },
+  {
+   "text": "0.016",
+   "value": 0.01564874,
+   "file": "05_solution/convergence/timestep_refinement.csv",
+   "field": "pct_from_finest_CM_min [case=A_validation] [reported=True]"
+  },
+  {
+   "text": "0.012",
+   "value": 0.01248686,
+   "file": "05_solution/convergence/timestep_refinement.csv",
+   "field": "pct_from_finest_CD_max [case=A_validation] [reported=True]"
+  },
+  {
+   "text": "17280",
+   "value": 17280,
+   "file": "05_solution/convergence/timestep_refinement.csv",
+   "field": "largest steps_per_cycle [case=B_application]"
+  },
+  {
+   "text": "0.002",
+   "value": 0.00199474,
+   "file": "05_solution/convergence/timestep_refinement.csv",
+   "field": "pct_from_finest_CL_max [case=B_application] [reported=True]"
+  },
+  {
+   "text": "0.007",
+   "value": 0.00684856,
+   "file": "05_solution/convergence/timestep_refinement.csv",
+   "field": "pct_from_finest_CM_min [case=B_application] [reported=True]"
+  },
+  {
+   "text": "0.007",
+   "value": 0.00705605,
+   "file": "05_solution/convergence/timestep_refinement.csv",
+   "field": "pct_from_finest_CD_max [case=B_application] [reported=True]"
+  },
+  {
+   "text": "five",
+   "value": 5,
+   "file": "05_solution/convergence/timestep_order.csv",
+   "field": "number of rows with order_observed = True"
+  },
+  {
+   "text": "eight",
+   "value": 8,
+   "file": "05_solution/convergence/timestep_order.csv",
+   "field": "number of rows"
+  },
+  {
+   "text": "0.6",
+   "value": 0.60474225,
+   "file": "05_solution/convergence/timestep_order.csv",
+   "field": "smallest observed_order"
+  },
+  {
+   "text": "1.9",
+   "value": 1.90761092,
+   "file": "05_solution/convergence/timestep_order.csv",
+   "field": "largest observed_order"
+  },
+  {
+   "text": "0.02",
+   "value": 0.02199755,
+   "file": "05_solution/convergence/timestep_order.csv",
+   "field": "largest uncertainty_pct_of_reported"
+  },
+  {
+   "text": "8",
+   "value": 8,
+   "file": "05_solution/convergence/residuals_A_validation.csv",
+   "field": "largest cycles_marched"
+  },
+  {
+   "text": "0",
+   "value": 0.0,
+   "file": "05_solution/convergence/residuals_A_validation.csv",
+   "field": "largest max_abs_change over the rows from the reported cycle on"
+  },
+  {
+   "text": "8",
+   "value": 8,
+   "file": "05_solution/convergence/residuals_B_application.csv",
+   "field": "largest cycles_marched"
+  },
+  {
+   "text": "5 × 10⁻¹⁰",
+   "value": 5e-10,
+   "file": "05_solution/convergence/residuals_B_application.csv",
+   "field": "largest max_abs_change over the rows from the reported cycle on"
+  },
+  {
+   "text": "0.10, 0.20",
+   "value": "0.10, 0.20",
+   "file": "docs/formulation.md",
+   "field": "section 5, constant 'blend limits in (18a)', column Value"
+  },
+  {
+   "text": "14",
+   "value": 14,
+   "file": "results/statespace_summary.csv",
+   "field": "states"
+  },
+  {
+   "text": "classical fourth-order Runge-Kutta, fixed step",
+   "value": "classical fourth-order Runge-Kutta, fixed step",
+   "file": "results/statespace_summary.csv",
+   "field": "integrator"
+  },
+  {
+   "text": "24",
+   "value": 24,
+   "file": "results/statespace_summary.csv",
+   "field": "n_frames"
+  },
+  {
+   "text": "0.0004",
+   "value": 0.000398,
+   "file": "results/statespace_summary.csv",
+   "field": "worst_difference_in_loop_error"
+  },
+  {
+   "text": "0.002",
+   "value": 0.002,
+   "file": "results/statespace_summary.csv",
+   "field": "target_difference_in_loop_error"
+  },
+  {
+   "text": "0.0001",
+   "value": 7.2e-05,
+   "file": "results/statespace_summary.csv",
+   "field": "mean_difference_in_loop_error"
+  },
+  {
+   "text": "0.0003",
+   "value": 0.00027,
+   "file": "results/statespace_summary.csv",
+   "field": "worst_difference_in_damping"
+  },
+  {
+   "text": "0.5",
+   "value": 0.5275,
+   "file": "results/statespace_summary.csv",
+   "field": "worst_difference_in_CL_pct_of_range"
+  },
+  {
+   "text": "2.0",
+   "value": 1.9679,
+   "file": "results/statespace_summary.csv",
+   "field": "worst_difference_in_CM_pct_of_range"
+  },
+  {
+   "text": "3.6",
+   "value": 3.6068,
+   "file": "results/statespace_summary.csv",
+   "field": "worst_difference_in_CD_pct_of_range"
+  },
+  {
+   "text": "4.9",
+   "value": 4.94,
+   "file": "results/statespace_summary.csv",
+   "field": "cpu_ratio_state_space_to_indicial"
+  },
+  {
+   "text": "4",
+   "value": 4,
+   "file": "results/statespace_summary.csv",
+   "field": "n_frames_below_mach_0_20"
+  },
+  {
+   "text": "0.04",
+   "value": 0.035,
+   "file": "results/statespace_summary.csv",
+   "field": "lowest_mach"
+  },
+  {
+   "text": "6",
+   "value": 6,
+   "file": "results/structural_checks.csv",
+   "field": "number of rows"
+  },
+  {
+   "text": "6",
+   "value": 6,
+   "file": "results/structural_checks.csv",
+   "field": "number of rows with state_space_agrees_in_sign = True"
+  },
+  {
+   "text": "1",
+   "value": 1,
+   "file": "results/structural_checks.csv",
+   "field": "number of rows with free_log_growth_per_cycle_state_space > 0"
+  },
+  {
+   "text": "0.30",
+   "value": "0.3",
+   "file": "03_model_setup/flow_conditions.csv",
+   "field": "A_validation [parameter=freestream_mach_M]"
+  },
+  {
+   "text": "0.1000",
+   "value": 0.1,
+   "file": "03_model_setup/kinematics.csv",
+   "field": "reduced_freq_k [case=A_validation]"
+  },
+  {
+   "text": "10",
+   "value": 10.0,
+   "file": "03_model_setup/kinematics.csv",
+   "field": "alpha_mean_deg [case=A_validation]"
+  },
+  {
+   "text": "10",
+   "value": 10.0,
+   "file": "03_model_setup/kinematics.csv",
+   "field": "alpha_amp_deg [case=A_validation]"
+  },
+  {
+   "text": "0.610",
+   "value": "0.61",
+   "file": "03_model_setup/flow_conditions.csv",
+   "field": "A_validation [parameter=chord_c]"
+  },
+  {
+   "text": "1.80",
+   "value": 1.79505,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=CL_max]"
+  },
+  {
+   "text": "-3.3",
+   "value": -3.3392,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "mean_error [quantity=CL_max]"
+  },
+  {
+   "text": "5.3",
+   "value": 5.3378,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "std_error [quantity=CL_max]"
+  },
+  {
+   "text": "18.1",
+   "value": 18.0673,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=alpha_at_CLmax_deg]"
+  },
+  {
+   "text": "-0.3",
+   "value": -0.2677,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "mean_error [quantity=alpha_at_CLmax_deg]"
+  },
+  {
+   "text": "0.8",
+   "value": 0.8138,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "std_error [quantity=alpha_at_CLmax_deg]"
+  },
+  {
+   "text": "14.4",
+   "value": 14.4267,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=stall_onset_alpha_deg]"
+  },
+  {
+   "text": "0.51",
+   "value": 0.513113,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=CN_vortex_max]"
+  },
+  {
+   "text": "19.6",
+   "value": 19.6285,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=alpha_at_CN_vortex_max_deg]"
+  },
+  {
+   "text": "-0.29",
+   "value": -0.289612,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=CM_min_c4]"
+  },
+  {
+   "text": "+0.02",
+   "value": 0.0167,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "mean_error [quantity=CM_min_c4]"
+  },
+  {
+   "text": "0.05",
+   "value": 0.0508,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "std_error [quantity=CM_min_c4]"
+  },
+  {
+   "text": "19.6",
+   "value": 19.6285,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=alpha_at_CMmin_deg]"
+  },
+  {
+   "text": "0.56",
+   "value": 0.555432,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=CD_max]"
+  },
+  {
+   "text": "-0.05",
+   "value": -0.0525,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "mean_error [quantity=CD_max]"
+  },
+  {
+   "text": "0.08",
+   "value": 0.0765,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "std_error [quantity=CD_max]"
+  },
+  {
+   "text": "19.6",
+   "value": 19.6285,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=alpha_at_CDmax_deg]"
+  },
+  {
+   "text": "0.004",
+   "value": 0.00370718,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=CD_min]"
+  },
+  {
+   "text": "45",
+   "value": 45,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "n_loops [quantity=CL_max]"
+  },
+  {
+   "text": "two",
+   "value": 2.0,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=vortex_clock_runs_per_cycle]"
+  },
+  {
+   "text": "2",
+   "value": 2.0,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=vortex_sheddings_per_cycle]"
+  },
+  {
+   "text": "0.09",
+   "value": 0.0889893,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=cycle_damping_Xi]"
+  },
+  {
+   "text": "1.80",
+   "value": 1.79505,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=CL_max]"
+  },
+  {
+   "text": "-3.3",
+   "value": -3.3392,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "mean_error [quantity=CL_max]"
+  },
+  {
+   "text": "5.3",
+   "value": 5.3378,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "std_error [quantity=CL_max]"
+  },
+  {
+   "text": "18.1",
+   "value": 18.0673,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=alpha_at_CLmax_deg]"
+  },
+  {
+   "text": "-0.3",
+   "value": -0.2677,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "mean_error [quantity=alpha_at_CLmax_deg]"
+  },
+  {
+   "text": "0.8",
+   "value": 0.8138,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "std_error [quantity=alpha_at_CLmax_deg]"
+  },
+  {
+   "text": "-0.29",
+   "value": -0.289612,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=CM_min_c4]"
+  },
+  {
+   "text": "+0.02",
+   "value": 0.0167,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "mean_error [quantity=CM_min_c4]"
+  },
+  {
+   "text": "0.05",
+   "value": 0.0508,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "std_error [quantity=CM_min_c4]"
+  },
+  {
+   "text": "19.6",
+   "value": 19.6285,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=alpha_at_CMmin_deg]"
+  },
+  {
+   "text": "0.56",
+   "value": 0.555432,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=CD_max]"
+  },
+  {
+   "text": "-0.05",
+   "value": -0.0525,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "mean_error [quantity=CD_max]"
+  },
+  {
+   "text": "0.08",
+   "value": 0.0765,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "std_error [quantity=CD_max]"
+  },
+  {
+   "text": "19.6",
+   "value": 19.6285,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=alpha_at_CDmax_deg]"
+  },
+  {
+   "text": "0.004",
+   "value": 0.00370718,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=CD_min]"
+  },
+  {
+   "text": "14.4",
+   "value": 14.4267,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=stall_onset_alpha_deg]"
+  },
+  {
+   "text": "2",
+   "value": 2.0,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=vortex_sheddings_per_cycle]"
+  },
+  {
+   "text": "2",
+   "value": 2.0,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=vortex_clock_runs_per_cycle]"
+  },
+  {
+   "text": "0.51",
+   "value": 0.513113,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=CN_vortex_max]"
+  },
+  {
+   "text": "19.6",
+   "value": 19.6285,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=alpha_at_CN_vortex_max_deg]"
+  },
+  {
+   "text": "0.089",
+   "value": 0.0889893,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=cycle_damping_Xi]"
+  },
+  {
+   "text": "True",
+   "value": true,
+   "file": "06_postprocessing/overlay_record.csv",
+   "field": "drawn [case=A_validation]"
+  },
+  {
+   "text": "0.302",
+   "value": 0.302,
+   "file": "06_postprocessing/overlay_record.csv",
+   "field": "M [case=A_validation]"
+  },
+  {
+   "text": "0.096",
+   "value": 0.096,
+   "file": "06_postprocessing/overlay_record.csv",
+   "field": "k [case=A_validation]"
+  },
+  {
+   "text": "9.8",
+   "value": 9.8,
+   "file": "06_postprocessing/overlay_record.csv",
+   "field": "alpha_mean_deg [case=A_validation]"
+  },
+  {
+   "text": "9.9",
+   "value": 9.9,
+   "file": "06_postprocessing/overlay_record.csv",
+   "field": "alpha_amp_deg [case=A_validation]"
+  },
+  {
+   "text": "0.302",
+   "value": 0.302,
+   "file": "results/validation_table.csv",
+   "field": "M [model=tabulated] [frame=frame_9302]"
+  },
+  {
+   "text": "0.096",
+   "value": 0.096,
+   "file": "results/validation_table.csv",
+   "field": "k [model=tabulated] [frame=frame_9302]"
+  },
+  {
+   "text": "9.8",
+   "value": 9.8,
+   "file": "results/validation_table.csv",
+   "field": "alpha0_deg [model=tabulated] [frame=frame_9302]"
+  },
+  {
+   "text": "9.9",
+   "value": 9.9,
+   "file": "results/validation_table.csv",
+   "field": "amp_deg [model=tabulated] [frame=frame_9302]"
+  },
+  {
+   "text": "0.066",
+   "value": 0.0656,
+   "file": "results/validation_table.csv",
+   "field": "nRMS_CL [model=tabulated] [frame=frame_9302]"
+  },
+  {
+   "text": "0.114",
+   "value": 0.1141,
+   "file": "results/validation_table.csv",
+   "field": "nRMS_CM [model=tabulated] [frame=frame_9302]"
+  },
+  {
+   "text": "0.114",
+   "value": 0.1135,
+   "file": "results/validation_table.csv",
+   "field": "nRMS_CD [model=tabulated] [frame=frame_9302]"
+  },
+  {
+   "text": "1.778",
+   "value": 1.7775,
+   "file": "results/validation_table.csv",
+   "field": "CLmax_model [model=tabulated] [frame=frame_9302]"
+  },
+  {
+   "text": "1.844",
+   "value": 1.8437,
+   "file": "results/validation_table.csv",
+   "field": "CLmax_exp [model=tabulated] [frame=frame_9302]"
+  },
+  {
+   "text": "-0.282",
+   "value": -0.2825,
+   "file": "results/validation_table.csv",
+   "field": "CMmin_model [model=tabulated] [frame=frame_9302]"
+  },
+  {
+   "text": "-0.239",
+   "value": -0.2392,
+   "file": "results/validation_table.csv",
+   "field": "CMmin_exp [model=tabulated] [frame=frame_9302]"
+  },
+  {
+   "text": "0.28",
+   "value": "0.28",
+   "file": "03_model_setup/flow_conditions.csv",
+   "field": "B_application [parameter=freestream_mach_M]"
+  },
+  {
+   "text": "0.0747",
+   "value": 0.0747168934628072,
+   "file": "03_model_setup/kinematics.csv",
+   "field": "reduced_freq_k [case=B_application]"
+  },
+  {
+   "text": "12",
+   "value": 12.0,
+   "file": "03_model_setup/kinematics.csv",
+   "field": "alpha_mean_deg [case=B_application]"
+  },
+  {
+   "text": "8",
+   "value": 8.0,
+   "file": "03_model_setup/kinematics.csv",
+   "field": "alpha_amp_deg [case=B_application]"
+  },
+  {
+   "text": "0.527",
+   "value": "0.527",
+   "file": "03_model_setup/flow_conditions.csv",
+   "field": "B_application [parameter=chord_c]"
+  },
+  {
+   "text": "1.75",
+   "value": 1.74544,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=CL_max]"
+  },
+  {
+   "text": "-3.3",
+   "value": -3.3392,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "mean_error [quantity=CL_max]"
+  },
+  {
+   "text": "5.3",
+   "value": 5.3378,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "std_error [quantity=CL_max]"
+  },
+  {
+   "text": "17.0",
+   "value": 17.0255,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=alpha_at_CLmax_deg]"
+  },
+  {
+   "text": "-0.3",
+   "value": -0.2677,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "mean_error [quantity=alpha_at_CLmax_deg]"
+  },
+  {
+   "text": "0.8",
+   "value": 0.8138,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "std_error [quantity=alpha_at_CLmax_deg]"
+  },
+  {
+   "text": "13.8",
+   "value": 13.8466,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=stall_onset_alpha_deg]"
+  },
+  {
+   "text": "0.39",
+   "value": 0.390203,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=CN_vortex_max]"
+  },
+  {
+   "text": "18.1",
+   "value": 18.0605,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=alpha_at_CN_vortex_max_deg]"
+  },
+  {
+   "text": "-0.24",
+   "value": -0.236861,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=CM_min_c4]"
+  },
+  {
+   "text": "+0.02",
+   "value": 0.0167,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "mean_error [quantity=CM_min_c4]"
+  },
+  {
+   "text": "0.05",
+   "value": 0.0508,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "std_error [quantity=CM_min_c4]"
+  },
+  {
+   "text": "18.1",
+   "value": 18.0605,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=alpha_at_CMmin_deg]"
+  },
+  {
+   "text": "0.44",
+   "value": 0.4361,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=CD_max]"
+  },
+  {
+   "text": "-0.05",
+   "value": -0.0525,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "mean_error [quantity=CD_max]"
+  },
+  {
+   "text": "0.08",
+   "value": 0.0765,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "std_error [quantity=CD_max]"
+  },
+  {
+   "text": "18.1",
+   "value": 18.0605,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=alpha_at_CDmax_deg]"
+  },
+  {
+   "text": "0.009",
+   "value": 0.00910269,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=CD_min]"
+  },
+  {
+   "text": "45",
+   "value": 45,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "n_loops [quantity=CL_max]"
+  },
+  {
+   "text": "three",
+   "value": 3.0,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=vortex_clock_runs_per_cycle]"
+  },
+  {
+   "text": "3",
+   "value": 3.0,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=vortex_sheddings_per_cycle]"
+  },
+  {
+   "text": "0.06",
+   "value": 0.0646719,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=cycle_damping_Xi]"
+  },
+  {
+   "text": "1.75",
+   "value": 1.74544,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=CL_max]"
+  },
+  {
+   "text": "-3.3",
+   "value": -3.3392,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "mean_error [quantity=CL_max]"
+  },
+  {
+   "text": "5.3",
+   "value": 5.3378,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "std_error [quantity=CL_max]"
+  },
+  {
+   "text": "17.0",
+   "value": 17.0255,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=alpha_at_CLmax_deg]"
+  },
+  {
+   "text": "-0.3",
+   "value": -0.2677,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "mean_error [quantity=alpha_at_CLmax_deg]"
+  },
+  {
+   "text": "0.8",
+   "value": 0.8138,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "std_error [quantity=alpha_at_CLmax_deg]"
+  },
+  {
+   "text": "-0.24",
+   "value": -0.236861,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=CM_min_c4]"
+  },
+  {
+   "text": "+0.02",
+   "value": 0.0167,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "mean_error [quantity=CM_min_c4]"
+  },
+  {
+   "text": "0.05",
+   "value": 0.0508,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "std_error [quantity=CM_min_c4]"
+  },
+  {
+   "text": "18.1",
+   "value": 18.0605,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=alpha_at_CMmin_deg]"
+  },
+  {
+   "text": "0.44",
+   "value": 0.4361,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=CD_max]"
+  },
+  {
+   "text": "-0.05",
+   "value": -0.0525,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "mean_error [quantity=CD_max]"
+  },
+  {
+   "text": "0.08",
+   "value": 0.0765,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "std_error [quantity=CD_max]"
+  },
+  {
+   "text": "18.1",
+   "value": 18.0605,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=alpha_at_CDmax_deg]"
+  },
+  {
+   "text": "0.009",
+   "value": 0.00910269,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=CD_min]"
+  },
+  {
+   "text": "13.8",
+   "value": 13.8466,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=stall_onset_alpha_deg]"
+  },
+  {
+   "text": "3",
+   "value": 3.0,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=vortex_sheddings_per_cycle]"
+  },
+  {
+   "text": "3",
+   "value": 3.0,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=vortex_clock_runs_per_cycle]"
+  },
+  {
+   "text": "0.39",
+   "value": 0.390203,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=CN_vortex_max]"
+  },
+  {
+   "text": "18.1",
+   "value": 18.0605,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=alpha_at_CN_vortex_max_deg]"
+  },
+  {
+   "text": "0.065",
+   "value": 0.0646719,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=cycle_damping_Xi]"
+  },
+  {
+   "text": "180",
+   "value": 180,
+   "file": "03_model_setup/solver_config.json",
+   "field": "field_reconstruction.read_by_the_driver.grid_nx"
+  },
+  {
+   "text": "140",
+   "value": 140,
+   "file": "03_model_setup/solver_config.json",
+   "field": "field_reconstruction.read_by_the_driver.grid_ny"
+  },
+  {
+   "text": "-1.0",
+   "value": -1.0,
+   "file": "03_model_setup/solver_config.json",
+   "field": "field_reconstruction.read_by_the_driver.domain_chords.0"
+  },
+  {
+   "text": "2.0",
+   "value": 2.0,
+   "file": "03_model_setup/solver_config.json",
+   "field": "field_reconstruction.read_by_the_driver.domain_chords.1"
+  },
+  {
+   "text": "-1.2",
+   "value": -1.2,
+   "file": "03_model_setup/solver_config.json",
+   "field": "field_reconstruction.read_by_the_driver.domain_chords.2"
+  },
+  {
+   "text": "1.2",
+   "value": 1.2,
+   "file": "03_model_setup/solver_config.json",
+   "field": "field_reconstruction.read_by_the_driver.domain_chords.3"
+  },
+  {
+   "text": "320",
+   "value": 320,
+   "file": "03_model_setup/solver_config.json",
+   "field": "field_reconstruction.read_by_the_driver.n_panels"
+  },
+  {
+   "text": "0.05",
+   "value": 0.05,
+   "file": "03_model_setup/solver_config.json",
+   "field": "field_reconstruction.record_of_module_constants.attached_outflow_fraction"
+  },
+  {
+   "text": "0.05",
+   "value": 0.05,
+   "file": "03_model_setup/solver_config.json",
+   "field": "field_reconstruction.record_of_module_constants.vortex_core_over_c"
+  },
+  {
+   "text": "0.896",
+   "value": 0.8963,
+   "file": "03_model_setup/solver_config.json",
+   "field": "field_reconstruction.compressibility.recovery_factor"
+  },
+  {
+   "text": "Pr^(1/3), the usual value for a turbulent boundary layer on a flat plate, with Pr = 0.72 for air",
+   "value": "Pr^(1/3), the usual value for a turbulent boundary layer on a flat plate, with Pr = 0.72 for air",
+   "file": "03_model_setup/solver_config.json",
+   "field": "field_reconstruction.compressibility.recovery_factor_source"
+  },
+  {
+   "text": "-6.95",
+   "value": -6.94732,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=Cp_critical]"
+  },
+  {
+   "text": "-8.06",
+   "value": -8.05673,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=Cp_critical]"
+  },
+  {
+   "text": "0.95",
+   "value": 0.95,
+   "file": "03_model_setup/solver_config.json",
+   "field": "field_reconstruction.compressibility.vacuum_cap"
+  },
+  {
+   "text": "four",
+   "value": 4,
+   "file": "03_model_setup/solver_config.json",
+   "field": "number of entries of field_reconstruction.field_phases"
+  },
+  {
+   "text": "4",
+   "value": 4,
+   "file": "03_model_setup/solver_config.json",
+   "field": "number of entries of field_reconstruction.quasi_steady_omissions"
+  },
+  {
+   "text": "-15.4",
+   "value": -15.394,
+   "file": "05_solution/reconstruction_A_validation.csv",
+   "field": "Cp_surface_min_incompressible [phase=peak]"
+  },
+  {
+   "text": "-13.8",
+   "value": -13.85,
+   "file": "05_solution/reconstruction_B_application.csv",
+   "field": "Cp_surface_min_incompressible [phase=peak]"
+  },
+  {
+   "text": "0.032",
+   "value": 0.032054,
+   "file": "05_solution/reconstruction_A_validation.csv",
+   "field": "beyond_critical_surface_fraction [phase=peak]"
+  },
+  {
+   "text": "0.023",
+   "value": 0.022925,
+   "file": "05_solution/reconstruction_B_application.csv",
+   "field": "beyond_critical_surface_fraction [phase=peak]"
+  },
+  {
+   "text": "0.0009",
+   "value": 0.00086813,
+   "file": "05_solution/reconstruction_A_validation.csv",
+   "field": "beyond_critical_field_area_over_c2 [phase=peak]"
+  },
+  {
+   "text": "0.0006",
+   "value": 0.00057875,
+   "file": "05_solution/reconstruction_B_application.csv",
+   "field": "beyond_critical_field_area_over_c2 [phase=peak]"
+  },
+  {
+   "text": "0.37",
+   "value": 0.373961,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=beyond_critical_fraction_of_cycle]"
+  },
+  {
+   "text": "0.37",
+   "value": 0.373961,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=beyond_critical_fraction_of_cycle]"
+  },
+  {
+   "text": "-0.059",
+   "value": -0.0593495,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=transpiration_vt_over_U_cycle_min]"
+  },
+  {
+   "text": "0.20",
+   "value": 0.204986,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=transpiration_inflow_fraction_of_cycle]"
+  },
+  {
+   "text": "+0.032",
+   "value": 0.0324499,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=transpiration_vt_over_U_cycle_min]"
+  },
+  {
+   "text": "0.00",
+   "value": 0.0,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=transpiration_inflow_fraction_of_cycle]"
+  },
+  {
+   "text": "three",
+   "value": 3,
+   "file": "05_solution/reconstruction_A_validation.csv",
+   "field": "number of rows with vortex_over_chord = 1"
+  },
+  {
+   "text": "two",
+   "value": 2,
+   "file": "05_solution/reconstruction_A_validation.csv",
+   "field": "number of rows with vortex_over_chord = 1 and dCp_under_vortex > 0"
+  },
+  {
+   "text": "-0.14",
+   "value": -0.13684,
+   "file": "05_solution/reconstruction_A_validation.csv",
+   "field": "smallest dCp_under_vortex"
+  },
+  {
+   "text": "+0.56",
+   "value": 0.55838,
+   "file": "05_solution/reconstruction_A_validation.csv",
+   "field": "largest dCp_under_vortex"
+  },
+  {
+   "text": "three",
+   "value": 3,
+   "file": "05_solution/reconstruction_B_application.csv",
+   "field": "number of rows with vortex_over_chord = 1"
+  },
+  {
+   "text": "two",
+   "value": 2,
+   "file": "05_solution/reconstruction_B_application.csv",
+   "field": "number of rows with vortex_over_chord = 1 and dCp_under_vortex > 0"
+  },
+  {
+   "text": "-0.11",
+   "value": -0.10863,
+   "file": "05_solution/reconstruction_B_application.csv",
+   "field": "smallest dCp_under_vortex"
+  },
+  {
+   "text": "+0.36",
+   "value": 0.35856,
+   "file": "05_solution/reconstruction_B_application.csv",
+   "field": "largest dCp_under_vortex"
+  },
+  {
+   "text": "-1.00",
+   "value": -0.9962,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=Cp_closure_error_pct_incompressible]"
+  },
+  {
+   "text": "-0.67",
+   "value": -0.66754,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=Cp_closure_error_pct_incompressible]"
+  },
+  {
+   "text": "-0.73",
+   "value": -0.72979,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=Cp_closure_error_pct_panels_only]"
+  },
+  {
+   "text": "-0.66",
+   "value": -0.65984,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=Cp_closure_error_pct_panels_only]"
+  },
+  {
+   "text": "0.954",
+   "value": 0.95394,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=prandtl_glauert_factor]"
+  },
+  {
+   "text": "0.960",
+   "value": 0.96,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=prandtl_glauert_factor]"
+  },
+  {
+   "text": "+6.10",
+   "value": 6.1011,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=Cp_closure_error_pct_prandtl_glauert_factor]"
+  },
+  {
+   "text": "+7.52",
+   "value": 7.5203,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=Cp_closure_error_pct_prandtl_glauert_factor]"
+  },
+  {
+   "text": "0.893",
+   "value": 0.89289,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=circulation_factor_at_CLmax]"
+  },
+  {
+   "text": "0.889",
+   "value": 0.88875,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=circulation_factor_at_CLmax]"
+  },
+  {
+   "text": "0.881",
+   "value": 0.880732,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=circulation_factor_cycle_min]"
+  },
+  {
+   "text": "0.963",
+   "value": 0.963048,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=circulation_factor_cycle_max]"
+  },
+  {
+   "text": "0.884",
+   "value": 0.884284,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=circulation_factor_cycle_min]"
+  },
+  {
+   "text": "0.967",
+   "value": 0.966546,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=circulation_factor_cycle_max]"
+  },
+  {
+   "text": "1.1 × 10⁻⁵",
+   "value": 1.0608e-05,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=Cp_closure_error_pct]"
+  },
+  {
+   "text": "2.6 × 10⁻⁶",
+   "value": 2.5569e-06,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=Cp_closure_error_pct]"
+  },
+  {
+   "text": "+0.277",
+   "value": 0.27744,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=Cp_moment_minus_model_at_CLmax]"
+  },
+  {
+   "text": "+0.244",
+   "value": 0.24374,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=Cp_moment_minus_model_at_CLmax]"
+  },
+  {
+   "text": "2",
+   "value": 2.0,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=Cp_moment_sign_agrees_with_model_instants]"
+  },
+  {
+   "text": "3",
+   "value": 3.0,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=Cp_moment_sign_agrees_with_model_instants]"
+  },
+  {
+   "text": "6",
+   "value": 6.0,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=stored_instants]"
+  },
+  {
+   "text": "-0.466",
+   "value": -0.46637,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=Cp_drag_minus_model_at_CLmax]"
+  },
+  {
+   "text": "-0.415",
+   "value": -0.41462,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=Cp_drag_minus_model_at_CLmax]"
+  },
+  {
+   "text": "0.682",
+   "value": 0.68229,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=Cp_drag_minus_model_worst_abs_stored_instants]"
+  },
+  {
+   "text": "0.594",
+   "value": 0.59357,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=Cp_drag_minus_model_worst_abs_stored_instants]"
+  },
+  {
+   "text": "320",
+   "value": 320,
+   "file": "05_solution/convergence/panel_convergence_summary.csv",
+   "field": "n_panels_configured"
+  },
+  {
+   "text": "8",
+   "value": 8,
+   "file": "05_solution/convergence/panel_convergence_summary.csv",
+   "field": "number of rows with within_tolerance = True"
+  },
+  {
+   "text": "8",
+   "value": 8,
+   "file": "05_solution/convergence/panel_convergence_summary.csv",
+   "field": "number of rows"
+  },
+  {
+   "text": "-6.95",
+   "value": -6.94732,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=Cp_critical]"
+  },
+  {
+   "text": "-8.06",
+   "value": -8.05673,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=Cp_critical]"
+  },
+  {
+   "text": "-15.87",
+   "value": -15.873,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=Cp_vacuum]"
+  },
+  {
+   "text": "-18.22",
+   "value": -18.2216,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=Cp_vacuum]"
+  },
+  {
+   "text": "293.34",
+   "value": 293.337,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=total_temperature_K]"
+  },
+  {
+   "text": "292.67",
+   "value": 292.668,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=total_temperature_K]"
+  },
+  {
+   "text": "0.896",
+   "value": 0.896281,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=recovery_factor]"
+  },
+  {
+   "text": "0.896",
+   "value": 0.896281,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=recovery_factor]"
+  },
+  {
+   "text": "-16.0",
+   "value": -16.0,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=Cp_surface_min_incompressible_stored_instants]"
+  },
+  {
+   "text": "-14.7",
+   "value": -14.659,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=Cp_surface_min_incompressible_stored_instants]"
+  },
+  {
+   "text": "-15.1",
+   "value": -15.079,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=Cp_surface_min_stored_instants]"
+  },
+  {
+   "text": "-17.3",
+   "value": -17.31,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=Cp_surface_min_stored_instants]"
+  },
+  {
+   "text": "0.032",
+   "value": 0.032054,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=beyond_critical_surface_fraction_worst_stored_instants]"
+  },
+  {
+   "text": "0.023",
+   "value": 0.022925,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=beyond_critical_surface_fraction_worst_stored_instants]"
+  },
+  {
+   "text": "0.033",
+   "value": 0.0330586,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=beyond_critical_surface_fraction_worst_over_cycle]"
+  },
+  {
+   "text": "0.025",
+   "value": 0.0248481,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=beyond_critical_surface_fraction_worst_over_cycle]"
+  },
+  {
+   "text": "0.37",
+   "value": 0.373961,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=beyond_critical_fraction_of_cycle]"
+  },
+  {
+   "text": "0.37",
+   "value": 0.373961,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=beyond_critical_fraction_of_cycle]"
+  },
+  {
+   "text": "0.0009",
+   "value": 0.00086813,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=beyond_critical_field_area_over_c2_worst_stored_instants]"
+  },
+  {
+   "text": "0.0006",
+   "value": 0.00057875,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=beyond_critical_field_area_over_c2_worst_stored_instants]"
+  },
+  {
+   "text": "0.00012",
+   "value": 0.00012034,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=beyond_critical_field_fraction_worst_stored_instants]"
+  },
+  {
+   "text": "0.00008",
+   "value": 8.0225e-05,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=beyond_critical_field_fraction_worst_stored_instants]"
+  },
+  {
+   "text": "1.1 × 10⁻⁵",
+   "value": 1.0608e-05,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=Cp_closure_error_pct]"
+  },
+  {
+   "text": "2.6 × 10⁻⁶",
+   "value": 2.5569e-06,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=Cp_closure_error_pct]"
+  },
+  {
+   "text": "0.893",
+   "value": 0.89289,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=circulation_factor_at_CLmax]"
+  },
+  {
+   "text": "0.889",
+   "value": 0.88875,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=circulation_factor_at_CLmax]"
+  },
+  {
+   "text": "0.954",
+   "value": 0.95394,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=prandtl_glauert_factor]"
+  },
+  {
+   "text": "0.960",
+   "value": 0.96,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=prandtl_glauert_factor]"
+  },
+  {
+   "text": "+6.10",
+   "value": 6.1011,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=Cp_closure_error_pct_prandtl_glauert_factor]"
+  },
+  {
+   "text": "+7.52",
+   "value": 7.5203,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=Cp_closure_error_pct_prandtl_glauert_factor]"
+  },
+  {
+   "text": "-1.00",
+   "value": -0.9962,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=Cp_closure_error_pct_incompressible]"
+  },
+  {
+   "text": "-0.67",
+   "value": -0.66754,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=Cp_closure_error_pct_incompressible]"
+  },
+  {
+   "text": "-0.73",
+   "value": -0.72979,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=Cp_closure_error_pct_panels_only]"
+  },
+  {
+   "text": "-0.66",
+   "value": -0.65984,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=Cp_closure_error_pct_panels_only]"
+  },
+  {
+   "text": "3.45",
+   "value": 3.4524,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=Cp_closure_worst_abs_pct_incompressible_stored_instants]"
+  },
+  {
+   "text": "3.55",
+   "value": 3.5496,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=Cp_closure_worst_abs_pct_incompressible_stored_instants]"
+  },
+  {
+   "text": "0.881",
+   "value": 0.880732,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=circulation_factor_cycle_min]"
+  },
+  {
+   "text": "0.884",
+   "value": 0.884284,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=circulation_factor_cycle_min]"
+  },
+  {
+   "text": "0.963",
+   "value": 0.963048,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=circulation_factor_cycle_max]"
+  },
+  {
+   "text": "0.967",
+   "value": 0.966546,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=circulation_factor_cycle_max]"
+  },
+  {
+   "text": "+0.277",
+   "value": 0.27744,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=Cp_moment_minus_model_at_CLmax]"
+  },
+  {
+   "text": "+0.244",
+   "value": 0.24374,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=Cp_moment_minus_model_at_CLmax]"
+  },
+  {
+   "text": "-0.466",
+   "value": -0.46637,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=Cp_drag_minus_model_at_CLmax]"
+  },
+  {
+   "text": "-0.415",
+   "value": -0.41462,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=Cp_drag_minus_model_at_CLmax]"
+  },
+  {
+   "text": "0.415",
+   "value": 0.41492,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=Cp_moment_minus_model_worst_abs_stored_instants]"
+  },
+  {
+   "text": "0.363",
+   "value": 0.3628,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=Cp_moment_minus_model_worst_abs_stored_instants]"
+  },
+  {
+   "text": "0.682",
+   "value": 0.68229,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=Cp_drag_minus_model_worst_abs_stored_instants]"
+  },
+  {
+   "text": "0.594",
+   "value": 0.59357,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=Cp_drag_minus_model_worst_abs_stored_instants]"
+  },
+  {
+   "text": "2",
+   "value": 2.0,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=Cp_moment_sign_agrees_with_model_instants]"
+  },
+  {
+   "text": "3",
+   "value": 3.0,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=Cp_moment_sign_agrees_with_model_instants]"
+  },
+  {
+   "text": "6",
+   "value": 6.0,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=stored_instants]"
+  },
+  {
+   "text": "6",
+   "value": 6.0,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=stored_instants]"
+  },
+  {
+   "text": "1.1 × 10⁻⁸",
+   "value": 1.1382e-08,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=Cp_trailing_edge_jump_worst_stored_instants]"
+  },
+  {
+   "text": "6.5 × 10⁻⁹",
+   "value": 6.4851e-09,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=Cp_trailing_edge_jump_worst_stored_instants]"
+  },
+  {
+   "text": "0.597",
+   "value": 0.597222,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=transpiration_vt_over_U_cycle_max]"
+  },
+  {
+   "text": "0.583",
+   "value": 0.582637,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=transpiration_vt_over_U_cycle_max]"
+  },
+  {
+   "text": "-0.059",
+   "value": -0.0593495,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=transpiration_vt_over_U_cycle_min]"
+  },
+  {
+   "text": "+0.032",
+   "value": 0.0324499,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=transpiration_vt_over_U_cycle_min]"
+  },
+  {
+   "text": "0.205",
+   "value": 0.204986,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=transpiration_inflow_fraction_of_cycle]"
+  },
+  {
+   "text": "0.000",
+   "value": 0.0,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=transpiration_inflow_fraction_of_cycle]"
+  },
+  {
+   "text": "0.259",
+   "value": 0.259151,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=transpiration_flux_over_Uc_cycle_max]"
+  },
+  {
+   "text": "0.268",
+   "value": 0.268318,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=transpiration_flux_over_Uc_cycle_max]"
+  },
+  {
+   "text": "0.257",
+   "value": 0.256556,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=vortex_circulation_over_Uc]"
+  },
+  {
+   "text": "0.195",
+   "value": 0.195102,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=vortex_circulation_over_Uc]"
+  },
+  {
+   "text": "32.7",
+   "value": 32.6658,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=vortex_peak_vorticity_c_over_U]"
+  },
+  {
+   "text": "24.8",
+   "value": 24.8411,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=vortex_peak_vorticity_c_over_U]"
+  },
+  {
+   "text": "-0.99",
+   "value": -0.994139,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=vortex_centre_Cp]"
+  },
+  {
+   "text": "-0.56",
+   "value": -0.559596,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=vortex_centre_Cp]"
+  },
+  {
+   "text": "1.00",
+   "value": 0.999675,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=vortex_x_over_c]"
+  },
+  {
+   "text": "1.00",
+   "value": 0.999587,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=vortex_x_over_c]"
+  },
+  {
+   "text": "0.16",
+   "value": 0.159974,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=vortex_y_over_c]"
+  },
+  {
+   "text": "0.16",
+   "value": 0.159967,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=vortex_y_over_c]"
+  },
+  {
+   "text": "0.05",
+   "value": 0.05,
+   "file": "05_solution/metrics_A_validation.csv",
+   "field": "value [metric=vortex_core_radius_over_c]"
+  },
+  {
+   "text": "0.05",
+   "value": 0.05,
+   "file": "05_solution/metrics_B_application.csv",
+   "field": "value [metric=vortex_core_radius_over_c]"
+  },
+  {
+   "text": "193",
+   "value": "193",
+   "file": "02_mesh/mesh_quality_metrics.csv",
+   "field": "value [metric=nodes_wrap_i]"
+  },
+  {
+   "text": "81",
+   "value": "81",
+   "file": "02_mesh/mesh_quality_metrics.csv",
+   "field": "value [metric=nodes_normal_j]"
+  },
+  {
+   "text": "15360",
+   "value": "15360",
+   "file": "02_mesh/mesh_quality_metrics.csv",
+   "field": "value [metric=total_cells]"
+  },
+  {
+   "text": "20",
+   "value": "20.0",
+   "file": "02_mesh/mesh_quality_metrics.csv",
+   "field": "value [metric=farfield_radius]"
+  },
+  {
+   "text": "0.001",
+   "value": "0.001",
+   "file": "02_mesh/mesh_quality_metrics.csv",
+   "field": "value [metric=first_layer_height]"
+  },
+  {
+   "text": "1.100",
+   "value": "1.0996",
+   "file": "02_mesh/mesh_quality_metrics.csv",
+   "field": "value [metric=wall_normal_growth_ratio]"
+  },
+  {
+   "text": "not a CFD mesh that has been run; not read by the load model",
+   "value": "not a CFD mesh that has been run; not read by the load model",
+   "file": "02_mesh/mesh_quality_metrics.csv",
+   "field": "value [metric=status]"
+  },
+  {
+   "text": "0.908",
+   "value": "0.908",
+   "file": "02_mesh/mesh_quality_metrics.csv",
+   "field": "value [metric=max_skewness_equiangle]"
+  },
+  {
+   "text": "0.491",
+   "value": "0.491",
+   "file": "02_mesh/mesh_quality_metrics.csv",
+   "field": "value [metric=max_skewness_without_trailing_edge_cells]"
+  },
+  {
+   "text": "8.3",
+   "value": "8.3",
+   "file": "02_mesh/mesh_quality_metrics.csv",
+   "field": "value [metric=min_orthogonality_angle]"
+  },
+  {
+   "text": "45.8",
+   "value": "45.8",
+   "file": "02_mesh/mesh_quality_metrics.csv",
+   "field": "value [metric=min_orthogonality_angle_without_trailing_edge_cells]"
+  },
+  {
+   "text": "0",
+   "value": "0",
+   "file": "02_mesh/mesh_quality_metrics.csv",
+   "field": "value [metric=inverted_cells]"
+  },
+  {
+   "text": "15633",
+   "value": 15633,
+   "file": "05_solution/field_A_validation_peak_on_mesh.csv.gz",
+   "field": "number of rows"
+  },
+  {
+   "text": "193",
+   "value": 193,
+   "file": "05_solution/field_A_validation_peak_on_mesh.csv.gz",
+   "field": "number of rows with source = surface"
+  },
+  {
+   "text": "579",
+   "value": 579,
+   "file": "05_solution/field_A_validation_peak_on_mesh.csv.gz",
+   "field": "number of rows with source = none"
+  },
+  {
+   "text": "180",
+   "value": 180,
+   "file": "03_model_setup/solver_config.json",
+   "field": "field_reconstruction.read_by_the_driver.grid_nx"
+  },
+  {
+   "text": "140",
+   "value": 140,
+   "file": "03_model_setup/solver_config.json",
+   "field": "field_reconstruction.read_by_the_driver.grid_ny"
+  },
+  {
+   "text": "0",
+   "value": 0,
+   "file": "05_solution/response_surface.csv",
+   "field": "number of rows with cycle_damping_Xi < 0"
+  },
+  {
+   "text": "42",
+   "value": 42,
+   "file": "05_solution/response_surface.csv",
+   "field": "number of rows"
+  },
+  {
+   "text": "6",
+   "value": 6.0,
+   "file": "05_solution/response_surface.csv",
+   "field": "smallest alpha_mean_deg"
+  },
+  {
+   "text": "16",
+   "value": 16.0,
+   "file": "05_solution/response_surface.csv",
+   "field": "largest alpha_mean_deg"
+  },
+  {
+   "text": "0.04",
+   "value": 0.04,
+   "file": "05_solution/response_surface.csv",
+   "field": "smallest reduced_freq_k"
+  },
+  {
+   "text": "0.16",
+   "value": 0.16,
+   "file": "05_solution/response_surface.csv",
+   "field": "largest reduced_freq_k"
+  },
+  {
+   "text": "0.28",
+   "value": 0.28,
+   "file": "05_solution/response_surface.csv",
+   "field": "mach_M"
+  },
+  {
+   "text": "8",
+   "value": 8.0,
+   "file": "05_solution/response_surface.csv",
+   "field": "alpha_amp_deg"
+  },
+  {
+   "text": "24",
+   "value": 24.0,
+   "file": "05_solution/response_surface.csv",
+   "field": "largest peak_alpha_deg"
+  },
+  {
+   "text": "25",
+   "value": 25.0,
+   "file": "03_model_setup/solver_config.json",
+   "field": "compared_range.peak_alpha_max_deg"
+  },
+  {
+   "text": "45",
+   "value": 45,
+   "file": "results/validation_damping.csv",
+   "field": "n_frames [group=all primary held-out loops with a closed moment loop]"
+  },
+  {
+   "text": "0.60",
+   "value": 0.6,
+   "file": "results/validation_damping.csv",
+   "field": "sign_agreement [group=all primary held-out loops with a closed moment loop]"
+  },
+  {
+   "text": "0.67",
+   "value": 0.6667,
+   "file": "results/validation_damping.csv",
+   "field": "sign_agreement_if_always_positive [group=all primary held-out loops with a closed moment loop]"
+  },
+  {
+   "text": "15",
+   "value": 15,
+   "file": "results/validation_damping.csv",
+   "field": "measured_negative [group=all primary held-out loops with a closed moment loop]"
+  },
+  {
+   "text": "1.42",
+   "value": 1.423,
+   "file": "05_solution/response_surface.csv",
+   "field": "smallest CL_max"
+  },
+  {
+   "text": "1.84",
+   "value": 1.84245,
+   "file": "05_solution/response_surface.csv",
+   "field": "largest CL_max"
+  },
+  {
+   "text": "-0.33",
+   "value": -0.32768,
+   "file": "05_solution/response_surface.csv",
+   "field": "smallest CM_min"
+  },
+  {
+   "text": "-0.01",
+   "value": -0.01014,
+   "file": "05_solution/response_surface.csv",
+   "field": "largest CM_min"
+  },
+  {
+   "text": "12.9",
+   "value": 12.87,
+   "file": "05_solution/response_surface.csv",
+   "field": "smallest stall_onset_alpha_deg"
+  },
+  {
+   "text": "15.0",
+   "value": 15.022,
+   "file": "05_solution/response_surface.csv",
+   "field": "largest stall_onset_alpha_deg"
+  },
+  {
+   "text": "0.023",
+   "value": 0.02274,
+   "file": "05_solution/response_surface.csv",
+   "field": "smallest cycle_damping_Xi"
+  },
+  {
+   "text": "0.229",
+   "value": 0.22932,
+   "file": "05_solution/response_surface.csv",
+   "field": "largest cycle_damping_Xi"
+  },
+  {
+   "text": "four",
+   "value": 4,
+   "file": "08_engineering_drawings",
+   "field": "number of files sheet*.png"
+  },
+  {
+   "text": "outboard",
+   "value": "outboard",
+   "file": "08_engineering_drawings/sheet_record.csv",
+   "field": "value [item=section A-A: cutting-plane arrows point]"
+  },
+  {
+   "text": "left",
+   "value": "left",
+   "file": "08_engineering_drawings/sheet_record.csv",
+   "field": "value [item=section A-A: leading edge drawn on the]"
+  },
+  {
+   "text": "0.107",
+   "value": 0.1067,
+   "file": "results/validation_targets.csv",
+   "field": "measured [measure=mean_nRMS_CL]"
+  },
+  {
+   "text": "at most",
+   "value": "at most",
+   "file": "results/validation_targets.csv",
+   "field": "kind [measure=mean_nRMS_CL]"
+  },
+  {
+   "text": "0.100",
+   "value": 0.1,
+   "file": "results/validation_targets.csv",
+   "field": "target [measure=mean_nRMS_CL]"
+  },
+  {
+   "text": "0.196",
+   "value": 0.1959,
+   "file": "results/validation_targets.csv",
+   "field": "measured [measure=mean_nRMS_CM]"
+  },
+  {
+   "text": "at most",
+   "value": "at most",
+   "file": "results/validation_targets.csv",
+   "field": "kind [measure=mean_nRMS_CM]"
+  },
+  {
+   "text": "0.150",
+   "value": 0.15,
+   "file": "results/validation_targets.csv",
+   "field": "target [measure=mean_nRMS_CM]"
+  },
+  {
+   "text": "0.60",
+   "value": 0.6,
+   "file": "results/validation_targets.csv",
+   "field": "measured [measure=damping_sign_agreement]"
+  },
+  {
+   "text": "at least",
+   "value": "at least",
+   "file": "results/validation_targets.csv",
+   "field": "kind [measure=damping_sign_agreement]"
+  },
+  {
+   "text": "0.80",
+   "value": 0.8,
+   "file": "results/validation_targets.csv",
+   "field": "target [measure=damping_sign_agreement]"
+  },
+  {
+   "text": "45",
+   "value": 45,
+   "file": "results/validation_table.csv",
+   "field": "number of rows with model=tabulated, set=held_out, in_mach_range=True"
+  },
+  {
+   "text": "0.22",
+   "value": 0.22,
+   "file": "results/validation_table.csv",
+   "field": "smallest M over rows with model=tabulated, set=held_out, in_mach_range=True"
+  },
+  {
+   "text": "0.30",
+   "value": 0.302,
+   "file": "results/validation_table.csv",
+   "field": "largest M over rows with model=tabulated, set=held_out, in_mach_range=True"
+  },
+  {
+   "text": "0.20",
+   "value": 0.2,
+   "file": "03_model_setup/solver_config.json",
+   "field": "compared_range.k_max"
+  },
+  {
+   "text": "25",
+   "value": 25.0,
+   "file": "03_model_setup/solver_config.json",
+   "field": "compared_range.peak_alpha_max_deg"
+  },
+  {
+   "text": "45",
+   "value": 45,
+   "file": "05_solution/held_out_error_bands.csv",
+   "field": "n_loops [quantity=CL_max]"
+  },
+  {
+   "text": "Bousman, NASA/TP-2003-212265 (UH-60A main rotor)",
+   "value": "Bousman, NASA/TP-2003-212265 (UH-60A main rotor)",
+   "file": "08_engineering_drawings/dimensions.csv",
+   "field": "source [name=Case B rotor radius]"
+  },
+  {
+   "text": "112",
+   "value": 112,
+   "file": "01_geometry, 02_mesh, 06_postprocessing/plots, 06_postprocessing/validation, 08_engineering_drawings, results/figures",
+   "field": "number of *.png files"
+  }
+ ],
+ "tables": [
+  {
+   "file": "project_meta.py",
+   "shown": "TITLE"
+  },
+  {
+   "file": "project_meta.py",
+   "shown": "SUBTITLE"
+  },
+  {
+   "file": "project_meta.py",
+   "shown": "SOLVER_LONG"
+  },
+  {
+   "file": "project_meta.py",
+   "shown": "METHOD"
+  },
+  {
+   "file": "project_meta.py",
+   "shown": "AUTHOR_FULL"
+  },
+  {
+   "file": "project_meta.py",
+   "shown": "STUDY_DATE"
+  },
+  {
+   "file": "00_overview/case_definition.md",
+   "shown": "table 'What each part of the case study is, and is not'"
+  },
+  {
+   "file": "results/tables.md",
+   "shown": "Table 3. Constants, columns Constant, Literature, Tabulated model, Status, Range"
+  },
+  {
+   "file": "docs/formulation.md",
+   "shown": "section 5, rows with Status = fixed"
+  },
+  {
+   "file": "results/static_by_mach_naca0012.csv",
+   "shown": "columns M, CL_alpha_per_deg, alpha_zero_lift_deg, CL_max, alpha_at_CL_max_deg, CN_at_CL_max, frame"
+  },
+  {
+   "file": "results/tables.md",
+   "shown": "Table 1. Measured loops used"
+  },
+  {
+   "file": "results/targets_scoreboard.csv",
+   "shown": "rows with met other than yes"
+  },
+  {
+   "file": "results/validation_by_stall_depth.csv",
+   "shown": "all rows"
+  },
+  {
+   "file": "05_solution/convergence/timestep_refinement.csv",
+   "shown": "columns case, steps_per_cycle, step_semichords, CL_max, CM_min, CD_max, pct_from_finest_CL_max, pct_from_finest_CM_min, pct_from_finest_CD_max, reported"
+  },
+  {
+   "file": "05_solution/convergence/timestep_order.csv",
+   "shown": "all rows"
+  },
+  {
+   "file": "results/structural_checks.csv",
+   "shown": "columns alpha_mean_deg, alpha_amp_deg, k, M, cycle_damping, free_log_growth_per_cycle, free_log_growth_per_cycle_state_space, state_space_agrees_in_sign"
+  },
+  {
+   "file": "05_solution/metrics_A_validation.csv",
+   "shown": "the load metrics"
+  },
+  {
+   "file": "05_solution/metrics_B_application.csv",
+   "shown": "the load metrics"
+  },
+  {
+   "file": "05_solution/convergence/panel_convergence_summary.csv",
+   "shown": "all rows"
+  },
+  {
+   "file": "05_solution/metrics_A_validation.csv",
+   "shown": "the metrics of the reconstruction"
+  },
+  {
+   "file": "05_solution/metrics_B_application.csv",
+   "shown": "the metrics of the reconstruction"
+  },
+  {
+   "file": "05_solution/reconstruction_A_validation.csv",
+   "shown": "columns phase, alpha_deg, f_separation, transpiration_vt_over_U, transpiration_flux_over_Uc, circulation_bound_over_Uc, circulation_total_over_Uc, dCp_under_vortex"
+  },
+  {
+   "file": "05_solution/reconstruction_A_validation.csv",
+   "shown": "columns phase, Cp_surface_min_incompressible, Cp_surface_min, beyond_critical_surface_fraction, beyond_critical_field_area_over_c2, beyond_critical_field_fraction, Mach_surface_max_subcritical, T_static_surface_min_subcritical_K, T_recovery_surface_max_K"
+  },
+  {
+   "file": "05_solution/reconstruction_A_validation.csv",
+   "shown": "columns phase, circulation_factor, closure_error_pct, closure_error_pct_prandtl_glauert_factor, closure_error_pct_incompressible, closure_error_pct_panels_only, CM_model, CM_from_Cp, CD_model, CD_from_Cp"
+  },
+  {
+   "file": "05_solution/reconstruction_B_application.csv",
+   "shown": "columns phase, alpha_deg, f_separation, transpiration_vt_over_U, transpiration_flux_over_Uc, circulation_bound_over_Uc, circulation_total_over_Uc, dCp_under_vortex"
+  },
+  {
+   "file": "05_solution/reconstruction_B_application.csv",
+   "shown": "columns phase, Cp_surface_min_incompressible, Cp_surface_min, beyond_critical_surface_fraction, beyond_critical_field_area_over_c2, beyond_critical_field_fraction, Mach_surface_max_subcritical, T_static_surface_min_subcritical_K, T_recovery_surface_max_K"
+  },
+  {
+   "file": "05_solution/reconstruction_B_application.csv",
+   "shown": "columns phase, circulation_factor, closure_error_pct, closure_error_pct_prandtl_glauert_factor, closure_error_pct_incompressible, closure_error_pct_panels_only, CM_model, CM_from_Cp, CD_model, CD_from_Cp"
+  },
+  {
+   "file": "05_solution/response_surface.csv",
+   "shown": "CL_max and cycle_damping_Xi against alpha_mean_deg and reduced_freq_k"
+  },
+  {
+   "file": "08_engineering_drawings/dimensions.csv",
+   "shown": "all rows"
+  },
+  {
+   "file": "08_engineering_drawings/sheet_record.csv",
+   "shown": "all rows"
+  },
+  {
+   "file": "docs/references.bib",
+   "shown": "entries mccroskey1982v1, mccroskey1982arfm, carr1988, leishman1989, damiani2019, theodorsen1935, mcalister1982v2"
+  },
+  {
+   "file": "03_model_setup/flow_conditions.csv",
+   "shown": "dossier table 'Flow conditions'"
+  },
+  {
+   "file": "03_model_setup/kinematics.csv",
+   "shown": "dossier table 'Kinematics'"
+  },
+  {
+   "file": "03_model_setup/station_condition.csv",
+   "shown": "dossier table 'How the condition of Case B follows from the rotor (Case B is not a rotor calculation)'"
+  },
+  {
+   "file": "03_model_setup/air_properties.csv",
+   "shown": "dossier table 'Air properties'"
+  },
+  {
+   "file": "03_model_setup/solver_config.json",
+   "shown": "dossier table 'Solver configuration'"
+  },
+  {
+   "file": "results/calibrated_constants.json (without the copy kept under first_stage_record)",
+   "shown": "dossier table 'Calibrated constants and the record of the fit'"
+  },
+  {
+   "file": "results/attached_moment_factor.json",
+   "shown": "dossier table 'Unsteady-moment factor (empirical; a correction of this model)'"
+  },
+  {
+   "file": "results/tables.md, Table 3. Constants",
+   "shown": "dossier table 'Constants, literature and calibrated'"
+  },
+  {
+   "file": "results/static_by_mach_naca0012.csv",
+   "shown": "dossier table 'Static inputs at the Mach stations'"
+  },
+  {
+   "file": "03_model_setup/static_inputs.csv",
+   "shown": "dossier table 'Static inputs of the cases, sampled (one row in 8 of 202)'"
+  },
+  {
+   "file": "01_geometry/section_geometry_summary.csv",
+   "shown": "dossier table 'Section geometry'"
+  },
+  {
+   "file": "02_mesh/mesh_quality_metrics.csv",
+   "shown": "dossier table 'Mesh quality (the load model does not read the grid)'"
+  },
+  {
+   "file": "05_solution/metrics_A_validation.csv and 05_solution/metrics_B_application.csv",
+   "shown": "dossier table 'Metrics of the cases (cycle damping is model output only)'"
+  },
+  {
+   "file": "05_solution/summary_all_cases.csv",
+   "shown": "dossier table 'Summary of the cases'"
+  },
+  {
+   "file": "05_solution/convergence/residuals_A_validation.csv",
+   "shown": "dossier table 'Convergence with cycles marched, Case A: tunnel condition'"
+  },
+  {
+   "file": "05_solution/convergence/residuals_B_application.csv",
+   "shown": "dossier table 'Convergence with cycles marched, Case B: rotor-blade-station condition'"
+  },
+  {
+   "file": "05_solution/convergence/timestep_refinement.csv",
+   "shown": "dossier table 'Convergence with the time step'"
+  },
+  {
+   "file": "05_solution/convergence/timestep_order.csv",
+   "shown": "dossier table 'Observed order of convergence and discretisation uncertainty'"
+  },
+  {
+   "file": "05_solution/convergence/panel_convergence_summary.csv",
+   "shown": "dossier table 'The reconstruction against the number of panels: largest change on doubling'"
+  },
+  {
+   "file": "05_solution/convergence/panel_convergence_A_validation.csv",
+   "shown": "dossier table 'The reconstruction against the number of panels, Case A: tunnel condition'"
+  },
+  {
+   "file": "05_solution/convergence/panel_convergence_B_application.csv",
+   "shown": "dossier table 'The reconstruction against the number of panels, Case B: rotor-blade-station condition'"
+  },
+  {
+   "file": "05_solution/convergence/reconstruction_timing.csv",
+   "shown": "dossier table 'CPU time of the reconstruction'"
+  },
+  {
+   "file": "05_solution/held_out_error_bands.csv",
+   "shown": "dossier table 'Error of the load model in each headline quantity on the held-out loops'"
+  },
+  {
+   "file": "05_solution/static_station_spread.csv",
+   "shown": "dossier table 'Case B with the static inputs of each Mach station'"
+  },
+  {
+   "file": "05_solution/model_static_polar_A_validation.csv",
+   "shown": "dossier table 'Static polar of the model in a slow sweep, Case A: tunnel condition, sampled (one row in 4 of 101); the model's quasi-steady limit, not a measurement'"
+  },
+  {
+   "file": "05_solution/model_static_polar_B_application.csv",
+   "shown": "dossier table 'Static polar of the model in a slow sweep, Case B: rotor-blade-station condition, sampled (one row in 4 of 101); the model's quasi-steady limit, not a measurement'"
+  },
+  {
+   "file": "results/convergence_summary.csv",
+   "shown": "dossier table 'Convergence of the calibration loops'"
+  },
+  {
+   "file": "05_solution/response_surface.csv",
+   "shown": "dossier table 'Response surface (a section in a steady stream with prescribed pitch; damping is model output only)'"
+  },
+  {
+   "file": "05_solution/reconstruction_A_validation.csv",
+   "shown": "dossier table 'The reconstruction instant by instant, Case A: tunnel condition (not a flow solution)'"
+  },
+  {
+   "file": "05_solution/reconstruction_B_application.csv",
+   "shown": "dossier table 'The reconstruction instant by instant, Case B: rotor-blade-station condition (not a flow solution)'"
+  },
+  {
+   "file": "results/statespace_summary.csv",
+   "shown": "dossier table 'State-space form against the indicial march'"
+  },
+  {
+   "file": "results/structural_checks.csv",
+   "shown": "dossier table 'A section free in torsion: the two forms of the model (model output only)'"
+  },
+  {
+   "file": "results/onset_level_check.csv",
+   "shown": "dossier table 'Calibration cost against the stall-onset level'"
+  },
+  {
+   "file": "05_solution/runtime_environment.csv",
+   "shown": "dossier table 'Runtime environment'"
+  },
+  {
+   "file": "results/tables.md, Table 5. Accuracy on the held-out loops",
+   "shown": "dossier table 'Accuracy on the held-out loops'"
+  },
+  {
+   "file": "results/validation_targets.csv",
+   "shown": "dossier table 'Held-out measures against their targets'"
+  },
+  {
+   "file": "results/validation_by_stall_depth.csv",
+   "shown": "dossier table 'Held-out accuracy by stall depth'"
+  },
+  {
+   "file": "results/validation_damping.csv",
+   "shown": "dossier table 'Cycle damping on the held-out loops (the model does not predict cycle damping through stall)'"
+  },
+  {
+   "file": "results/comparison_same_constants.csv",
+   "shown": "dossier table 'Tabulated against fitted separation law, same constants'"
+  },
+  {
+   "file": "results/targets_scoreboard.csv",
+   "shown": "dossier table 'Every target against its measured value'"
+  },
+  {
+   "file": "06_postprocessing/validation/validation_loops_summary.csv",
+   "shown": "dossier table 'Scored loops, one row each (the same numbers as results/validation_table.csv)'"
+  },
+  {
+   "file": "06_postprocessing/validation/calibration_constants.csv",
+   "shown": "dossier table 'Constants of the calibration, fitted and fixed'"
+  },
+  {
+   "file": "08_engineering_drawings/dimensions.csv",
+   "shown": "dossier table 'Dimensions of the drawings (illustrative)'"
+  },
+  {
+   "file": "08_engineering_drawings/sheet_record.csv",
+   "shown": "dossier table 'What each drawing sheet states'"
+  },
+  {
+   "file": "06_postprocessing/overlay_record.csv",
+   "shown": "dossier table 'Whether the measured loop was drawn with each case'"
+  },
+  {
+   "file": "06_postprocessing/masked_region_record.csv",
+   "shown": "dossier table 'The region beyond the critical pressure printed on each figure of a corrected quantity'"
+  },
+  {
+   "file": "05_solution (sizes read from the files at build time)",
+   "shown": "dossier table 'File inventory of 05_solution'"
+  }
+ ],
+ "equations": [
+  {
+   "number": 1,
+   "key": "motion",
+   "image": "_equations/eq_001.png",
+   "formulation_lines": [],
+   "formulation_text": {}
+  },
+  {
+   "number": 2,
+   "key": "step",
+   "image": "_equations/eq_002.png",
+   "formulation_lines": [
+    "1",
+    "2"
+   ],
+   "formulation_text": {
+    "1": "ds = 2 U dt / c                                        [1.5b]",
+    "2": "beta^2 = 1 - M^2"
+   }
+  },
+  {
+   "number": 3,
+   "key": "rate",
+   "image": "_equations/eq_003.png",
+   "formulation_lines": [
+    "3",
+    "4",
+    "5"
+   ],
+   "formulation_text": {
+    "3": "K_alpha,n = (alpha_n - alpha_{n-1}) / dt               [1.7]",
+    "4": "q_n = K_alpha,n c / U ;  K_q,n = (q_n - q_{n-1}) / dt  [1.7, 1.8]",
+    "5": "alpha_34,n = alpha_n + q_n (3/4 - x_p)"
+   }
+  },
+  {
+   "number": 4,
+   "key": "deficiency",
+   "image": "_equations/eq_004.png",
+   "formulation_lines": [
+    "6",
+    "7"
+   ],
+   "formulation_text": {
+    "6": "X_1,n = X_1,n-1 exp(-b_1 beta^2 ds) + A_1 exp(-b_1 beta^2 ds/2) d(alpha_34)   [1.15]",
+    "7": "X_2,n = X_2,n-1 exp(-b_2 beta^2 ds) + A_2 exp(-b_2 beta^2 ds/2) d(alpha_34)   [1.15]"
+   }
+  },
+  {
+   "number": 5,
+   "key": "circulatory",
+   "image": "_equations/eq_005.png",
+   "formulation_lines": [
+    "8",
+    "9"
+   ],
+   "formulation_text": {
+    "8": "alpha_e,n = alpha_34,n - alpha_0 - X_1,n - X_2,n       [1.14]",
+    "9": "C_N^c = C_Nalpha alpha_e                               [1.13]"
+   }
+  },
+  {
+   "number": 6,
+   "key": "impulsive",
+   "image": "_equations/eq_006.png",
+   "formulation_lines": [
+    "14",
+    "15",
+    "18"
+   ],
+   "formulation_text": {
+    "14": "K'_alpha,n = K'_alpha,n-1 exp(-dt/T_alpha) + (K_alpha,n - K_alpha,n-1) exp(-dt/(2 T_alpha))   [1.18]",
+    "15": "C_N^nc,alpha = (4 T_alpha / M)(K_alpha - K'_alpha)     [1.18]",
+    "18": "C_N^pot = C_N^c + C_N^nc,alpha + C_N^nc,q              [1.20]"
+   }
+  },
+  {
+   "number": 7,
+   "key": "pressure_lag",
+   "image": "_equations/eq_007.png",
+   "formulation_lines": [
+    "26",
+    "27"
+   ],
+   "formulation_text": {
+    "26": "D_p,n = D_p,n-1 exp(-ds/T_p) + (C_N^pot_n - C_N^pot_{n-1}) exp(-ds/(2 T_p))   [1.35]",
+    "27": "C'_N = C_N^pot - D_p                                   [1.35]"
+   }
+  },
+  {
+   "number": 8,
+   "key": "lookup",
+   "image": "_equations/eq_008.png",
+   "formulation_lines": [
+    "28",
+    "29"
+   ],
+   "formulation_text": {
+    "28": "alpha_f = C'_N / C_Nalpha + alpha_0                    [1.34]",
+    "29": "f' = f(alpha_f ; M)          table look-up, section 4"
+   }
+  },
+  {
+   "number": 9,
+   "key": "static_f",
+   "image": "_equations/eq_009.png",
+   "formulation_lines": [
+    "50"
+   ],
+   "formulation_text": {
+    "50": "f = (2 sqrt(C_N,s / (C_Nalpha,s (alpha - alpha_0,s))) - 1)^2 ,  F_MIN <= f <= 1,"
+   }
+  },
+  {
+   "number": 10,
+   "key": "boundary_layer_lag",
+   "image": "_equations/eq_010.png",
+   "formulation_lines": [
+    "30",
+    "31",
+    "32"
+   ],
+   "formulation_text": {
+    "30": "T_f = T_f0 / sigma_1                                   [1.37]",
+    "31": "D_f,n = D_f,n-1 exp(-ds/T_f) + (f'_n - f'_{n-1}) exp(-ds/(2 T_f))             [1.36]",
+    "32": "f'' = f' - D_f ,  F_MIN <= f'' <= 1                    [1.36]"
+   }
+  },
+  {
+   "number": 11,
+   "key": "kirchhoff",
+   "image": "_equations/eq_011.png",
+   "formulation_lines": [
+    "33"
+   ],
+   "formulation_text": {
+    "33": "C_N^fs = C_N^c ((1 + sqrt f'')/2)^2 + C_N^nc           [1.38]"
+   }
+  },
+  {
+   "number": 12,
+   "key": "vortex_feed",
+   "image": "_equations/eq_012.png",
+   "formulation_lines": [
+    "37",
+    "38"
+   ],
+   "formulation_text": {
+    "37": "C_V = C_N^c (1 - ((1 + sqrt f'')/2)^2)                 [1.49]",
+    "38": "T_V = T_V0 / sigma_3                                   [1.48]"
+   }
+  },
+  {
+   "number": 13,
+   "key": "vortex_lift",
+   "image": "_equations/eq_013.png",
+   "formulation_lines": [
+    "39",
+    "40"
+   ],
+   "formulation_text": {
+    "39": "0 < tau_v <= T_VL:  C_N^v,n = C_N^v,n-1 exp(-ds/T_V) + (C_V,n - C_V,n-1) exp(-ds/(2 T_V))   [1.47]",
+    "40": "C_N = C_N^fs + C_N^v                                   [1.53]"
+   }
+  },
+  {
+   "number": 14,
+   "key": "chord_force",
+   "image": "_equations/eq_014.png",
+   "formulation_lines": [
+    "43"
+   ],
+   "formulation_text": {
+    "43": "C_C = eta C_N^c tan(alpha) sqrt f''                    [1.21, 1.32, with alpha for alpha_e + alpha_0]"
+   }
+  },
+  {
+   "number": 15,
+   "key": "lift_drag",
+   "image": "_equations/eq_015.png",
+   "formulation_lines": [
+    "45",
+    "46"
+   ],
+   "formulation_text": {
+    "45": "C_L = C_N cos alpha + C_C sin alpha                    [1.2]",
+    "46": "C_D = C_N sin alpha - C_C cos alpha + C_D0             [1.2]"
+   }
+  },
+  {
+   "number": 16,
+   "key": "vortex_arm",
+   "image": "_equations/eq_016.png",
+   "formulation_lines": [
+    "48"
+   ],
+   "formulation_text": {
+    "48": "x_v = x_cp,v (1 - cos(pi min(tau_v / T_VL, 1)))        [1.57]"
+   }
+  },
+  {
+   "number": 17,
+   "key": "moment",
+   "image": "_equations/eq_017.png",
+   "formulation_lines": [
+    "49"
+   ],
+   "formulation_text": {
+    "49": "C_M = C_M,s(alpha'_f ; M) + g (K_f C_M^c,q + C_M^nc,alpha + C_M^nc,q) - x_v C_N^v   [1.59]"
+   }
+  },
+  {
+   "number": 18,
+   "key": "step_rule",
+   "image": "_equations/eq_018.png",
+   "formulation_lines": [
+    "54"
+   ],
+   "formulation_text": {
+    "54": "steps per cycle = 2 pi / (k ds_max), rounded up to a multiple of 360 and at least 720,  ds_max = 0.02"
+   }
+  },
+  {
+   "number": 19,
+   "key": "damping",
+   "image": "_equations/eq_019.png",
+   "formulation_lines": [],
+   "formulation_text": {}
+  },
+  {
+   "number": 20,
+   "key": "ss_circulatory",
+   "image": "_equations/eq_020.png",
+   "formulation_lines": [
+    "56",
+    "57"
+   ],
+   "formulation_text": {
+    "56": "W_i' = b_i beta^2 (alpha_34 - W_i),  i = 1, 2            X_i = A_i (alpha_34 - W_i)",
+    "57": "W_5' = b_5 beta^2 (q - W_5)                              C_M^c,q = -(C_Nalpha/16)(q - A_5 (q - W_5))"
+   }
+  },
+  {
+   "number": 21,
+   "key": "ss_impulsive",
+   "image": "_equations/eq_021.png",
+   "formulation_lines": [
+    "58"
+   ],
+   "formulation_text": {
+    "58": "Z_a' = (c/2U)(K_alpha - Z_a)/T_alpha ,  Z_q' = (c/2U)(K_q - Z_q)/T_q"
+   }
+  },
+  {
+   "number": 22,
+   "key": "ss_moment",
+   "image": "_equations/eq_022.png",
+   "formulation_lines": [
+    "59"
+   ],
+   "formulation_text": {
+    "59": "Z_3' = (c/2U)(K_alpha - Z_3)/T_3 ,  Z_4' likewise with T_4 ,  Z_m' = (c/2U)(K_q - Z_m)/(k_mq^2 T_I)"
+   }
+  },
+  {
+   "number": 23,
+   "key": "ss_lags",
+   "image": "_equations/eq_023.png",
+   "formulation_lines": [
+    "60",
+    "61",
+    "62"
+   ],
+   "formulation_text": {
+    "60": "C'_N ' = (C_N^pot - C'_N)/T_p",
+    "61": "f'' ' = (f(alpha_f ; M) - f'')/T_f",
+    "62": "alpha_m' = (alpha_f - alpha_m)/(c_m T_f0)                static moment read at alpha_m"
+   }
+  },
+  {
+   "number": 24,
+   "key": "ss_vortex",
+   "image": "_equations/eq_024.png",
+   "formulation_lines": [
+    "63"
+   ],
+   "formulation_text": {
+    "63": "C_N^v ' = -C_N^v/T_V + [vortex on chord] d/ds( C_N^c (1 - K_f) )"
+   }
+  }
+ ]
+}

@@ -1,0 +1,42 @@
+name: checks
+on:
+  push:
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-lock.txt
+      # the measured loops are third-party data: fetched, checksummed, not shipped
+      - run: python3 -m unistall.fetch_frames
+      # the second-facility runs and the published model curves: fetched, checksummed, not shipped
+      - run: python3 -m unistall.fetch_glasgow
+      - run: python3 -c "from unistall import published_reference as p; p.fetch()"
+      # a skipped test is a check that did not run: on this runner it is a failure (tests/conftest.py)
+      - run: python3 -m pytest -q -rs
+        env:
+          UNISTALL_NO_SKIPS: "1"
+      # a plain install, used from outside the clone, must give the same model
+      - run: |
+          python3 -m venv --system-site-packages /tmp/plain
+          /tmp/plain/bin/pip install --no-deps -q .
+          cd /tmp && UNISTALL_CACHE=$GITHUB_WORKSPACE/unistall/cache /tmp/plain/bin/python -c "from unistall import dsmodel, paths; assert not paths.IN_CLONE; print(dsmodel.solve(10.0, 8.0, 0.10, 0.30, strict=True)['CL'].max())"
+  case-study:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-lock.txt
+      - run: pip install ".[casestudy]"
+      - run: python3 -m unistall.fetch_frames
+      # the whole case study from the committed constants: geometry, grid, the two
+      # cases, plots, report documents and drawings, then its own checks
+      - run: python3 run_all.py 2
+        env:
+          PYTHONPATH: .

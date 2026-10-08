@@ -1,0 +1,8 @@
+{
+  "start": 0,
+  "max_abs_difference_in_constants": 1.1102230246251565e-16,
+  "cost_recorded": 1.9124447854354245,
+  "cost_repeated": 1.9124447854354243,
+  "target": 1e-06,
+  "met": true
+}

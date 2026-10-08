@@ -1,0 +1,35 @@
+group,kind_of_target,target,kind,value,measured,measurement_floor,met,source
+attached_flow,physical,lift_and_moment_amplitude_error_max_pct,at most,3.0,1.86,,yes,attached_checks.csv
+attached_flow,physical,lift_and_moment_phase_error_max_deg,at most,3.0,0.62,,yes,attached_checks.csv
+attached_flow,physical,chord_speed_independence_max_abs_dCL,at most,1e-10,5.04e-14,,yes,attached_checks.csv
+attached_flow,physical,no_stall_frame_nRMS_CL_max,at most,0.05,0.0425,,yes,attached_checks.csv
+attached_flow,physical,no_stall_frame_nRMS_CM_max,at most,0.1,0.1235,,no,attached_checks.csv
+separated_flow,physical,CD_negative_fraction_of_cycle_max,at most,0.05,0.0,,yes,separated_checks.csv
+separated_flow,physical,CD_min,at least,-0.01,0.0021,,yes,separated_checks.csv
+separated_flow,physical,onset_shift_with_4x_steps_max_deg,at most,0.02,0.0011,,yes,separated_checks.csv
+calibration,numerical,repeatability_max_abs_difference,at most,1e-06,1.11e-16,,yes,calibration_repeatability.json
+held_out_validation,physical,mean_nRMS_CL_max,at most,0.1,0.1067,0.0279,no,validation_targets.csv
+held_out_validation,physical,mean_nRMS_CM_max,at most,0.15,0.1959,0.0589,no,validation_targets.csv
+held_out_validation,physical,mean_nRMS_CD_max,at most,0.2,0.1526,0.059,yes,validation_targets.csv
+held_out_validation,physical,mean_abs_dalpha_CLmax_deg_max,at most,0.7238,0.5723,,yes,validation_targets.csv
+held_out_validation,physical,mean_abs_dalpha_Mstall_deg_max,at most,1.0,0.6216,,yes,validation_targets.csv: judged on the 29 loops where measurement and model both show a moment stall; the model misses a measured one on 3 loops and predicts an unmeasured one on 0
+held_out_validation,physical,damping_sign_agreement_min,at least,0.8,0.6,,no,validation_targets.csv
+structural,numerical,cycle_work_identity_max_error_pct,at most,1.0,0.3814,,yes,structural_checks.csv
+structural,numerical,free_response_sign_agreement_min_conditions,at least,3.0,6.0,,yes,structural_checks.csv
+structural,numerical,dimensional_load_identity_max_abs,at most,1e-09,1.138e-15,,yes,structural_checks.csv
+structural,numerical,second_axis_theodorsen_amplitude_max_pct,at most,3.0,1.69,,yes,attached_checks.csv
+structural,numerical,second_axis_theodorsen_phase_max_deg,at most,3.0,0.63,,yes,attached_checks.csv
+code_quality,software,regression_max_abs_difference,at most,1e-12,0.0,,yes,code_quality.csv
+code_quality,software,import_path_edits_load_model_path_max,at most,0.0,0.0,,yes,code_quality.csv
+code_quality,software,module_level_executable_lines_per_load_model_file_max,at most,30.0,1.0,,yes,code_quality.csv
+code_quality,software,longest_package_function_lines_max,at most,80.0,56.0,,yes,code_quality.csv
+code_quality,software,unused_parameters_max,at most,0.0,0.0,,yes,code_quality.csv
+code_quality,software,public_functions_typed_and_unit_documented_pct_min,at least,100.0,100.0,,yes,code_quality.csv
+code_quality,software,lint_findings_max,at most,0.0,0.0,,yes,code_quality.csv
+code_quality,software,silently_skipped_checks_max,at most,0.0,0.0,,yes,code_quality.csv
+code_quality,software,revision_history_phrases_in_package_max,at most,0.0,0.0,,yes,code_quality.csv
+numerical,numerical,loop_error_change_max,at most,0.002,0.000602,,yes,convergence_summary.csv
+numerical,numerical,state_space_loop_error_difference_max,at most,0.002,0.000398,,yes,statespace_summary.csv
+equivalence_of_separation_laws,physical,margin_CL,at most,0.01,0.01402,,no,equivalence.csv
+equivalence_of_separation_laws,physical,margin_CM,at most,0.015,0.01143,,yes,equivalence.csv
+equivalence_of_separation_laws,physical,margin_CD,at most,0.02,0.01159,,yes,equivalence.csv

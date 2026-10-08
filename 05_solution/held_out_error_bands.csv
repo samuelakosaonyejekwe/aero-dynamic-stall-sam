@@ -1,0 +1,6 @@
+quantity,error_is,n_loops,mean_error,std_error,mean_abs_error,largest_abs_error,source
+CL_max,"model minus measured, percent of measured",45,-3.3392,5.3378,4.5306,19.5431,"results/validation_table.csv: CLmax_model, CLmax_exp"
+CM_min_c4,"model minus measured, in the units of the quantity",45,0.0167,0.0508,0.0395,0.144,"results/validation_table.csv: CMmin_model, CMmin_exp"
+CD_max,"model minus measured, in the units of the quantity",45,-0.0525,0.0765,0.069,0.2408,"results/validation_table.csv: CDmax_model, CDmax_exp"
+alpha_at_CLmax_deg,"model minus measured, in the units of the quantity",45,-0.2677,0.8138,0.5723,3.7518,"results/validation_table.csv: alpha_CLmax_model, alpha_CLmax_exp"
+moment_stall_alpha_deg,"model minus measured, in the units of the quantity",29,-0.6083,0.6898,0.6216,2.671,"results/validation_table.csv: alpha_Mstall_model, alpha_Mstall_exp"

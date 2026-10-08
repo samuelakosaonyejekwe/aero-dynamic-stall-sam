@@ -1,0 +1,9 @@
+property,value,units
+section,NACA 0012,-
+trailing_edge,closed: x^4 coefficient -0.1036 of the four-digit thickness form,-
+max_thickness_t_c,0.12001,-
+x_at_max_thickness_x_c,0.2995,-
+LE_radius_r_c,0.01587,-
+TE_gap_percent_chord,0.0,%
+enclosed_area_A_c2,0.0817,-
+n_surface_points,319,-

@@ -1,0 +1,11 @@
+file,source,doi,bytes,sha256
+DSplot.m,https://researchdata.gla.ac.uk/464/1/GU_dynamic_stall.zip (member DSplot.m),10.5525/gla.researchdata.464,71154,a3de2213b7a009e4f7cce5adad6c16af1181ffdb5a720c3efcfeb666f2a71f56
+TransducerLocations.dat,https://researchdata.gla.ac.uk/464/1/GU_dynamic_stall.zip (member TransducerLocations.dat),10.5525/gla.researchdata.464,2476,f98251a1258179ac09f3e939b1f1dacc09143c856a89375d3f5a6f6c4741eebc
+aerofoil_taps.m,https://researchdata.gla.ac.uk/464/1/GU_dynamic_stall.zip (member aerofoil_taps.m),10.5525/gla.researchdata.464,5616,27de4b911adee9d8943a7793f56b75f7ad8d8883e63579a0d63213583b337efe
+dynamic_stall_database_final_report.pdf,https://researchdata.gla.ac.uk/464/2/dynamic_stall_database_final_report.pdf,10.5525/gla.researchdata.464,1090756,6f4c89079c7f7e9f02a5966f43a97b979b35ed386f6047d0f7205f0fd3cc07f3
+model11_osc_sine.txt,https://researchdata.gla.ac.uk/464/1/GU_dynamic_stall.zip (member model11_osc_sine.txt),10.5525/gla.researchdata.464,14181,d2ff642ee73477e014e8ca046383aeb7f87c69b6b26e3761f499bd987b878d54
+model11_sinusoidal_crc32.csv,"https://researchdata.gla.ac.uk/464/1/GU_dynamic_stall.zip (CRC-32 of members CorrectedFiles/1101*.dat, from the archive listing)",10.5525/gla.researchdata.464,6648,b670bd60022071c1261a046657df3cf2676612b77db2498f651faf14ba338211
+model11_static.txt,https://researchdata.gla.ac.uk/464/1/GU_dynamic_stall.zip (member model11_static.txt),10.5525/gla.researchdata.464,1376,772a93590fb8caed5afbacd7b0a763038e26f658884137718ecfe74710a0151a
+README.md,https://github.com/luizpancini/BL-DSM-JFS-2021 at 84e7945c5b16c6da4075c7fb467c01125dace36b,,2052,01d14717721ed25bda4da446f93e69dccc1eda1736fb970e999f1a8c9633217b
+generate_GUD.m,https://github.com/luizpancini/BL-DSM-JFS-2021 at 84e7945c5b16c6da4075c7fb467c01125dace36b,,1249,e93549f7a972f4bdccd61c3f77fe4807597c5a2cb7f02744d7a9e71aea8371c8
+load_GUD.m,https://github.com/luizpancini/BL-DSM-JFS-2021 at 84e7945c5b16c6da4075c7fb467c01125dace36b,,1058,ec3f519dd921bf8a61f1156df616fa0cbe254a0001ced2278e90aaa18215b8f8

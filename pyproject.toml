@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "unistall"
+version = "1.0.0"
+description = "Leishman-Beddoes dynamic-stall load model for a pitching aerofoil, with tabulated separation, assessed against NASA TM-84245"
+authors = [{ name = "Akosa Samuel Onyejekwe" }]
+readme = "README.md"
+license = { text = "All rights reserved; see LICENSE" }
+requires-python = ">=3.11"
+dependencies = ["numpy>=1.26,<3", "scipy>=1.11", "pandas>=2.1", "matplotlib>=3.6"]
+
+[project.urls]
+Repository = "https://github.com/samuelakosaonyejekwe/aero-dynamic-stall-sam"
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+# needed only to rebuild the case study (plots, report documents, drawings): python3 run_all.py
+casestudy = ["Pillow>=10.2", "reportlab>=5.0", "python-docx>=1.2"]
+
+[tool.setuptools]
+packages = ["unistall"]
+
+# A copy of the inputs, the result files and the documents goes with a plain
+# `pip install .`, so the model and its calibrated constants work outside a
+# clone (unistall/paths.py finds them under <prefix>/share/unistall).
+[tool.setuptools.data-files]
+"share/unistall/data" = ["data/*"]
+"share/unistall/results" = ["results/*.json", "results/*.csv", "results/*.npz", "results/*.md"]
+"share/unistall/docs" = ["docs/*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["F", "E7", "E9", "B", "C901", "PLR0912", "PLR0915"]

@@ -1,0 +1,183 @@
+{
+  "author": "Akosa Samuel Onyejekwe (independent)",
+  "title": "Prediction of Dynamic Stall on a Pitching NACA 0012 Section",
+  "solver_name": "UNISTALL",
+  "solver": "UNISTALL, a Leishman-Beddoes dynamic-stall load model with tabulated separation (Python package unistall)",
+  "method": "Leishman-Beddoes indicial method with a tabulated separation point",
+  "package": "unistall",
+  "load_model": "unistall.dsmodel.solve",
+  "section": "0012",
+  "constants": {
+    "Tp": 1.651526,
+    "Tf0": 6.278239,
+    "Tv0": 6.317996,
+    "Tvl": 8.391549,
+    "eta": 0.906958,
+    "xcp_v": 0.2,
+    "St_sh": 0.19,
+    "cm_lag": 0.1,
+    "CD0": 0.0072,
+    "cn1_factor": 1.0,
+    "cmq_kirchhoff": 1,
+    "cm_unsteady": 0.728,
+    "sigma_rules": 1,
+    "cc_geometric": 1,
+    "cc_offset": 0.0,
+    "cc_floor": 1
+  },
+  "constants_source": "results/calibrated_constants.json, read by unistall.dsmodel.load_constants",
+  "march_rule": {
+    "largest_step_semichords": 0.02,
+    "settle_semichords": 200.0,
+    "steps_min": 720,
+    "cycles_min": 3,
+    "cycles_max": 8
+  },
+  "compared_range": {
+    "k_max": 0.2,
+    "peak_alpha_max_deg": 25.0
+  },
+  "cases": {
+    "A_validation": {
+      "label": "Case A: tunnel condition",
+      "description": "tunnel condition of NASA TM-84245, frame 9302",
+      "alpha_mean_deg": 10.0,
+      "alpha_amp_deg": 10.0,
+      "reduced_frequency_k": 0.1,
+      "mach_M": 0.3,
+      "chord_m": 0.61,
+      "measured_frame": "frame_9302",
+      "march": {
+        "steps_per_cycle": 3240,
+        "cycles": 5,
+        "step_semichords": 0.019393
+      },
+      "critical": {
+        "sonic_speed_ms": 313.4263,
+        "Cp_critical": -6.9473,
+        "Cp_vacuum": -15.873
+      },
+      "static_inputs": {
+        "CN_alpha_per_rad": 6.70492,
+        "alpha0_deg": 0.2343,
+        "CN_static_at_zero_incidence": -0.02741,
+        "alpha_stall_deg": 13.6598,
+        "CN1_onset": 1.34202,
+        "inside_static_mach_range": true
+      }
+    },
+    "B_application": {
+      "label": "Case B: rotor-blade-station condition",
+      "description": "an aerofoil at a rotor-blade-station condition (steady stream, prescribed pitch); not a rotor calculation",
+      "alpha_mean_deg": 12.0,
+      "alpha_amp_deg": 8.0,
+      "reduced_frequency_k": 0.07471689346280729,
+      "mach_M": 0.28,
+      "chord_m": 0.527,
+      "measured_frame": null,
+      "march": {
+        "steps_per_cycle": 4320,
+        "cycles": 4,
+        "step_semichords": 0.019466
+      },
+      "critical": {
+        "sonic_speed_ms": 313.0689,
+        "Cp_critical": -8.0567,
+        "Cp_vacuum": -18.2216
+      },
+      "static_inputs": {
+        "CN_alpha_per_rad": 6.71809,
+        "alpha0_deg": 0.1768,
+        "CN_static_at_zero_incidence": -0.02073,
+        "alpha_stall_deg": 14.2575,
+        "CN1_onset": 1.40225,
+        "inside_static_mach_range": true
+      }
+    }
+  },
+  "field_reconstruction": {
+    "module": "unistall.flowfield",
+    "what_it_is": "Potential-flow reconstruction drawn round the predicted lift, not a flow solution: incompressible, with a linearised (Karman-Tsien) correction of the pressure that holds only where the local flow is subcritical, and quasi-steady (no shed wake, no pitch-rate boundary condition, no unsteady pressure term, vortex not force-free); no boundary layer, no separated shear layer. A transpiration through the suction surface, of either sign, stands for the separated region, which is not drawn: no reversed flow and no wake appear. The vortex is a marker of the model's vortex clock and does not reproduce a suction footprint. Compared with no measurement; no load depends on it.",
+    "quasi_steady_omissions": [
+      "no shed wake",
+      "no pitch-rate boundary condition",
+      "no unsteady pressure term",
+      "vortex not force-free"
+    ],
+    "read_by_the_driver": {
+      "note": "04_solver/run_case.py passes these four to unistall.flowfield; changing one here changes the output",
+      "n_panels": 320,
+      "domain_chords": [
+        -1.0,
+        2.0,
+        -1.2,
+        1.2
+      ],
+      "grid_nx": 180,
+      "grid_ny": 140
+    },
+    "record_of_module_constants": {
+      "note": "a record of the constants of unistall.flowfield at the time of writing; the driver does not read them, and a check asserts that they still equal the module's",
+      "panels": "straight panels, each with a source of constant strength and a vortex sheet of one uniform strength, velocities from the closed-form panel integrals",
+      "near_wall_panel_lengths": 0.6,
+      "near_wall_rings_blanked": 0,
+      "attached_outflow_fraction": 0.05,
+      "vortex_x0": 0.25,
+      "vortex_dx": 0.75,
+      "vortex_y0": 0.1,
+      "vortex_dy": 0.06,
+      "vortex_core_over_c": 0.05,
+      "lamb_oseen_peak_coefficient": 0.638173
+    },
+    "transpiration": {
+      "what": "an equivalent transpiration through the suction surface standing for the separated region: an outflow where positive, an inflow where negative; its strength is solved so that the Kutta condition holds at the trailing edge while the circulation stays that of the predicted lift",
+      "wall_condition": "v_n = v_t w on the suction-surface panels aft of x/c = min(f_sep, 1 - attached_outflow_fraction); w a smooth step from 0 there to 1 at the trailing edge",
+      "kutta_condition": "equal pressure at the two control points next to the trailing edge"
+    },
+    "compressibility": {
+      "what": "a linearised correction applied to an incompressible reconstruction, valid only where the local flow is subcritical; not a compressible solution",
+      "pressure": "Karman-Tsien correction of the incompressible Cp at the stream Mach number: Cp_c = Cp / (beta + M^2 Cp / (2 (1 + beta))), beta = sqrt(1 - M^2)",
+      "vacuum_cap": 0.95,
+      "vacuum_cap_note": "the corrected Cp is not allowed below this fraction of the vacuum value -2/(gamma M^2) (cases.<case>.critical.Cp_vacuum)",
+      "beyond_critical": "where the corrected Cp is below cases.<case>.critical.Cp_critical the local Mach number is above one, the correction does not hold and the values are not physical; those points are flagged, hatched in the figures and counted",
+      "local_state": "local Mach number, static temperature and recovery temperature from the corrected Cp by the isentropic relations with the stagnation state of the stream",
+      "recovery_factor": 0.8963,
+      "recovery_factor_source": "Pr^(1/3), the usual value for a turbulent boundary layer on a flat plate, with Pr = 0.72 for air",
+      "circulation": "the sheet carries the fraction of the circulation of the lift at which the corrected surface pressure returns the lift given; the fraction is solved at each instant, starting from the Prandtl-Glauert factor sqrt(1 - M^2)"
+    },
+    "field_files": {
+      "format": "gzip-compressed CSV, one row per grid node",
+      "columns": [
+        "x_m",
+        "y_m",
+        "u_ms",
+        "v_ms",
+        "Cp",
+        "Cp_incompressible",
+        "Mach",
+        "T_static_K",
+        "T_recovery_K",
+        "vorticity_1s",
+        "beyond_critical",
+        "inside"
+      ],
+      "velocity": "u_ms, v_ms: the incompressible velocity",
+      "beyond_critical": "1 where the corrected Cp is below the critical value: Cp, Mach and the temperatures are not physical there; 0 elsewhere",
+      "inside": "1 at a node inside the section, where the values are those of the singularities and have no physical meaning; 0 elsewhere"
+    },
+    "bound_circulation": "Gamma = 0.5 CL U c, uniform vortex sheet on the surface",
+    "vortex": {
+      "what": "a marker of the load model's vortex clock; it does not reproduce a suction footprint",
+      "circulation": "0.5 CN_vortex U c",
+      "profile": "Lamb-Oseen",
+      "position": "x/c = x0 + dx tau, y/c = y0 + dy tau, tau = tau_v / Tvl; over the trailing edge at tau = 1",
+      "path_and_core": "assumed: chosen for illustration, neither derived nor measured"
+    },
+    "field_phases": {
+      "rise": "upstroke, mean incidence plus half the amplitude",
+      "peak": "instant of greatest lift",
+      "dsv": "instant of greatest vortex normal force",
+      "fall": "downstroke, mean incidence plus half the amplitude"
+    }
+  }
+}

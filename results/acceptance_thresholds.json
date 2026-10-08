@@ -1,0 +1,43 @@
+{
+  "tolerance": 0.0002,
+  "group": "held-out NACA 0012 loops inside the static Mach range whose peak incidence is inside the static lift range",
+  "use": "reproduction check only: each recomputed measure must equal its recorded value within the tolerance",
+  "measures": {
+    "mean_nRMS_CL": {
+      "recorded": 0.1067,
+      "target": 0.1,
+      "kind": "at most",
+      "met": false
+    },
+    "mean_nRMS_CM": {
+      "recorded": 0.1959,
+      "target": 0.15,
+      "kind": "at most",
+      "met": false
+    },
+    "mean_nRMS_CD": {
+      "recorded": 0.1526,
+      "target": 0.2,
+      "kind": "at most",
+      "met": true
+    },
+    "mean_abs_dalpha_CLmax_deg": {
+      "recorded": 0.5723,
+      "target": 0.7238,
+      "kind": "at most",
+      "met": true
+    },
+    "mean_abs_dalpha_Mstall_deg": {
+      "recorded": 0.6216,
+      "target": 1.0,
+      "kind": "at most",
+      "met": true
+    },
+    "damping_sign_agreement": {
+      "recorded": 0.6,
+      "target": 0.8,
+      "kind": "at least",
+      "met": false
+    }
+  }
+}

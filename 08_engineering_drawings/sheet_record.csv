@@ -1,0 +1,12 @@
+sheet,item,value
+1,scale stated in the title block,NOT TO SCALE; VIEWS NOT ALIGNED IN PROJECTION
+1,generic body: mast_over_R,0.15
+1,generic body: fin_top_over_R,-0.06
+2,scale stated in the title block,NOT TO SCALE (ISOMETRIC SKETCH)
+2,generic body: mast_over_R,0.15
+2,generic body: fin_top_over_R,-0.06
+3,scale stated in the title block,PLANFORM 1 : 27.3 ON A3; SECTION A-A ENLARGED
+3,section A-A: cutting-plane arrows point,outboard
+3,section A-A: leading edge drawn on the,left
+3,section A-A: leading edge belongs on the,left
+4,scale stated in the title block,1 : 2.26 ON A3

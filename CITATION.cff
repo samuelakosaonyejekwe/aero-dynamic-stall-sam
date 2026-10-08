@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "To refer to this work, please cite it as below. Reuse needs the author's permission; see LICENSE."
+title: "UNISTALL: a dynamic-stall load model for a pitching aerofoil"
+type: software
+authors:
+  - family-names: Onyejekwe
+    given-names: Akosa Samuel
+    affiliation: Independent Researcher
+version: "1.0.0"
+date-released: "2026-10-06"
+repository-code: "https://github.com/samuelakosaonyejekwe/aero-dynamic-stall-sam"

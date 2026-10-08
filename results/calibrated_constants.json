@@ -1,0 +1,316 @@
+{
+  "author": "Akosa Samuel Onyejekwe (independent)",
+  "model": "tabulated",
+  "constants": {
+    "Tp": 1.651526,
+    "Tf0": 6.278239,
+    "Tv0": 6.317996,
+    "Tvl": 8.391549,
+    "eta": 0.906958
+  },
+  "fixed": {
+    "xcp_v": 0.2,
+    "St_sh": 0.19,
+    "cm_lag": 0.1,
+    "CD0": 0.0072,
+    "cn1_factor": 1.0,
+    "cmq_kirchhoff": 1,
+    "cm_unsteady": 0.728,
+    "sigma_rules": 1,
+    "cc_geometric": 1,
+    "cc_offset": 0.0,
+    "cc_floor": 1
+  },
+  "cost": 1.90576495,
+  "cost_at_literature_values": 2.14349292,
+  "cost_definition": "sum over frames of nRMS_CL^2 + nRMS_CM^2 + nRMS_CD^2, at the reporting resolution",
+  "algorithm": "scipy.optimize.least_squares, method trf, bounded; search at a coarser march, then every start refined at the reporting resolution",
+  "starts": 8,
+  "seed": 20261006,
+  "bounds": {
+    "Tp": [
+      0.3,
+      4.0
+    ],
+    "Tf0": [
+      0.5,
+      10.0
+    ],
+    "Tv0": [
+      1.0,
+      15.0
+    ],
+    "Tvl": [
+      3.0,
+      13.0
+    ],
+    "eta": [
+      0.6,
+      1.0
+    ]
+  },
+  "march": {
+    "search_step_semichords": 0.32,
+    "search_settle_semichords": 120.0,
+    "reporting_step_semichords": 0.02,
+    "reporting_settle_semichords": 200.0,
+    "jacobian_relative_step": 0.01
+  },
+  "frames": [
+    "frame_7023",
+    "frame_7101",
+    "frame_7104",
+    "frame_7110",
+    "frame_7119",
+    "frame_7200",
+    "frame_7212",
+    "frame_7305",
+    "frame_9210",
+    "frame_9213",
+    "frame_9222",
+    "frame_9302",
+    "frame_10104",
+    "frame_10113",
+    "frame_10203",
+    "frame_10212",
+    "frame_10218",
+    "frame_10221",
+    "frame_10305",
+    "frame_14220"
+  ],
+  "n_frames": 20,
+  "spread_over_starts": {
+    "Tp": [
+      1.2519,
+      2.033
+    ],
+    "Tf0": [
+      4.6053,
+      7.3605
+    ],
+    "Tv0": [
+      2.6486,
+      9.3007
+    ],
+    "Tvl": [
+      6.8408,
+      12.9876
+    ],
+    "eta": [
+      0.9063,
+      0.9094
+    ]
+  },
+  "spread_of_search_cost": [
+    1.90378,
+    2.01605
+  ],
+  "starts_within_1pct_of_best_search": 3,
+  "polished_costs": [
+    1.918899,
+    1.962506,
+    2.013453,
+    1.907005,
+    1.959429,
+    1.905765,
+    2.01251,
+    1.907238
+  ],
+  "polished_constants_differ_by": {
+    "Tp": 0.8353,
+    "Tf0": 2.5325,
+    "Tv0": 5.9016,
+    "Tvl": 5.9277,
+    "eta": 0.0016
+  },
+  "first_stage_record": {
+    "author": "Akosa Samuel Onyejekwe (independent)",
+    "model": "tabulated",
+    "constants": {
+      "Tp": 1.651526,
+      "Tf0": 6.278239,
+      "Tv0": 6.317996,
+      "Tvl": 8.391549,
+      "eta": 0.906958
+    },
+    "fixed": {
+      "xcp_v": 0.2,
+      "St_sh": 0.19,
+      "cm_lag": 0.1,
+      "CD0": 0.0072,
+      "cn1_factor": 1.0,
+      "cmq_kirchhoff": 1,
+      "cm_unsteady": 0.728,
+      "sigma_rules": 1,
+      "cc_geometric": 1,
+      "cc_offset": 0.0,
+      "cc_floor": 1
+    },
+    "cost": 1.90576495,
+    "cost_at_literature_values": 2.14349292,
+    "cost_definition": "sum over frames of nRMS_CL^2 + nRMS_CM^2 + nRMS_CD^2, at the reporting resolution",
+    "algorithm": "scipy.optimize.least_squares, method trf, bounded; search at a coarser march, then every start refined at the reporting resolution",
+    "starts": 8,
+    "seed": 20261006,
+    "bounds": {
+      "Tp": [
+        0.3,
+        4.0
+      ],
+      "Tf0": [
+        0.5,
+        10.0
+      ],
+      "Tv0": [
+        1.0,
+        15.0
+      ],
+      "Tvl": [
+        3.0,
+        13.0
+      ],
+      "eta": [
+        0.6,
+        1.0
+      ]
+    },
+    "march": {
+      "search_step_semichords": 0.32,
+      "search_settle_semichords": 120.0,
+      "reporting_step_semichords": 0.02,
+      "reporting_settle_semichords": 200.0,
+      "jacobian_relative_step": 0.01
+    },
+    "frames": [
+      "frame_7023",
+      "frame_7101",
+      "frame_7104",
+      "frame_7110",
+      "frame_7119",
+      "frame_7200",
+      "frame_7212",
+      "frame_7305",
+      "frame_9210",
+      "frame_9213",
+      "frame_9222",
+      "frame_9302",
+      "frame_10104",
+      "frame_10113",
+      "frame_10203",
+      "frame_10212",
+      "frame_10218",
+      "frame_10221",
+      "frame_10305",
+      "frame_14220"
+    ],
+    "n_frames": 20,
+    "spread_over_starts": {
+      "Tp": [
+        1.2519,
+        2.033
+      ],
+      "Tf0": [
+        4.6053,
+        7.3605
+      ],
+      "Tv0": [
+        2.6486,
+        9.3007
+      ],
+      "Tvl": [
+        6.8408,
+        12.9876
+      ],
+      "eta": [
+        0.9063,
+        0.9094
+      ]
+    },
+    "spread_of_search_cost": [
+      1.90378,
+      2.01605
+    ],
+    "starts_within_1pct_of_best_search": 3,
+    "polished_costs": [
+      1.918899,
+      1.962506,
+      2.013453,
+      1.907005,
+      1.959429,
+      1.905765,
+      2.01251,
+      1.907238
+    ],
+    "polished_constants_differ_by": {
+      "Tp": 0.8353,
+      "Tf0": 2.5325,
+      "Tv0": 5.9016,
+      "Tvl": 5.9277,
+      "eta": 0.0016
+    }
+  },
+  "selection": {
+    "method": "5-fold cross-validation inside the calibration set",
+    "chosen": "all",
+    "candidates": {
+      "all": {
+        "constants": [
+          "Tp",
+          "Tf0",
+          "Tv0",
+          "Tvl",
+          "eta"
+        ],
+        "left_out_cost": 1.978641
+      },
+      "sensitive only": {
+        "constants": [
+          "Tvl",
+          "eta"
+        ],
+        "left_out_cost": 2.058586
+      },
+      "none": {
+        "constants": [],
+        "left_out_cost": 2.143493
+      }
+    },
+    "starts_per_fold": 2,
+    "rule": "candidates in order of size: none, sensitive only, all. A larger set of fitted constants replaces the next smaller one only if its left-out cost is lower, averaged over the folds, by more than one standard error of the fold-by-fold differences",
+    "steps": [
+      {
+        "smaller": "none",
+        "larger": "sensitive only",
+        "mean_improvement_per_fold": 0.016981,
+        "standard_error": 0.009119,
+        "larger_kept": true
+      },
+      {
+        "smaller": "sensitive only",
+        "larger": "all",
+        "mean_improvement_per_fold": 0.015989,
+        "standard_error": 0.005143,
+        "larger_kept": true
+      }
+    ],
+    "folds_in_which_chosen_is_better": {
+      "sensitive only": 5,
+      "none": 4
+    },
+    "sensitive_set_by_fold": {
+      "0": "Tvl eta",
+      "1": "Tp Tvl eta",
+      "2": "Tvl eta",
+      "3": "Tvl eta",
+      "4": "Tvl eta"
+    },
+    "returned_to_literature_values": [],
+    "largest_cost_change_pct_for_10pct": {
+      "Tp": 0.256,
+      "Tf0": 0.17,
+      "Tv0": 0.083,
+      "Tvl": 3.836,
+      "eta": 30.928
+    }
+  }
+}

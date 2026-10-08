@@ -1,0 +1,3 @@
+case,alpha_mean_deg,alpha_amp_deg,reduced_freq_k,omega_rad_s,freq_Hz,period_s,motion
+A_validation,10.0,10.0,0.1,33.471372,5.327134,0.187718,"alpha(t) = mean + amp sin(omega t), about the quarter chord"
+B_application,12.0,8.0,0.07471689346280729,27.017697,4.3,0.232558,"alpha(t) = mean + amp sin(omega t), about the quarter chord"

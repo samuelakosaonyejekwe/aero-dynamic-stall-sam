@@ -1,0 +1,13 @@
+parameter,A_validation,B_application,units,source
+description,"tunnel condition of NASA TM-84245, frame 9302","an aerofoil at a rotor-blade-station condition (steady stream, prescribed pitch); not a rotor calculation",-,project_meta.CASES
+airfoil,NACA 0012,NACA 0012,-,project_meta.SECTION
+chord_c,0.61,0.527,m,"Case A: NASA TM-84245; Case B: Bousman, NASA/TP-2003-212265 (UH-60A main rotor)"
+freestream_mach_M,0.3,0.28,-,Case A: nominal condition of the frame; Case B: station_condition.csv
+speed_of_sound_a,340.29228686527705,340.29228686527705,m/s,"sea-level standard air, sqrt(gamma R T)"
+freestream_velocity_U,102.0876860595831,95.28184032227759,m/s,M a
+air_density_rho,1.22501,1.22501,kg/m^3,sea-level standard air
+static_pressure_p_inf,101325.0,101325.0,Pa,sea-level standard air
+static_temperature_T_inf,288.15,288.15,K,sea-level standard air
+dynamic_viscosity_mu,1.7893e-05,1.7893e-05,Pa.s,"sea-level standard air, Sutherland"
+reynolds_number_Re_c,4263000.0,3438000.0,-,sea-level standard air; not the tunnel value of the frame and not a flight value; the load model does not use it
+reduced_frequency_k,0.1,0.07471689346280729,-,Case A: nominal condition of the frame; Case B: station_condition.csv

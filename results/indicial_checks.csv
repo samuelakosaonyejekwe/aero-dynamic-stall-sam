@@ -1,0 +1,11 @@
+check,M,quantity,model,theory,error_pct
+starting value,0.22,C_N per unit step in incidence,18.17718,18.18182,-0.02549
+starting value,0.22,C_M about c/4 per unit step in incidence,-4.54465,-4.54545,-0.01777
+starting value,0.22,C_N per unit step in pitch rate,4.54421,4.54545,-0.02735
+starting value,0.22,C_M about c/4 per unit step in pitch rate,-2.64979,-2.65152,-0.06489
+short-time lift after a step in incidence,0.22,largest difference over 0 <= s <= 0.361 semichords (at s = 0.361),8.0916,6.55917,23.36308
+starting value,0.3,C_N per unit step in incidence,13.33093,13.33333,-0.01803
+starting value,0.3,C_M about c/4 per unit step in incidence,-3.33294,-3.33333,-0.01169
+starting value,0.3,C_N per unit step in pitch rate,3.33265,3.33333,-0.0205
+starting value,0.3,C_M about c/4 per unit step in pitch rate,-1.94368,-1.94444,-0.03914
+short-time lift after a step in incidence,0.3,largest difference over 0 <= s <= 0.462 semichords (at s = 0.462),6.83459,6.15444,11.05136

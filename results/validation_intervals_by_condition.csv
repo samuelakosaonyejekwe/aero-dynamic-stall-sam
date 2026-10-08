@@ -1,0 +1,7 @@
+measure,n_loops,n_conditions,value,ci95_lo_by_loop,ci95_hi_by_loop,ci95_lo_by_condition,ci95_hi_by_condition
+mean_nRMS_CL,45,38,0.1067,0.0906,0.124,0.09,0.1251
+mean_nRMS_CM,45,38,0.1959,0.1721,0.2202,0.1684,0.2232
+mean_nRMS_CD,45,38,0.1526,0.13,0.177,0.1275,0.1785
+mean_abs_dalpha_CLmax_deg,45,38,0.5723,0.4126,0.7745,0.4145,0.7876
+mean_abs_dalpha_Mstall_deg,29,38,0.6216,0.4004,0.8726,0.3837,0.8831
+mean_Xi_sign_agree,45,38,0.6,0.4444,0.7333,0.4419,0.7609

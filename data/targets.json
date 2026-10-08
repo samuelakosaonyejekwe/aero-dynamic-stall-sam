@@ -1,0 +1,105 @@
+{
+  "author": "Akosa Samuel Onyejekwe (independent)",
+  "frozen_on": "2026-10-06",
+  "rule": "Targets are stated here and are not loosened after a result is seen. docs/provenance.md gives the dated first record of each.",
+  "attached_flow": {
+    "theodorsen_M": 0.05,
+    "theodorsen_k": [
+      0.05,
+      0.1,
+      0.2
+    ],
+    "lift_and_moment_amplitude_error_max_pct": 3.0,
+    "lift_and_moment_phase_error_max_deg": 3.0,
+    "chord_speed_independence_max_abs_dCL": 1e-10,
+    "no_stall_frame_nRMS_CL_max": 0.05,
+    "no_stall_frame_nRMS_CM_max": 0.1
+  },
+  "separated_flow": {
+    "CD_negative_fraction_of_cycle_max": 0.05,
+    "CD_min": -0.01,
+    "onset_shift_with_4x_steps_max_deg": 0.02
+  },
+  "calibration": {
+    "repeatability_max_abs_difference": 1e-06,
+    "sensitivity_perturbation_pct": 10,
+    "drop_constant_if_cost_change_below_pct": 1,
+    "selection_rule": "candidates in order of size: none, sensitive only, all. A larger set of fitted constants replaces the next smaller one only if its left-out cost is lower, averaged over the folds, by more than one standard error of the fold-by-fold differences",
+    "selection_rule_note": "written on 2026-10-07 before the recalibration that follows the change of the pitch-rate source and of the static drag split; the earlier rule kept the candidate with the lowest total left-out cost, with no allowance for its scatter over folds. The first cross-validation had been seen when this rule was written"
+  },
+  "held_out_validation": {
+    "group": "held-out NACA 0012 loops inside the static Mach range whose peak incidence is inside the static lift range",
+    "mean_nRMS_CL_max": 0.1,
+    "mean_nRMS_CM_max": 0.15,
+    "mean_nRMS_CD_max": 0.2,
+    "mean_abs_dalpha_CLmax_deg_max": 0.7238,
+    "mean_abs_dalpha_Mstall_deg_max": 1.0,
+    "damping_sign_agreement_min": 0.8,
+    "origin": {
+      "rule": "each limit is the stricter of an absolute limit and 75 % of the baseline, the value the earlier form of the model had scored on the same held-out group when the targets were first recorded (2026-10-06 10:46 +03:00)",
+      "mean_nRMS_CL_max": {
+        "absolute": 0.1,
+        "baseline": 0.1475,
+        "three_quarters_of_baseline": 0.1106
+      },
+      "mean_nRMS_CM_max": {
+        "absolute": 0.15,
+        "baseline": 0.2581,
+        "three_quarters_of_baseline": 0.1936
+      },
+      "mean_nRMS_CD_max": {
+        "absolute": 0.2,
+        "baseline": 0.4043,
+        "three_quarters_of_baseline": 0.3032
+      },
+      "mean_abs_dalpha_CLmax_deg_max": {
+        "absolute": 1.0,
+        "baseline": 0.965,
+        "three_quarters_of_baseline": 0.7238
+      },
+      "mean_abs_dalpha_Mstall_deg_max": {
+        "absolute": 1.0,
+        "baseline": 1.475,
+        "three_quarters_of_baseline": 1.1063
+      },
+      "note": "copied on 2026-10-07 from the first recorded targets file, which the public file had reduced to the limits alone; the absolute limits and the damping-sign limit of 0.80 are the author's working limits for a model to be useful for section loads, not taken from a standard"
+    }
+  },
+  "structural": {
+    "cycle_work_identity_max_error_pct": 1.0,
+    "free_response_sign_agreement_min_conditions": 3,
+    "dimensional_load_identity_max_abs": 1e-09,
+    "second_pitch_axis_x_c": 0.4,
+    "second_axis_theodorsen_amplitude_max_pct": 3.0,
+    "second_axis_theodorsen_phase_max_deg": 3.0
+  },
+  "code_quality": {
+    "regression_max_abs_difference": 1e-12,
+    "import_path_edits_load_model_path_max": 0,
+    "module_level_executable_lines_per_load_model_file_max": 30,
+    "longest_package_function_lines_max": 80,
+    "unused_parameters_max": 0,
+    "public_functions_typed_and_unit_documented_pct_min": 100,
+    "lint_rule_set": "ruff rules F, E7, E9, B, C901, PLR0912, PLR0915",
+    "lint_findings_max": 0,
+    "silently_skipped_checks_max": 0,
+    "revision_history_phrases_in_package_max": 0
+  },
+  "numerical": {
+    "loop_error_change_max": 0.002,
+    "note": "largest change in any normalised loop error of any calibration loop between the default resolution (dsmodel.march_resolution) and the finest march; this group was added on 2026-10-07, after the first record. From 2026-10-07 the step study is judged more strictly, against the Richardson-extrapolated value at zero step (results/convergence_extrapolated.csv); the limit itself is unchanged",
+    "state_space_loop_error_difference_max": 0.002,
+    "state_space_note": "largest difference in any normalised loop error of any calibration loop between the state-space form and the indicial march; added 2026-10-07 before the check was run on the calibration loops"
+  },
+  "equivalence_of_separation_laws": {
+    "added_on": "2026-10-07",
+    "note": "margin for calling the tabulated and the fitted separation law equivalent in the loads they predict with identical constants; written here before the direct load differences were computed, and after the differences between mean loop errors (at most 0.0021) had been seen",
+    "margin_fraction_of_accuracy_target": 0.1,
+    "margin_CL": 0.01,
+    "margin_CM": 0.015,
+    "margin_CD": 0.02,
+    "quantity": "RMS over the cycle of the difference between the two predicted coefficients, divided by the measured range of that coefficient over the loop; mean over the primary held-out loops",
+    "test": "upper end of the 95 % bootstrap interval of that mean below the margin, for each of the three sets of constants; and the 95 % interval of the paired difference in loop error inside plus or minus the margin",
+    "worst_single_loop": "reported, not a target"
+  }
+}

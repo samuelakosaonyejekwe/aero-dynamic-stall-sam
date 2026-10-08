@@ -1,0 +1,5 @@
+case,coefficient,measured_points,published_curve_points,measured_range,loop_error_published_model,loop_error_this_model,rms_difference_between_models_over_range,extreme_published_model,extreme_this_model,extreme_measured,source
+"9.9 +/- 9.9 deg, k 0.1, M 0.3",CN,57,59,1.78151,0.03812,0.07749,0.05979,1.80955,1.81972,1.82976,"Leishman and Crouse (1989), as traced in the source repository"
+"9.9 +/- 9.9 deg, k 0.1, M 0.3",CM,57,73,0.29369,0.07456,0.11284,0.09695,-0.26306,-0.28637,-0.22943,"Leishman and Crouse (1989), as traced in the source repository"
+"15 +/- 10 deg, k 0.1, M 0.3",CN,60,61,1.75567,0.07182,0.081,0.06613,1.94764,1.93259,2.08891,"Leishman and Crouse (1989), as traced in the source repository"
+"15 +/- 10 deg, k 0.1, M 0.3",CM,61,71,0.39529,0.10972,0.12659,0.08149,-0.34791,-0.32029,-0.3138,"Leishman and Crouse (1989), as traced in the source repository"

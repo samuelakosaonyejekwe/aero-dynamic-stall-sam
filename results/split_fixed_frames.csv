@@ -1,0 +1,6 @@
+frame,set_as_fixed,set_by_rule,departs_from_rule,M,k,alpha0_deg,amp_deg
+frame_9302,calibration,held_out,True,0.302,0.096,9.8,9.9
+frame_9217,held_out,held_out,False,0.29,0.098,15.0,10.0
+frame_9214,held_out,held_out,False,0.292,0.049,15.0,10.0
+frame_7113,held_out,calibration,True,0.301,0.099,10.0,4.9
+frame_10118,held_out,held_out,False,0.291,0.102,15.0,5.0

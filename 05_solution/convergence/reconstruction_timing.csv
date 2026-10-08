@@ -1,0 +1,3 @@
+case,what,instants,fields,cycle_instants_scanned,n_panels,cpu_time_s
+A_validation,"the six instants, the four fields and the scan of the cycle",6,4,361,320,11.68
+B_application,"the six instants, the four fields and the scan of the cycle",6,4,361,320,11.99

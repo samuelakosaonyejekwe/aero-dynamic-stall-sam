@@ -1,0 +1,15 @@
+name,value,unit,source
+Case A section,NACA 0012,-,NASA TM-84245
+Case A chord of the tunnel model,0.61,m,NASA TM-84245
+"Case A maximum thickness, percent of chord",12,% of chord,NACA 0012 designation
+Case A maximum thickness,0.0732,m,derived: 12 % of the Case A chord
+"Case A station of maximum thickness, fraction of chord",0.2995,chord,four-digit thickness form (01_geometry)
+"Case A pitch axis from the leading edge, fraction of chord",0.25,chord,NASA TM-84245
+Case B rotor radius,8.18,m,"Bousman, NASA/TP-2003-212265 (UH-60A main rotor)"
+"Case B rotor radius, in feet",26.83,ft,"Bousman, NASA/TP-2003-212265 (UH-60A main rotor)"
+Case B blade chord,0.527,m,"Bousman, NASA/TP-2003-212265 (UH-60A main rotor)"
+"Case B blade chord, in inches",20.76,in,"Bousman, NASA/TP-2003-212265 (UH-60A main rotor)"
+Case B number of blades,4,-,"Bousman, NASA/TP-2003-212265 (UH-60A main rotor)"
+Case B rotor speed,258,rpm,"Bousman, NASA/TP-2003-212265 (UH-60A main rotor)"
+"Case B analysis station, fraction of rotor radius",0.75,R,case definition of this study
+"Root end of the blade as drawn, fraction of rotor radius",0.13,R,"Bousman, NASA/TP-2003-212265 (Table 3: root cutout 42.00 in of 322.00 in)"

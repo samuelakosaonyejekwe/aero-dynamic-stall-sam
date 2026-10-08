@@ -1,0 +1,17 @@
+variant,source,nRMS_CL,nRMS_CM,nRMS_CD,CLmax_err_pct,dalpha_CLmax_deg,dalpha_Mstall_deg,Xi_sign_agree
+calibrated,baseline,0.1067,0.1959,0.1526,4.5311,0.5723,0.6216,0.6
+calibration start 0,calibration,0.1093,0.1982,0.1537,4.0993,0.6796,0.5458,0.6
+calibration start 3,calibration,0.1056,0.196,0.1512,4.3542,0.5327,0.602,0.6
+calibration start 5,calibration,0.1067,0.1959,0.1526,4.5312,0.5723,0.6216,0.6
+calibration start 7,calibration,0.1065,0.1946,0.1521,4.9735,0.5653,0.6836,0.6
+C_N1 + 0.03,static data,0.1061,0.1898,0.1534,4.5804,0.5684,0.6187,0.6222
+C_N1 - 0.03,static data,0.107,0.198,0.1521,4.5424,0.5585,0.6403,0.6
+slope + 0.003/deg,static data,0.111,0.1992,0.1525,4.5356,0.5462,0.6336,0.5778
+slope - 0.003/deg,static data,0.1101,0.1894,0.1573,5.7803,0.5695,0.6299,0.6222
+slope +0.0011/deg (fit range),fit range,0.1063,0.1969,0.1514,4.3598,0.5409,0.6231,0.6
+slope -0.0011/deg (fit range),fit range,0.1067,0.1935,0.1538,4.8902,0.5898,0.6244,0.6
+zero-lift incidence +0.029 deg (fit range),fit range,0.1067,0.1954,0.1526,4.5983,0.5628,0.6205,0.6
+zero-lift incidence -0.029 deg (fit range),fit range,0.1069,0.1963,0.1525,4.4688,0.5762,0.6228,0.6
+unsteady-moment factor 0.606,moment factor,0.1067,0.1955,0.1526,4.5311,0.5723,0.6194,0.5778
+unsteady-moment factor 0.892,moment factor,0.1067,0.1984,0.1526,4.5311,0.5723,0.6249,0.6222
+the other post-stall static curve (less separated),post-stall curve,0.1464,0.2689,0.1779,3.7601,0.505,0.8645,0.6667

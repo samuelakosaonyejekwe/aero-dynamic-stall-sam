@@ -1,0 +1,24 @@
+quantity,value,units,source
+rotor_radius,26.83,ft,"Bousman, NASA/TP-2003-212265 (UH-60A main rotor)"
+rotor_radius_m,8.1778,m,radius in feet x 0.3048
+blade_chord,20.76,in,"Bousman, NASA/TP-2003-212265 (UH-60A main rotor)"
+blade_chord_m,0.527,m,"chord in inches x 0.0254, to three decimals"
+number_of_blades,4,-,"Bousman, NASA/TP-2003-212265 (UH-60A main rotor)"
+rotor_speed,258,rpm,"Bousman, NASA/TP-2003-212265 (UH-60A main rotor)"
+rotor_speed_rev_per_s,4.3,1/s,rpm / 60
+rotor_speed_Omega,27.0177,rad/s,2 pi rpm / 60
+tip_speed,220.945,m/s,Omega R
+station_r_over_R,0.75,-,chosen for this study
+station_rotational_speed,165.709,m/s,Omega r
+station_azimuth,270.0,deg,chosen for this study: the retreating side
+station_mach_M,0.28,-,chosen for this study: the Mach number of Case B
+speed_of_sound,340.292,m/s,"sea-level standard air, sqrt(gamma R T)"
+station_speed_U,95.282,m/s,M a
+forward_speed_implied,70.43,m/s,the forward speed V at which Omega r + V sin(azimuth) = U
+forward_speed_implied_kt,136.9,kt,V in knots
+advance_ratio_implied,0.3188,-,V / (Omega R)
+mach_at_station_lowest,0.28,-,(Omega r - V) / a: the value Case B holds steady
+mach_at_station_highest,0.6939,-,"(Omega r + V) / a, on the advancing side: not represented in Case B"
+pitch_frequency,4.3,Hz,once per revolution: rpm / 60
+reduced_frequency_k,0.074717,-,Omega c / (2 U)
+incidence_history,"12 deg +/- 8 deg, sinusoidal",-,assumed for this study; it comes from no trim calculation

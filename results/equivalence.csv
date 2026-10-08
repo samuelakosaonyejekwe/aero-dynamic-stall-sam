@@ -1,0 +1,10 @@
+constants,coefficient,n_frames,margin,mean_rms_difference_over_range,ci95_lo,ci95_hi,loads_within_margin,mean_rms_difference_raw,mean_signed_difference_raw,worst_loop_rms_over_range,worst_loop_max_abs_over_range,worst_loop_max_abs_raw,worst_loop_frame,loop_error_difference,loop_error_ci95_lo,loop_error_ci95_hi,loop_error_within_margin,loop_error_bias,equivalent
+literature values,CL,45,0.01,0.01158,0.00936,0.01402,False,0.01271,0.00168,0.0401,0.07084,0.07746,frame_10114,0.0017,0.0,0.0033,True,reference better,False
+literature values,CM,45,0.015,0.00614,0.00483,0.00756,True,0.00095,-0.0,0.02246,0.18388,0.02101,frame_7019,0.0017,0.0002,0.0034,True,reference better,True
+literature values,CD,45,0.02,0.00963,0.0079,0.01152,True,0.0034,0.00041,0.02656,0.0861,0.03725,frame_7216,0.0008,-0.0004,0.0021,True,no difference at 95 %,True
+fitted for the tabulated model,CL,45,0.01,0.01007,0.00793,0.01254,False,0.0109,0.00127,0.03906,0.07061,0.07306,frame_10114,0.0014,-0.0006,0.003,True,no difference at 95 %,False
+fitted for the tabulated model,CM,45,0.015,0.00524,0.00417,0.00635,True,0.00086,4e-05,0.01425,0.2246,0.02441,frame_7019,0.0014,0.0002,0.0027,True,reference better,True
+fitted for the tabulated model,CD,45,0.02,0.00857,0.0069,0.01041,True,0.00293,0.00032,0.02599,0.07751,0.03221,frame_7108,0.0005,-0.0007,0.0016,True,no difference at 95 %,True
+fitted for the reference model,CL,45,0.01,0.01079,0.00823,0.0138,False,0.01177,0.00149,0.04697,0.20002,0.24298,frame_10120,0.0002,-0.0032,0.0027,True,no difference at 95 %,False
+fitted for the reference model,CM,45,0.015,0.00744,0.00488,0.01143,True,0.00139,-0.0001,0.0805,0.38322,0.10491,frame_10120,0.0006,-0.0015,0.0024,True,no difference at 95 %,True
+fitted for the reference model,CD,45,0.02,0.00929,0.00732,0.01159,True,0.00325,0.00045,0.03817,0.17039,0.08317,frame_10120,-0.0002,-0.0028,0.0016,True,no difference at 95 %,True

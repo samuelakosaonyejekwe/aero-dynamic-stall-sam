@@ -1,0 +1,18 @@
+{
+  "author": "Akosa Samuel Onyejekwe (independent)",
+  "fixed_on": "2026-10-07",
+  "purpose": "Which University of Glasgow NACA 0012 sinusoidal runs (model 11 of doi:10.5525/gla.researchdata.464, as redistributed in BL-DSM-JFS-2021, directory Glasgow Data) may be used to build static inputs, to fit model constants and to forecast (calibration), and which may only be predicted, once (held_out). Fixed before any model result was computed on any of these runs, and not altered afterwards.",
+  "rule": {
+    "statement": "A run is assigned by its eight-digit run number alone (the file name), before its data are examined: run number divisible by 3 -> calibration, otherwise held_out. This is the rule data/split.json states for NASA frames added after 2026-10-06. There are no assignments by name.",
+    "calibration_if": "run_number % 3 == 0",
+    "modulus": 3,
+    "calibration_remainder": 0,
+    "assignments_by_name": []
+  },
+  "static_runs": "The static runs of the same model (motion type 0, file names 1100efgh) are not sinusoidal runs and are in neither set. They are static inputs, used as data/static_naca0012_M030_*.csv is used for the NASA loops.",
+  "uses_permitted": {
+    "calibration": "building static inputs from the slowest runs, fitting constants, choosing which constants to fit, the cross-validated forecast",
+    "held_out": "scoring only, once, by unistall.glasgow_blind score, and only if the go rule of data/glasgow_targets.json is met; before that only the run information block, the incidence column and the number of rows of each file may be read (data/glasgow_inventory.csv)"
+  },
+  "where_the_set_of_each_run_is_listed": "data/glasgow_inventory.csv, column set"
+}

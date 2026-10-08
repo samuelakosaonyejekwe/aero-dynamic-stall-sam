@@ -1,0 +1,2 @@
+n_frames,n_frames_below_mach_0_20,lowest_mach,states,integrator,worst_difference_in_loop_error,mean_difference_in_loop_error,worst_difference_in_CL,worst_difference_in_CM,worst_difference_in_CD,worst_difference_in_CL_pct_of_range,worst_difference_in_CM_pct_of_range,worst_difference_in_CD_pct_of_range,worst_difference_in_damping,cpu_ratio_state_space_to_indicial,target_difference_in_loop_error,met
+24,4,0.035,14,"classical fourth-order Runge-Kutta, fixed step",0.000398,7.2e-05,0.005225,0.004843,0.001692,0.5275,1.9679,3.6068,0.00027,4.94,0.002,True

@@ -1,0 +1,3 @@
+case,CL_max,alpha_at_CLmax_deg,CM_min_c4,CD_max,stall_onset_alpha_deg,cycle_damping_Xi,Cp_closure_error_pct,Cp_closure_error_pct_incompressible,Cp_closure_error_pct_panels_only,circulation_factor_at_CLmax,CN_vortex_max,vortex_circulation_over_Uc
+A_validation,1.79505,18.0673,-0.289612,0.555432,14.4267,0.0889893,1.0608e-05,-0.9962,-0.72979,0.89289,0.513113,0.256556
+B_application,1.74544,17.0255,-0.236861,0.4361,13.8466,0.0646719,2.5569e-06,-0.66754,-0.65984,0.88875,0.390203,0.195102

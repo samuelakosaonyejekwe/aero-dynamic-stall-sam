@@ -1,0 +1,11 @@
+property,value,units,note
+gamma,1.4,-,ratio of specific heats
+R_gas,287.05,J/kg/K,specific gas constant
+prandtl,0.72,-,Prandtl number of air
+T_inf,288.15,K,sea-level standard temperature
+p_inf,101325.0,Pa,sea-level standard pressure
+a_sound,340.29228686527705,m/s,derived: sqrt(gamma R T)
+rho,1.22501,kg/m^3,derived: p / (R T)
+mu,1.7893e-05,Pa.s,derived: Sutherland's law
+cp,1004.675,J/kg/K,derived: gamma R / (gamma - 1)
+recovery_factor,0.8963,-,"derived: Pr^(1/3), the usual value for a turbulent boundary layer on a flat plate, with Pr = 0.72 for air"

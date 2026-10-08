@@ -1,0 +1,9 @@
+quantity,value,nominal_uncertainty,source
+CL_alpha_per_deg,0.109,0.003,"NASA TM-84245 Vol. 1 (NTRS 19820024438), Table 8, printed p. 25: NACA 0012 at M = 0.30, including wind-tunnel-wall corrections"
+alpha_zero_lift_deg,-0.1,0.2,"NASA TM-84245 Vol. 1 (NTRS 19820024438), Table 8, printed p. 25: NACA 0012 at M = 0.30, including wind-tunnel-wall corrections"
+CM0,-0.007,0.005,"NASA TM-84245 Vol. 1 (NTRS 19820024438), Table 8, printed p. 25: NACA 0012 at M = 0.30, including wind-tunnel-wall corrections"
+CD_min,0.0072,0.0005,"NASA TM-84245 Vol. 1 (NTRS 19820024438), Table 8, printed p. 25: NACA 0012 at M = 0.30, including wind-tunnel-wall corrections"
+x_ac_over_c,0.24,0.005,"NASA TM-84245 Vol. 1 (NTRS 19820024438), Table 8, printed p. 25: NACA 0012 at M = 0.30, including wind-tunnel-wall corrections"
+CL_max,1.33,0.03,"NASA TM-84245 Vol. 1 (NTRS 19820024438), Table 8, printed p. 25: NACA 0012 at M = 0.30, including wind-tunnel-wall corrections"
+alpha_static_stall_deg,13.7,0.3,"NASA TM-84245 Vol. 1 (NTRS 19820024438), Table 8, printed p. 25: NACA 0012 at M = 0.30, including wind-tunnel-wall corrections"
+L_over_D_max,90.0,5.0,"NASA TM-84245 Vol. 1 (NTRS 19820024438), Table 8, printed p. 25: NACA 0012 at M = 0.30, including wind-tunnel-wall corrections"

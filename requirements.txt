@@ -1,0 +1,12 @@
+# Minimum versions that provide every API the package calls (Python 3.11 or later).
+# requirements-lock.txt pins the exact versions the results were produced with.
+numpy>=1.26,<3
+scipy>=1.11
+pandas>=2.1
+matplotlib>=3.6
+pytest>=8
+
+# Needed only to rebuild the case study's plots and report documents (run_all.py):
+Pillow>=10.2
+reportlab>=5.0
+python-docx>=1.2

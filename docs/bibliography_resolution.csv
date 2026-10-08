@@ -1,0 +1,55 @@
+key,topic,resolved,identifier,registry,title_requested,title_registered,note
+leishman1989,model,True,doi:10.4050/jahs.34.3.3,doi,A Semi-Empirical Model for Dynamic Stall,A Semi‐Empirical Model for Dynamic Stall,
+leishman1990,model,True,doi:10.2514/3.25127,doi,State-space representation of unsteady airfoil behavior,State-space representation of unsteady airfoil behavior,
+leishman1988,indicial,True,doi:10.2514/3.45680,doi,Validation of approximate indicial aerodynamic functions for two-dimensional subsonic flow,Validation of approximate indicial aerodynamic functions for two-dimensional subsonic flow,
+leishman1993,indicial,True,doi:10.2514/3.46340,doi,Indicial lift approximations for two-dimensional subsonic flow as obtained from oscillatory measurements,Indicial lift approximations for two-dimensional subsonic flow as obtained from oscillatory measurements,
+sheng2006,onset,True,doi:10.1115/1.2346703,doi,A new stall-onset criterion for low speed dynamic-stall,A New Stall-Onset Criterion for Low Speed Dynamic-Stall,
+sheng2008,lowmach,True,doi:10.1115/1.2931509,doi,A modified dynamic stall model for low Mach numbers,A Modified Dynamic Stall Model for Low Mach Numbers,
+goman1994,model,True,doi:10.2514/3.46618,doi,State-space representation of aerodynamic characteristics of an aircraft at high angles of attack,State-space representation of aerodynamic characteristics of an aircraft at high angles of attack,
+mccroskey1982arfm,review,True,doi:10.1146/annurev.fl.14.010182.001441,doi,Unsteady airfoils,Unsteady Airfoils,
+carr1988,review,True,doi:10.2514/3.45534,doi,Progress in analysis and prediction of dynamic stall,Progress in analysis and prediction of dynamic stall,
+mulleners2012,onset,True,doi:10.1007/s00348-011-1118-y,doi,The onset of dynamic stall revisited,The onset of dynamic stall revisited,
+mulleners2013,experiment,True,doi:10.1007/s00348-013-1469-7,doi,Dynamic stall development,Dynamic stall development,
+corke2015,review,True,doi:10.1146/annurev-fluid-010814-013632,doi,Dynamic stall in pitching airfoils: aerodynamic damping and compressibility effects,Dynamic Stall in Pitching Airfoils: Aerodynamic Damping and Compressibility Effects,
+ekaterinaris1998,cfd,True,doi:10.1016/s0376-0421(97)00012-2,doi,Computational prediction of airfoil dynamic stall,Computational prediction of airfoil dynamic stall,
+richter2011,cfd,True,doi:10.4050/jahs.56.042007,doi,Improved two-dimensional dynamic stall prediction with structured and hybrid numerical methods,Improved Two-Dimensional Dynamic Stall Prediction with Structured and Hybrid Numerical Methods,
+dossantos2021,lowmach,True,doi:10.1016/j.jfluidstructs.2021.103375,doi,Improvements on the Beddoes-Leishman dynamic stall model for low speed applications,Improvements on the Beddoes–Leishman dynamic stall model for low speed applications,
+larsen2007,tabulated,True,doi:10.1016/j.jfluidstructs.2007.02.005,doi,Dynamic stall model for wind turbine airfoils,Dynamic stall model for wind turbine airfoils,
+gupta2006,model,True,doi:10.1002/we.200,doi,Dynamic stall modelling of the S809 aerofoil and comparison with experiments,Dynamic stall modelling of the S809 aerofoil and comparison with experiments,
+pierce1995,model,True,doi:10.1115/1.2847783,doi,Prediction of wind turbine rotor loads using the Beddoes-Leishman model for dynamic stall,Prediction of Wind Turbine Rotor Loads Using the Beddoes-Leishman Model for Dynamic Stall,
+ericsson1988,review,True,doi:10.1016/s0889-9746(88)90116-8,doi,Fluid mechanics of dynamic stall part I. Unsteady flow concepts,Fluid mechanics of dynamic stall part I. Unsteady flow concepts,
+johnson1972,rotor,True,doi:10.4050/jahs.17.36,doi,On the mechanism of dynamic stall,On the Mechanism of Dynamic Stall,
+ham1968,rotor,True,doi:10.4050/jahs.13.49,doi,Dynamic stall considerations in helicopter rotors,Dynamic Stall Considerations in Helicopter Rotors,
+bousman1998,rotor,True,doi:10.4050/jahs.43.279,doi,A qualitative examination of dynamic stall from flight test data,A Qualitative Examination of Dynamic Stall from Flight Test Data,
+gardner2023,review,True,doi:10.1016/j.paerosci.2023.100887,doi,Review of rotating wing dynamic stall: experiments and flow control,Review of rotating wing dynamic stall: Experiments and flow control,
+visbal2018,cfd,True,doi:10.2514/1.j056108,doi,Analysis of dynamic stall on a pitching airfoil using high-fidelity large-eddy simulations,Analysis of Dynamic Stall on a Pitching Airfoil Using High-Fidelity Large-Eddy Simulations,
+bangga2020,model,True,doi:10.5194/wes-5-1037-2020,doi,An improved second-order dynamic stall model for wind turbine airfoils,An improved second-order dynamic  stall model for wind turbine airfoils,
+elgammi2016,model,True,doi:10.1115/1.4034241,doi,A modified Beddoes-Leishman model for unsteady aerodynamic blade load computations on wind turbine blades,A Modified Beddoes–Leishman Model for Unsteady Aerodynamic Blade Load Computations on Wind Turbine Blades,
+boutet2020,lowmach,True,doi:10.1016/j.jfluidstructs.2019.102852,doi,A modified Leishman-Beddoes model for airfoil sections undergoing dynamic stall at low Reynolds numbers,A modified Leishman–Beddoes model for airfoil sections undergoing dynamic stall at low Reynolds numbers,
+wagner1925,theory,True,doi:10.1002/zamm.19250050103,doi,Über die Entstehung des dynamischen Auftriebes von Tragflügeln,Über die Entstehung des dynamischen Auftriebes von Tragflügeln,
+mccroskey1976,experiment,True,doi:10.2514/3.61332,doi,Dynamic stall experiments on oscillating airfoils,Dynamic Stall Experiments on Oscillating Airfoils,
+mccroskey1980forum,experiment,True,doi:10.4050/vfs-f36-001,doi,Dynamic stall on advanced airfoil sections,Dynamic Stall On Advanced Airfoil Sections,
+leishman2002,review,True,doi:10.2514/6.2002-37,doi,Challenges in modelling the unsteady aerodynamics of wind turbines,Challenges in modeling the unsteady aerodynamics of wind turbines,
+holierhoek2013,comparison,True,doi:10.1002/we.548,doi,Comparing different dynamic stall models,Comparing different dynamic stall models,
+mcalister1978tp,experiment,True,NTRS 19780009057,ntrs,Dynamic stall experiments on the NACA 0012 airfoil,Dynamic stall experiments on the NACA 0012 airfoil,
+mccroskey1981tm,review,True,NTRS 19810011501,ntrs,The phenomenon of dynamic stall,The phenomenon of dynamic stall,
+carr1977,experiment,True,NTRS 19770010056,ntrs,Analysis of the development of dynamic stall based on oscillating airfoil experiments,Analysis of the development of dynamic stall based on oscillating airfoil experiments,
+theodorsen1935,theory,True,NTRS 19800006788,ntrs,General theory of aerodynamic instability and the mechanism of flutter,General Theory of Aerodynamic Instability and the Mechanism of Flutter,
+jones1940,theory,True,NTRS 19930091758,ntrs,The unsteady lift of a wing of finite aspect ratio,The unsteady lift of a wing of finite aspect ratio,
+lomax1952,theory,True,NTRS 19930092122,ntrs,Two- and three-dimensional unsteady lift problems in high-speed flight,Two-and three-dimensional unsteady lift problems in high-speed flight,
+garrick1936,theory,True,NTRS 19930091642,ntrs,Propulsion of a flapping and oscillating airfoil,Propulsion of a flapping and oscillating airfoil,
+allen1944,experiment,True,NTRS 19930091861,ntrs,"Wall interference in a two-dimensional-flow wind tunnel, with consideration of the effect of compressibility","Wall interference in a two-dimensional-flow wind tunnel, with consideration of the effect of compressibility",
+mccroskey1982v1,data,True,NTRS 19820024438,ntrsid,,An experimental study of dynamic stall on advanced airfoil sections.  Volume 1:  Summary of the experiment,
+mcalister1982v2,data,True,NTRS 19830003778,ntrsid,,An experimental study of dynamic stall on advanced airfoil section.  Volume 2:  Pressure and force data,
+carr1982v3,data,True,NTRS 19830009234,ntrsid,,An Experimental Study of Dynamic Stall on Advanced Airfoil Sections: Hot-Wire and Hot Film Measurements - Volume 3,
+mccroskey1987,data,True,NTRS 19880002254,ntrsid,,A critical assessment of wind tunnel results for the NACA 0012 airfoil,
+bousman2003,rotor,True,NTRS 20040081236,ntrsid,,Aerodynamic Characteristics of SC1095 and SC1094 R8 Airfoils,
+damiani2019,model,True,doi:10.2172/1576488,other,,,"https://www.osti.gov/biblio/1576488 (U.S. DOE Office of Scientific and Technical Information), read 2026-10-06"
+pancini2021data,data,True,https://github.com/luizpancini/BL-DSM-JFS-2021,other,,,"GitHub repository record (api.github.com/repos/luizpancini/BL-DSM-JFS-2021), read 2026-10-06"
+green2017,data,True,doi:10.5525/gla.researchdata.464,other,,,"https://researchdata.gla.ac.uk/464/ (University of Glasgow research data record), read 2026-10-07"
+leishman1989crouse,model,True,doi:10.2514/6.1989-1319,other,,,"the registry record of this DOI names the first author only; second author and paper number as cited in The Aeronautical Journal and Journal of the Brazilian Society of Mechanical Sciences and Engineering reference lists, read 2026-10-07"
+hansen2004,tabulated,True,Risø-R-1354(EN); ISBN 87-550-3090-4,other,,,"https://orbit.dtu.dk/en/publications/a-beddoes-leishman-type-dynamic-stall-model-in-state-space-and-in/ (DTU Research Database record), read 2026-10-07"
+beddoes1983,model,True,Vertica 7(2):183-197,other,,,"the journal Vertica has no registry record; volume, number and pages as cited in The Aeronautical Journal (Cambridge University Press) reference lists, read 2026-10-07"
+beddoes1984,indicial,True,Vertica 8(1):55-71,other,,,"the journal Vertica has no registry record; volume, number and pages as cited in The Aeronautical Journal (Cambridge University Press) reference lists, read 2026-10-07"
+tran1981,onera,True,Vertica 5(1):35-53,other,,,"the journal Vertica has no registry record; volume and pages as cited in Aerospace 4(2):21 (doi:10.3390/aerospace4020021) and other reference lists, read 2026-10-07"
+khan2018,review,True,https://repository.tudelft.nl/record/uuid:f1ee9368-ca44-47ca-abe2-b816f64a564f,other,,,"TU Delft repository record, read 2026-10-07"

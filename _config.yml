@@ -1,0 +1,16 @@
+title: "Prediction of Dynamic Stall on a Pitching NACA 0012 Section"
+description: "A Leishman-Beddoes dynamic-stall load model for a pitching NACA 0012 section, assessed against NASA TM-84245, with a case study at two conditions."
+author: "Akosa Samuel Onyejekwe"
+lang: en
+repo_url: "https://github.com/samuelakosaonyejekwe/aero-dynamic-stall-sam"
+markdown: kramdown
+
+exclude:
+  - unistall/cache
+  - manuscript
+  - tests
+  - "**/__pycache__"
+  - pyproject.toml
+  - requirements.txt
+  - requirements-lock.txt
+  - assets/make_favicon.py

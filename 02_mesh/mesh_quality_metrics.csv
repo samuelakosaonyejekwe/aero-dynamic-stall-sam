@@ -1,0 +1,27 @@
+metric,value,unit
+topology,"O-grid, no wake cut, seam at the trailing edge",-
+status,not a CFD mesh that has been run; not read by the load model,-
+nodes_wrap_i,193,-
+nodes_normal_j,81,-
+total_nodes,15633,-
+unique_nodes,15552,-
+total_cells,15360,-
+farfield_radius,20.0,chord
+farfield_radius_deviation_max,7.1e-15,chord
+first_layer_height,0.001,chord
+wall_normal_growth_ratio,1.0996,-
+wall_spacing_min,0.000457,chord
+wall_spacing_max,0.0183,chord
+wall_spacing_at_leading_edge,0.00203,chord
+wall_spacing_at_trailing_edge,0.000457,chord
+max_skewness_equiangle,0.908,-
+max_skewness_cell_i_j,0 0,-
+max_skewness_without_trailing_edge_cells,0.491,-
+mean_skewness_equiangle,0.063,-
+cells_with_skewness_above_0.5,0.01,percent
+min_orthogonality_angle,8.3,deg
+min_orthogonality_angle_without_trailing_edge_cells,45.8,deg
+max_aspect_ratio,18.3,-
+mean_aspect_ratio,3.9,-
+min_cell_area_signed,5.131e-07,chord^2
+inverted_cells,0,-

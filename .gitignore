@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Downloaded source reports, third-party measured loops and build tools:
+# fetched at run time, never committed (see NOTICE).
+unistall/cache/
+
+# The manuscript and its build products are kept out of the repository.
+manuscript/
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

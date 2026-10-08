@@ -1,0 +1,34 @@
+Copyright (c) 2026 Akosa Samuel Onyejekwe. All rights reserved.
+
+Everything in this repository that is the author's own work -- the source
+code, the derived data files, the documentation and the figures -- is covered
+by the terms in LICENSE: it may be read and run unmodified to verify the
+reported results, and may be cited; any other use needs the author's written
+permission.
+
+THIRD-PARTY DATA -- NOT DISTRIBUTED IN THIS REPOSITORY
+
+The measured oscillating-aerofoil loops this work is compared with are
+third-party experimental data. They were not produced by this work and are not
+the author's to license, so they are not included here and LICENSE does not
+extend to them. The original measurements are McCroskey, McAlister, Carr &
+Pucci (1982), NASA TM-84245, a work of the U.S. Government; the digitised
+frame files are obtained from L. Pancini, "BL-DSM-JFS-2021"
+(https://github.com/luizpancini/BL-DSM-JFS-2021), which states no licence of its
+own. The fetch script downloads them at run time into a git-ignored cache and
+pins each file by SHA-256.
+
+The University of Glasgow oscillating- and static-aerofoil runs used for the
+second-facility test are likewise third-party data and are not included here.
+They are: Green, R. B. and Giuni, M. (2017), "Dynamic stall database R and D
+1570-AM-01: Final Report", University of Glasgow,
+DOI: 10.5525/gla.researchdata.464, made available by its authors under the
+Creative Commons Attribution 4.0 licence. unistall/fetch_glasgow.py downloads
+the runs at run time into the git-ignored cache and records a checksum of
+each (data/glasgow_inventory.csv, data/glasgow_static_inventory.csv,
+data/glasgow_sources.csv). The files in data/ and results/ whose names begin
+with "glasgow_" are the author's own inventories and derived tables.
+
+The static data files named static_naca0012_M030_*.csv are the author's own
+digitisation of figures and tables in NASA TM-84245; each row names its source
+page.

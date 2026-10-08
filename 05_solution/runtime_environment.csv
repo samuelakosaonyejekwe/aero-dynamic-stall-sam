@@ -1,0 +1,15 @@
+property,value
+python,3.12.3
+platform,Linux-6.18.33.1-microsoft-standard-WSL2-x86_64-with-glibc2.39
+processor,x86_64
+version_numpy,1.26.4
+version_scipy,1.11.4
+version_pandas,3.0.3
+version_matplotlib,3.6.3
+steps_per_cycle_A_validation,3240
+cycles_A_validation,5
+march_cpu_time_s_A_validation,0.489
+steps_per_cycle_B_application,4320
+cycles_B_application,4
+march_cpu_time_s_B_application,0.453
+timing_note,CPU time of the load-model march on this machine; it varies from run to run

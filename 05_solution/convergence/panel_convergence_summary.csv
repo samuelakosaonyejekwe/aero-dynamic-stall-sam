@@ -1,0 +1,9 @@
+case,quantity,change_measured_as,n_panels_configured,largest_change_half_to_configured,largest_change_configured_to_double,tolerance,within_tolerance
+A_validation,Cp_surface_min_incompressible,percent of the value,320,0.9405,0.3675,1.0,True
+A_validation,transpiration_vt_over_U,absolute,320,0.001438,0.000991,0.005,True
+A_validation,closure_error_pct_incompressible,percentage points,320,0.3727,0.1903,0.5,True
+A_validation,beyond_critical_surface_fraction,absolute,320,0.002544,0.001085,0.005,True
+B_application,Cp_surface_min_incompressible,percent of the value,320,1.149,0.3423,1.0,True
+B_application,transpiration_vt_over_U,absolute,320,0.001001,0.000774,0.005,True
+B_application,closure_error_pct_incompressible,percentage points,320,0.3244,0.1663,0.5,True
+B_application,beyond_critical_surface_fraction,absolute,320,0.001754,0.001397,0.005,True

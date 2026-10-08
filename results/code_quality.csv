@@ -1,0 +1,11 @@
+measure,value
+regression_max_abs_difference,0.0
+import_path_edits_load_model_path,0.0
+module_level_executable_lines_worst_load_model_file,1.0
+longest_package_function_lines_excluding_docstring,56.0
+unused_parameters_in_package,0.0
+public_package_functions,104.0
+public_package_functions_typed_and_documented_pct,100.0
+revision_history_phrases_in_package,0.0
+lint_findings_whole_repository,0.0
+silently_skipped_checks,0.0
